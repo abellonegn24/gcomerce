@@ -1,0 +1,12 @@
+Hi {displayName},
+
+Thank you for your order. Your invoice number is {invoiceNumber} and the total is {currency} {grandTotal}.
+
+You can view your order details here:
+{orderLink}
+
+If you have any questions, contact us at support@gadaaistar.com.
+
+--
+Gadaa Istar Business Group S.C. · Addis Ababa, Ethiopia
+This is an automated message — please do not reply.

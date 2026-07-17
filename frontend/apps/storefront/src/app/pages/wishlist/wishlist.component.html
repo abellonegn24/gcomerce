@@ -1,0 +1,111 @@
+<section class="gi-wishlist">
+  <header class="gi-wishlist__header">
+    <div class="gi-wishlist__header-inner">
+      <p class="gi-wishlist__eyebrow">Saved for later</p>
+      <h1>Your wishlist</h1>
+      @if (hasItems()) {
+        <p class="gi-wishlist__count">{{ slugs().length }} item{{ slugs().length > 1 ? 's' : '' }} saved</p>
+      }
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="gi-wishlist__loading">
+      <span class="material-icons-round gi-wishlist__spinner">hourglass_top</span>
+      <p>Loading your saved items…</p>
+    </div>
+  }
+
+  @if (error()) {
+    <div class="gi-wishlist__banner" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  @if (!loading() && !hasItems()) {
+    <div class="gi-wishlist__empty">
+      <span class="material-icons-round gi-wishlist__empty-icon">favorite_border</span>
+      <h2>No saved items yet</h2>
+      <p>Tap the heart icon on any product to save it for later.</p>
+      <a routerLink="/shop" class="gi-wishlist__cta">
+        <span class="material-icons-round">storefront</span>
+        Browse products
+      </a>
+    </div>
+  }
+
+  @if (!loading() && hasItems()) {
+    <div class="gi-wishlist__grid">
+      @for (product of products(); track $index) {
+        @if (product) {
+          <article class="gi-wishlist__card">
+            <a [routerLink]="['/products', product.slug]" class="gi-wishlist__card-link">
+              @if (product.detailThumbnailUrl || product.primaryImageUrl) {
+                <img [src]="product.detailThumbnailUrl || product.primaryImageUrl" [alt]="product.name" class="gi-wishlist__img" loading="lazy" />
+              } @else {
+                <div class="gi-wishlist__img-placeholder">
+                  <span class="material-icons-round">image</span>
+                </div>
+              }
+            </a>
+
+            <div class="gi-wishlist__card-body">
+              <a [routerLink]="['/products', product.slug]" class="gi-wishlist__name">
+                {{ product.name }}
+              </a>
+              <p class="gi-wishlist__sku">{{ product.sku }}</p>
+
+              <div class="gi-wishlist__price-row">
+                <span class="gi-wishlist__price">{{ formatMoney(product.currency, product.displayPrice) }}</span>
+                @if (!product.inStock) {
+                  <span class="gi-wishlist__out-of-stock">Out of stock</span>
+                }
+              </div>
+
+              <div class="gi-wishlist__actions">
+                <button
+                  type="button"
+                  class="gi-wishlist__add"
+                  [disabled]="!product.inStock || addingSlug() === product.slug"
+                  (click)="addToCart(product)">
+                  @if (addingSlug() === product.slug) {
+                    <span class="material-icons-round gi-wishlist__spinner">hourglass_top</span>
+                  } @else {
+                    <span class="material-icons-round">add_shopping_cart</span>
+                  }
+                  Add to cart
+                </button>
+                <button
+                  type="button"
+                  class="gi-wishlist__remove"
+                  (click)="remove(product.slug)"
+                  aria-label="Remove from wishlist">
+                  <span class="material-icons-round">favorite</span>
+                </button>
+              </div>
+            </div>
+          </article>
+        } @else {
+          <article class="gi-wishlist__card gi-wishlist__card--unavailable">
+            <div class="gi-wishlist__img-placeholder">
+              <span class="material-icons-round">broken_image</span>
+            </div>
+            <div class="gi-wishlist__card-body">
+              <p class="gi-wishlist__name">Product unavailable</p>
+              <p class="gi-wishlist__sku">This item may have been removed from the catalog.</p>
+              <button
+                type="button"
+                class="gi-wishlist__remove"
+                (click)="remove(slugs()[$index])"
+                aria-label="Remove from wishlist">
+                <span class="material-icons-round">delete_outline</span>
+                Remove
+              </button>
+            </div>
+          </article>
+        }
+      }
+    </div>
+  }
+</section>

@@ -1,0 +1,404 @@
+<section class="gi-checkout">
+  <header class="gi-checkout__head">
+    <div>
+      <p class="gi-eyebrow">Secure checkout</p>
+      <h1>Review + pay</h1>
+    </div>
+    <a routerLink="/cart" class="gi-btn-inline gi-btn-inline--ghost">
+      <span class="material-icons-round">arrow_back</span>
+      Back to cart
+    </a>
+  </header>
+
+  @if (errorMessage(); as msg) {
+    <div class="gi-alert gi-alert--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  @if (isCartEmpty()) {
+    <div class="gi-checkout__empty">
+      <span class="material-icons-round">shopping_bag</span>
+      <h2>Your cart is empty</h2>
+      <p>Add items to your cart before proceeding to checkout.</p>
+      <a routerLink="/shop" class="gi-btn-inline gi-btn-inline--gold">Browse the catalog</a>
+    </div>
+  } @else {
+    <div class="gi-checkout__grid">
+      <!-- ============================================================ -->
+      <!-- Column A: address + notes                                    -->
+      <!-- ============================================================ -->
+      <div class="gi-checkout__col">
+        <section class="gi-checkout__card">
+          <h2>Ship to</h2>
+
+          @if (addressesLoading() && !addresses()) {
+            <p class="gi-checkout__loading">
+              <span class="material-icons-round gi-spin">progress_activity</span>
+              Loading your saved addresses…
+            </p>
+          }
+
+          @if (addresses(); as list) {
+            @if (list.length > 0 && !newAddressOpen()) {
+              <ul class="gi-address-list" role="list">
+                @for (a of list; track a.id) {
+                  <li>
+                    <button type="button"
+                            class="gi-address-card"
+                            [class.is-selected]="selectedAddressId() === a.id"
+                            (click)="selectAddress(a)">
+                      <span class="gi-address-card__check">
+                        <span class="material-icons-round">
+                          {{ selectedAddressId() === a.id ? 'radio_button_checked' : 'radio_button_unchecked' }}
+                        </span>
+                      </span>
+                      <span class="gi-address-card__body">
+                        <span class="gi-address-card__title">
+                          {{ a.fullName || a.company || a.streetLine1 }}
+                          @if (a.isDefault) {
+                            <span class="gi-address-card__default">Default</span>
+                          }
+                        </span>
+                        <span class="gi-address-card__lines">
+                          {{ a.streetLine1 }}@if (a.streetLine2) {, {{ a.streetLine2 }}}<br>
+                          {{ a.city }}@if (a.region) {, {{ a.region }}}
+                          @if (a.postalCode) { {{ a.postalCode }} }
+                          · {{ a.countryCode }}
+                        </span>
+                        @if (a.phone) {
+                          <span class="gi-address-card__phone">
+                            <span class="material-icons-round">phone</span>
+                            {{ a.phone }}
+                          </span>
+                        }
+                      </span>
+                    </button>
+                  </li>
+                }
+              </ul>
+              <button type="button" class="gi-btn-inline gi-btn-inline--ghost gi-checkout__addnew"
+                      (click)="openNewAddress()">
+                <span class="material-icons-round">add</span>
+                Add a new address
+              </button>
+            }
+
+            <!-- ============================================================ -->
+            <!-- Inline "new address" form                                    -->
+            <!-- ============================================================ -->
+            @if (newAddressOpen()) {
+              <form [formGroup]="newAddressForm" (ngSubmit)="saveNewAddress()" class="gi-form" novalidate>
+                <div class="gi-form__grid">
+                  <label class="gi-field gi-field--wide">
+                    <span class="gi-field__label">Full name</span>
+                    <input type="text" formControlName="fullName" autocomplete="name" />
+                  </label>
+                  <label class="gi-field gi-field--wide">
+                    <span class="gi-field__label">Company (optional)</span>
+                    <input type="text" formControlName="company" autocomplete="organization" />
+                  </label>
+                  <label class="gi-field gi-field--wide">
+                    <span class="gi-field__label">Street address <span class="gi-req">*</span></span>
+                    <input type="text" formControlName="streetLine1" autocomplete="address-line1" />
+                  </label>
+                  <label class="gi-field gi-field--wide">
+                    <span class="gi-field__label">Apartment / suite (optional)</span>
+                    <input type="text" formControlName="streetLine2" autocomplete="address-line2" />
+                  </label>
+                  <label class="gi-field">
+                    <span class="gi-field__label">City <span class="gi-req">*</span></span>
+                    <input type="text" formControlName="city" autocomplete="address-level2" />
+                  </label>
+                  <label class="gi-field">
+                    <span class="gi-field__label">Region / state</span>
+                    <input type="text" formControlName="region" autocomplete="address-level1" />
+                  </label>
+                  <label class="gi-field">
+                    <span class="gi-field__label">Postal code</span>
+                    <input type="text" formControlName="postalCode" autocomplete="postal-code" />
+                  </label>
+                  <label class="gi-field">
+                    <span class="gi-field__label">Country <span class="gi-req">*</span></span>
+                    <input type="text" formControlName="countryCode" maxlength="2"
+                           style="text-transform: uppercase;"
+                           autocomplete="country" />
+                    @if (newAddressForm.controls.countryCode.touched
+                         && newAddressForm.controls.countryCode.errors?.['pattern']) {
+                      <span class="gi-field__error">Use a 2-letter code, e.g. ET, US, DE.</span>
+                    }
+                  </label>
+                  <label class="gi-field gi-field--wide">
+                    <span class="gi-field__label">Phone</span>
+                    <input type="tel" formControlName="phone" autocomplete="tel" />
+                  </label>
+                </div>
+                <div class="gi-form__actions">
+                  <button type="submit" class="gi-btn-inline gi-btn-inline--gold">
+                    <span class="material-icons-round">save</span>
+                    Save + use this address
+                  </button>
+                  @if (list.length > 0) {
+                    <button type="button" class="gi-btn-inline gi-btn-inline--ghost" (click)="cancelNewAddress()">
+                      Cancel
+                    </button>
+                  }
+                </div>
+              </form>
+            }
+          }
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Shipping picker                                              -->
+        <!-- ============================================================ -->
+        <section class="gi-checkout__card">
+          <h2>Shipping method</h2>
+
+          @if (shippingLoading()) {
+            <p class="gi-checkout__loading">
+              <span class="material-icons-round gi-spin">progress_activity</span>
+              Calculating shipping options for your cart…
+            </p>
+          } @else if (shippingError()) {
+            <p class="gi-checkout__hint">{{ shippingError() }}</p>
+          } @else if (shippingQuotes()?.length === 0) {
+            <p class="gi-checkout__hint">
+              No shipping options currently offered — your order will ship without freight billing.
+            </p>
+          } @else {
+            <p class="gi-checkout__hint">
+              Priced for your cart ({{ shippingWeightKg() }} kg).
+            </p>
+            <ul class="gi-ship-list" role="list">
+              @for (q of shippingQuotes(); track q.id) {
+                <li>
+                  <button type="button"
+                          class="gi-ship-card"
+                          [class.is-selected]="selectedShippingId() === q.id"
+                          (click)="selectShipping(q)">
+                    <span class="gi-ship-card__check">
+                      <span class="material-icons-round">
+                        {{ selectedShippingId() === q.id ? 'radio_button_checked' : 'radio_button_unchecked' }}
+                      </span>
+                    </span>
+                    <span class="gi-ship-card__body">
+                      <span class="gi-ship-card__title">{{ q.name }}</span>
+                      @if (q.description) {
+                        <span class="gi-ship-card__desc">{{ q.description }}</span>
+                      }
+                      @if (q.minDays != null || q.maxDays != null) {
+                        <span class="gi-ship-card__eta">
+                          <span class="material-icons-round">schedule</span>
+                          @if (q.minDays != null && q.maxDays != null && q.minDays !== q.maxDays) {
+                            {{ q.minDays }}–{{ q.maxDays }} business days
+                          } @else if (q.minDays != null && q.maxDays != null) {
+                            {{ q.minDays }} business day{{ q.minDays === 1 ? '' : 's' }}
+                          } @else if (q.minDays != null) {
+                            {{ q.minDays }}+ business days
+                          } @else {
+                            up to {{ q.maxDays }} business days
+                          }
+                        </span>
+                      }
+                    </span>
+                    <strong class="gi-ship-card__cost">{{ formatMoney(q.currency, q.cost) }}</strong>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Coupon code                                                 -->
+        <!-- ============================================================ -->
+        <section class="gi-checkout__card">
+          <h2>Coupon code</h2>
+          @if (couponPreview(); as preview) {
+            <div class="gi-coupon-applied">
+              <div class="gi-coupon-applied__info">
+                <span class="material-icons-round">confirmation_number</span>
+                <div>
+                  <strong>{{ preview.code }}</strong>
+                  @if (preview.description) {
+                    <p>{{ preview.description }}</p>
+                  }
+                  <p class="gi-coupon-applied__discount">
+                    @if (preview.discountType === 'PERCENT') {
+                      {{ preview.discountValue }}% off
+                    } @else {
+                      {{ formatMoney(preview.currency, preview.discountValue) }} off
+                    }
+                    @if (preview.freeShipping) {
+                      · Free shipping
+                    }
+                  </p>
+                </div>
+              </div>
+              <button type="button" class="gi-btn-inline gi-btn-inline--ghost" (click)="removeCoupon()">
+                <span class="material-icons-round">close</span>
+                Remove
+              </button>
+            </div>
+          } @else {
+            <div class="gi-coupon-input">
+              <input
+                type="text"
+                class="gi-coupon-input__field"
+                [value]="couponCode()"
+                (input)="couponCode.set($any($event.target).value)"
+                placeholder="Enter coupon code"
+                maxlength="64"
+                [disabled]="couponLoading()" />
+              <button
+                type="button"
+                class="gi-btn-inline gi-btn-inline--gold"
+                [disabled]="couponLoading() || !couponCode().trim()"
+                (click)="applyCoupon()">
+                @if (couponLoading()) {
+                  <span class="material-icons-round gi-spin">progress_activity</span>
+                }
+                Apply
+              </button>
+            </div>
+            @if (couponError(); as err) {
+              <p class="gi-coupon-error">{{ err }}</p>
+            }
+          }
+        </section>
+
+        <section class="gi-checkout__card">
+          <h2>Payment method</h2>
+          @if (paymentMethodsLoading()) {
+            <p class="gi-checkout__hint">Loading payment options…</p>
+          } @else if (paymentMethods().length === 0) {
+            <p class="gi-checkout__hint">No payment methods configured. Please contact support.</p>
+          } @else {
+            <div class="gi-checkout__payment-methods">
+              @for (method of paymentMethods(); track method.id) {
+                <label
+                  class="gi-checkout__payment-method"
+                  [class.is-selected]="selectedPaymentMethod() === method.id">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    [value]="method.id"
+                    [checked]="selectedPaymentMethod() === method.id"
+                    (change)="selectedPaymentMethod.set(method.id)" />
+                  <span class="gi-checkout__payment-method-body">
+                    <strong>{{ method.name }}</strong>
+                    <span>{{ method.description }}</span>
+                  </span>
+                </label>
+              }
+            </div>
+          }
+        </section>
+
+        <section class="gi-checkout__card">
+          <h2>Notes (optional)</h2>
+          <p class="gi-checkout__hint">
+            Anything the fulfilment team should know — e.g. gate codes, courier
+            preferences, delivery windows.
+          </p>
+          <textarea
+              class="gi-checkout__notes"
+              rows="3"
+              maxlength="1000"
+              [value]="customerNotes()"
+              (input)="customerNotes.set($any($event.target).value)"
+              placeholder="Leave a note for our team…"></textarea>
+        </section>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- Column B: order summary + submit                             -->
+      <!-- ============================================================ -->
+      @if (cart(); as c) {
+        <aside class="gi-checkout__summary" aria-label="Order summary">
+          <h2>Order summary</h2>
+
+          <ul class="gi-checkout__lines" role="list">
+            @for (line of c.items; track line.id) {
+              <li>
+                <div class="gi-checkout__line-thumb">
+                  @if (line.primaryImageUrl) {
+                    <img [src]="line.primaryImageUrl" [alt]="line.name" />
+                  } @else {
+                    <span class="material-icons-round">photo</span>
+                  }
+                  <span class="gi-checkout__line-badge">{{ line.quantity }}</span>
+                </div>
+                <div class="gi-checkout__line-body">
+                  <span class="gi-checkout__line-name">{{ line.name }}</span>
+                  <span class="gi-checkout__line-sku">SKU {{ line.sku }}</span>
+                </div>
+                <strong>{{ formatMoney(line.currency, line.lineTotal) }}</strong>
+              </li>
+            }
+          </ul>
+
+          <dl class="gi-checkout__totals">
+            <div>
+              <dt>Subtotal</dt>
+              <dd>{{ formatMoney(c.currency, c.subtotal) }}</dd>
+            </div>
+            <div>
+              <dt>Tax</dt>
+              <dd class="gi-checkout__hint-money">Applied at payment · {{ c.currency }}</dd>
+            </div>
+            <div>
+              <dt>Shipping
+                @if (selectedShipping(); as s) {
+                  <span class="gi-checkout__sub">— {{ s.name }}</span>
+                }
+              </dt>
+              @if (couponPreview()?.freeShipping) {
+                <dd class="gi-checkout__free">Free</dd>
+              } @else if (selectedShipping(); as s) {
+                <dd>{{ formatMoney(s.currency, s.cost) }}</dd>
+              } @else {
+                <dd class="gi-checkout__hint-money">Choose a method above</dd>
+              }
+            </div>
+            @if (couponPreview(); as preview) {
+              <div class="gi-checkout__discount">
+                <dt>Discount
+                  <span class="gi-checkout__sub">— {{ preview.code }}</span>
+                </dt>
+                <dd>−{{ formatMoney(preview.currency, preview.discountAmount) }}</dd>
+              </div>
+            }
+            <div class="gi-checkout__grand">
+              <dt>Estimated total</dt>
+              <dd>{{ formatMoney(c.currency, estimatedTotal()) }}</dd>
+            </div>
+          </dl>
+
+          <button type="button"
+                  class="gi-btn-inline gi-btn-inline--gold gi-checkout__pay"
+                  [disabled]="!canPlaceOrder()"
+                  (click)="placeOrder()">
+            @if (placing()) {
+              <span class="material-icons-round gi-spin">progress_activity</span>
+              Placing your order…
+            } @else if (redirecting()) {
+              <span class="material-icons-round gi-spin">progress_activity</span>
+              Redirecting to secure payment…
+            } @else {
+              <span class="material-icons-round">lock</span>
+              Continue to secure payment
+            }
+          </button>
+          <p class="gi-checkout__reassure">
+            <span class="material-icons-round">verified_user</span>
+            You'll be redirected to {{ selectedPaymentMethod() === 'MPGS' ? 'Mastercard' : 'CyberSource' }} to enter payment details.
+            Cards never touch our servers.
+          </p>
+        </aside>
+      }
+    </div>
+  }
+</section>

@@ -1,0 +1,128 @@
+.gi-notif {
+  position: relative;
+
+  &__btn {
+    position: relative;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: var(--gi-radius-md, 8px);
+    color: var(--gi-navy-700, #1B3A6B);
+    transition: background 0.15s;
+
+    &:hover { background: rgba(0, 0, 0, 0.05); }
+
+    .material-icons-round { font-size: 1.4rem; }
+  }
+
+  &__badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: #d32f2f;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    line-height: 1;
+  }
+
+  &__dropdown {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    width: 300px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    z-index: 1000;
+    overflow: hidden;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #eee;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #333;
+  }
+
+  &__close {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.15rem;
+    color: #999;
+
+    &:hover { color: #333; }
+    .material-icons-round { font-size: 1.1rem; }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    text-decoration: none;
+    color: inherit;
+    border-bottom: 1px solid #f5f5f5;
+    transition: background 0.12s;
+
+    &:hover { background: #f9f9f9; }
+    &:last-child { border-bottom: none; }
+  }
+
+  &__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+
+    &--orders { background: #e3f2fd; color: #1565c0; }
+    &--stock  { background: #fff3e0; color: #e65100; }
+    &--b2b    { background: #f3e5f5; color: #7b1fa2; }
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  &__label {
+    font-size: 0.85rem;
+    color: #555;
+  }
+
+  &__count {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1B3A6B;
+  }
+
+  &__empty {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: #999;
+    font-size: 0.85rem;
+  }
+}

@@ -1,0 +1,245 @@
+<section class="gi-cg">
+  <header class="gi-cg__header">
+    <div>
+      <h1>Customer groups</h1>
+      <p class="gi-cg__lead">
+        Groups drive B2B pricing tiers and the per-tier minimum-order
+        multiplier. A group with multiplier <code>5</code> forces its members
+        to buy at least 5× the product's retail MOQ at cart-add time.
+      </p>
+    </div>
+    <button type="button" class="gi-btn gi-btn--gold" (click)="openCreate()">
+      <span class="material-icons-round">add</span>
+      New group
+    </button>
+  </header>
+
+  @if (successMessage(); as msg) {
+    <div class="gi-cg__banner gi-cg__banner--success" role="status">
+      <span class="material-icons-round">check_circle</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+  @if (errorMessage(); as msg) {
+    <div class="gi-cg__banner gi-cg__banner--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  <!-- Inline create form -->
+  @if (showCreate()) {
+    <form class="gi-cg__form" [formGroup]="form" (ngSubmit)="submitCreate()">
+      <h3>Create a customer group</h3>
+
+      <div class="gi-cg__grid">
+        <label class="gi-field">
+          <span class="gi-field__label">Code <span class="gi-req">*</span></span>
+          <input type="text" formControlName="code" placeholder="WHOLESALE_T3"
+                 style="text-transform: uppercase;" />
+          <small class="gi-field__hint">UPPER_SNAKE_CASE. Unique.</small>
+        </label>
+
+        <label class="gi-field">
+          <span class="gi-field__label">Price tier <span class="gi-req">*</span></span>
+          <select formControlName="priceTier">
+            @for (opt of PRICE_TIER_OPTIONS; track opt.code) {
+              <option [ngValue]="opt.code">{{ opt.label }}</option>
+            }
+          </select>
+          <small class="gi-field__hint">Which tier of a bound price list applies.</small>
+        </label>
+
+        <label class="gi-field gi-field--wide">
+          <span class="gi-field__label">Display name <span class="gi-req">*</span></span>
+          <input type="text" formControlName="name" placeholder="Wholesale — Tier 3" />
+        </label>
+
+        <label class="gi-field gi-field--wide">
+          <span class="gi-field__label">Description (optional)</span>
+          <textarea formControlName="description" rows="2"
+                    placeholder="Regional distributors buying in bulk pallet quantities."></textarea>
+        </label>
+
+        <label class="gi-field">
+          <span class="gi-field__label">MOQ multiplier <span class="gi-req">*</span></span>
+          <input type="text" formControlName="moqMultiplier" placeholder="5.000" />
+          <small class="gi-field__hint">1.000 = retail MOQ. 5.000 = 5× retail MOQ.</small>
+        </label>
+
+        <label class="gi-field gi-field--check">
+          <input type="checkbox" formControlName="active" />
+          <span>Active — new customers can be assigned to this group.</span>
+        </label>
+      </div>
+
+      <div class="gi-cg__form-actions">
+        <button type="submit" class="gi-btn gi-btn--gold" [disabled]="saving() || form.invalid">
+          @if (saving()) {
+            <span class="material-icons-round gi-spin">progress_activity</span>
+            Creating…
+          } @else {
+            <span class="material-icons-round">save</span>
+            Create
+          }
+        </button>
+        <button type="button" class="gi-btn gi-btn--ghost" (click)="cancelCreate()" [disabled]="saving()">
+          Cancel
+        </button>
+      </div>
+    </form>
+  }
+
+  <!-- List -->
+  @if (loading()) {
+    <div class="gi-cg__skeleton" aria-live="polite">Loading customer groups…</div>
+  } @else if (groups().length === 0) {
+    <div class="gi-cg__empty">
+      <span class="material-icons-round">group_work</span>
+      <h3>No customer groups yet</h3>
+      <p>
+        Create your first group to start assigning B2B customers and building
+        tiered price lists. RETAIL is the default for anonymous shoppers.
+      </p>
+    </div>
+  } @else {
+    <div class="gi-cg__table-wrap">
+      <table class="gi-cg__table" role="table">
+        <thead>
+          <tr>
+            <th scope="col">Code / name</th>
+            <th scope="col">Tier</th>
+            <th scope="col" class="gi-cg__col-num">MOQ ×</th>
+            <th scope="col" class="gi-cg__col-num">Customers</th>
+            <th scope="col">Status</th>
+            <th scope="col" class="gi-cg__col-actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (g of groups(); track g.id) {
+            <tr [class.is-busy]="deletingId() === g.id" [class.is-editing]="editingId() === g.id">
+              <td>
+                <div class="gi-cg__name"><code>{{ g.code }}</code> · {{ g.name }}</div>
+                @if (g.description) {
+                  <div class="gi-cg__sub">{{ g.description }}</div>
+                }
+              </td>
+              <td>{{ PRICE_TIER_LABELS[g.priceTier] }}</td>
+              <td class="gi-cg__col-num">{{ multiplierLabel(g) }}</td>
+              <td class="gi-cg__col-num">{{ g.customerCount }}</td>
+              <td>
+                <span class="gi-cg__pill" [class.is-active]="g.active" [class.is-inactive]="!g.active">
+                  {{ g.active ? 'ACTIVE' : 'INACTIVE' }}
+                </span>
+              </td>
+              <td class="gi-cg__col-actions">
+                @if (editingId() === g.id) {
+                  <button
+                    type="button"
+                    class="gi-btn gi-btn--ghost"
+                    [disabled]="saving()"
+                    (click)="cancelEdit()">
+                    <span class="material-icons-round">close</span>
+                    Close
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="gi-btn gi-btn--ghost"
+                    [disabled]="editingId() !== null || deletingId() !== null"
+                    (click)="openEdit(g)">
+                    <span class="material-icons-round">edit</span>
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    class="gi-btn gi-btn--danger"
+                    [disabled]="deletingId() !== null || editingId() !== null"
+                    (click)="remove(g)">
+                    <span class="material-icons-round">delete_outline</span>
+                    Delete
+                  </button>
+                }
+              </td>
+            </tr>
+
+            @if (editingId() === g.id) {
+              <tr class="gi-cg__edit-row">
+                <td colspan="6">
+                  <form class="gi-cg__form gi-cg__form--inline"
+                        [formGroup]="editForm"
+                        (ngSubmit)="submitEdit()">
+                    <div class="gi-cg__form-intro">
+                      <span class="material-icons-round">tune</span>
+                      <div>
+                        <strong>Editing <em>{{ g.name }}</em></strong>
+                        <p>
+                          Changes take effect on the next cart-add. Existing
+                          cart lines below the new effective MOQ are not
+                          retroactively rejected; the next add/update to that
+                          line will enforce the new rule.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="gi-cg__grid">
+                      <label class="gi-field">
+                        <span class="gi-field__label">Code <span class="gi-req">*</span></span>
+                        <input type="text" formControlName="code" style="text-transform: uppercase;" />
+                      </label>
+
+                      <label class="gi-field">
+                        <span class="gi-field__label">Price tier <span class="gi-req">*</span></span>
+                        <select formControlName="priceTier">
+                          @for (opt of PRICE_TIER_OPTIONS; track opt.code) {
+                            <option [ngValue]="opt.code">{{ opt.label }}</option>
+                          }
+                        </select>
+                      </label>
+
+                      <label class="gi-field gi-field--wide">
+                        <span class="gi-field__label">Display name <span class="gi-req">*</span></span>
+                        <input type="text" formControlName="name" />
+                      </label>
+
+                      <label class="gi-field gi-field--wide">
+                        <span class="gi-field__label">Description</span>
+                        <textarea formControlName="description" rows="2"></textarea>
+                      </label>
+
+                      <label class="gi-field">
+                        <span class="gi-field__label">MOQ multiplier <span class="gi-req">*</span></span>
+                        <input type="text" formControlName="moqMultiplier" />
+                        <small class="gi-field__hint">1.000 = retail MOQ. Range 1..1000.</small>
+                      </label>
+
+                      <label class="gi-field gi-field--check">
+                        <input type="checkbox" formControlName="active" />
+                        <span>Active — new customers can be assigned to this group.</span>
+                      </label>
+                    </div>
+
+                    <div class="gi-cg__form-actions">
+                      <button type="submit" class="gi-btn gi-btn--gold" [disabled]="saving() || editForm.invalid">
+                        @if (saving()) {
+                          <span class="material-icons-round gi-spin">progress_activity</span>
+                          Saving…
+                        } @else {
+                          <span class="material-icons-round">save</span>
+                          Save changes
+                        }
+                      </button>
+                      <button type="button" class="gi-btn gi-btn--ghost" (click)="cancelEdit()" [disabled]="saving()">
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

@@ -1,0 +1,27 @@
+@if (loading()) {
+  <div class="gi-cms-page__loading">
+    <span class="material-icons-round">hourglass_empty</span>
+    Loading…
+  </div>
+} @else if (error()) {
+  <div class="gi-cms-page__error">
+    <span class="material-icons-round">error_outline</span>
+    {{ error() }}
+    <a routerLink="/" class="gi-cms-page__back">Back to home</a>
+  </div>
+} @else if (page(); as p) {
+  <article class="gi-cms-page">
+    <header class="gi-cms-page__header">
+      <div class="gi-container">
+        <h1 class="gi-cms-page__title">{{ p.title }}</h1>
+      </div>
+    </header>
+    <div class="gi-container gi-cms-page__body">
+      @if (bodyHtml()) {
+        <div class="gi-cms-page__content" [innerHTML]="bodyHtml()"></div>
+      } @else {
+        <p class="gi-cms-page__empty">This page has no content yet.</p>
+      }
+    </div>
+  </article>
+}

@@ -1,0 +1,153 @@
+<section class="gi-shop">
+  <header class="gi-shop__hero">
+    <div class="gi-shop__hero-inner">
+      <p class="gi-shop__eyebrow">Gadaa Istar catalog</p>
+      <h1>{{ heading() }}</h1>
+      <p class="gi-shop__lead">{{ blurb() }}</p>
+    </div>
+  </header>
+
+  <div class="gi-shop__search-bar">
+    <div class="gi-shop__search-input">
+      <span class="material-icons-round gi-shop__search-icon">search</span>
+      <input
+        type="search"
+        placeholder="Search products…"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="onSearchInput($event)"
+        aria-label="Search products" />
+      @if (isSearching()) {
+        <button type="button" class="gi-shop__search-clear" (click)="clearSearch()" aria-label="Clear search">
+          <span class="material-icons-round">close</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="gi-shop__body">
+    <!-- Category rail -->
+    <nav class="gi-shop__cats" aria-label="Product categories">
+      <button
+        type="button"
+        class="gi-shop__cat"
+        [class.is-active]="activeSlug() === null"
+        (click)="navigateToCategory(null)">
+        All
+      </button>
+      @for (c of categories; track c.slug) {
+        <button
+          type="button"
+          class="gi-shop__cat"
+          [class.is-active]="activeSlug() === c.slug"
+          (click)="navigateToCategory(c.slug)">
+          {{ c.label }}
+        </button>
+      }
+    </nav>
+
+    <!-- Content -->
+    <div class="gi-shop__content">
+      @if (errorMessage(); as msg) {
+        <div class="gi-shop__banner" role="alert">
+          <span class="material-icons-round">error_outline</span>
+          <span>{{ msg }}</span>
+          <button type="button" class="gi-shop__retry" (click)="load()">Retry</button>
+        </div>
+      }
+
+      @if (loading()) {
+        <div class="gi-shop__skeleton-grid" aria-live="polite">
+          @for (i of [0, 1, 2, 3, 4, 5]; track i) {
+            <article class="gi-shop__skeleton" aria-hidden="true">
+              <div class="gi-shop__skeleton-img"></div>
+              <div class="gi-shop__skeleton-line"></div>
+              <div class="gi-shop__skeleton-line gi-shop__skeleton-line--short"></div>
+            </article>
+          }
+        </div>
+      } @else if (items().length === 0) {
+        <div class="gi-shop__empty">
+          <span class="material-icons-round">{{ isSearching() ? 'search_off' : 'inventory_2' }}</span>
+          <h3>{{ isSearching() ? 'No results found' : 'No products yet' }}</h3>
+          <p>
+            @if (isSearching()) {
+              No products matched <strong>"{{ searchTerm() }}"</strong>. Try a different keyword or browse the full catalog.
+            } @else {
+              We haven't added anything to <strong>{{ heading() }}</strong> yet. Check back soon — new lots are added every harvest.
+            }
+          </p>
+          @if (isSearching()) {
+            <button type="button" class="gi-btn-inline gi-btn-inline--gold" (click)="clearSearch()">
+              Clear search
+            </button>
+          } @else {
+            <button type="button" class="gi-btn-inline gi-btn-inline--gold" (click)="navigateToCategory(null)">
+              Browse the full catalog
+            </button>
+          }
+        </div>
+      } @else {
+        <div class="gi-shop__grid">
+          @for (item of items(); track trackBySlug($index, item)) {
+            <a [routerLink]="['/products', item.slug]" class="gi-card" [attr.aria-label]="item.name">
+              <div class="gi-card__image">
+                @if (item.cardThumbnailUrl || item.primaryImageUrl) {
+                  <img [src]="item.cardThumbnailUrl || item.primaryImageUrl" [alt]="item.name" loading="lazy" />
+                } @else {
+                  <span class="material-icons-round gi-card__placeholder">image</span>
+                }
+                @if (!item.inStock) {
+                  <span class="gi-card__badge gi-card__badge--oos">Out of stock</span>
+                } @else if (item.discountPercent && +item.discountPercent > 0) {
+                  <span class="gi-card__badge gi-card__badge--sale">
+                    Save {{ +item.discountPercent | number: '1.0-0' }}%
+                  </span>
+                }
+              </div>
+              <div class="gi-card__body">
+                <p class="gi-card__cat">{{ item.category | titlecase }}</p>
+                <h3 class="gi-card__title">{{ item.name }}</h3>
+                @if (item.shortDescription) {
+                  <p class="gi-card__desc">{{ item.shortDescription }}</p>
+                }
+                <div class="gi-card__price">
+                  @if (+item.discountPercent > 0) {
+                    <span class="gi-card__price-strike">{{ formatPrice(item.currency, item.basePrice) }}</span>
+                  }
+                  <span class="gi-card__price-now">
+                    {{ formatPrice(item.currency, item.displayPrice) }}
+                  </span>
+                </div>
+              </div>
+            </a>
+          }
+        </div>
+
+        <!-- Pagination -->
+        @if (pageCount() > 1) {
+          <nav class="gi-shop__pager" aria-label="Pagination">
+            <button
+              type="button"
+              class="gi-shop__pager-btn"
+              [disabled]="!hasPrev()"
+              (click)="prevPage()">
+              <span class="material-icons-round">arrow_back</span>
+              <span>Previous</span>
+            </button>
+            <span class="gi-shop__pager-pos">
+              Page {{ page() + 1 }} of {{ pageCount() }}
+            </span>
+            <button
+              type="button"
+              class="gi-shop__pager-btn"
+              [disabled]="!hasNext()"
+              (click)="nextPage()">
+              <span>Next</span>
+              <span class="material-icons-round">arrow_forward</span>
+            </button>
+          </nav>
+        }
+      }
+    </div>
+  </div>
+</section>

@@ -1,0 +1,152 @@
+<section class="gi-products">
+  <header class="gi-products__header">
+    <div>
+      <h1>Product catalog</h1>
+      <p class="gi-products__lead">
+        Every product in the Gadaa Istar catalog. Create, edit, and archive
+        items; adjust pricing tiers and stock levels in the linked screens.
+      </p>
+    </div>
+    <a
+      class="gi-btn gi-btn--primary"
+      routerLink="/products/new">
+      <span class="material-icons-round">add</span>
+      New product
+    </a>
+  </header>
+
+  <!-- Filters -->
+  <div class="gi-products__filters">
+    <form class="gi-products__search" (submit)="submitSearch(); $event.preventDefault()">
+      <span class="material-icons-round">search</span>
+      <input
+        type="text"
+        placeholder="Search by SKU, name, or slug…"
+        [ngModel]="q()"
+        (ngModelChange)="q.set($event)"
+        name="q"
+        autocomplete="off" />
+      @if (q()) {
+        <button type="button" class="gi-products__search-clear" (click)="clearSearch()">
+          <span class="material-icons-round">close</span>
+        </button>
+      }
+    </form>
+
+    <div class="gi-products__chips" role="group" aria-label="Category filter">
+      @for (c of categories; track c.code) {
+        <button
+          type="button"
+          class="gi-products__chip"
+          [class.is-active]="category() === c.code"
+          (click)="applyFilter(c.code)">
+          {{ c.label }}
+        </button>
+      }
+    </div>
+
+    <div class="gi-products__status">
+      <label for="status-filter">Status</label>
+      <select
+        id="status-filter"
+        [ngModel]="status()"
+        (ngModelChange)="applyStatus($event)"
+        name="status">
+        @for (s of statuses; track s.code) {
+          <option [ngValue]="s.code">{{ s.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (errorMessage(); as msg) {
+    <div class="gi-products__banner" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+      <button type="button" class="gi-btn gi-btn--ghost" (click)="load()">Retry</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="gi-products__skeleton" aria-live="polite">Loading products…</div>
+  } @else if (items().length === 0) {
+    <div class="gi-products__empty">
+      <span class="material-icons-round">inventory_2</span>
+      <h3>No products match your filters</h3>
+      <p>Try clearing filters or check that the product exists in the database.</p>
+    </div>
+  } @else {
+    <div class="gi-products__table-wrap">
+      <table class="gi-products__table" role="table">
+        <thead>
+          <tr>
+            <th scope="col" class="gi-products__col-img"></th>
+            <th scope="col">Name</th>
+            <th scope="col">SKU</th>
+            <th scope="col">Category</th>
+            <th scope="col">Status</th>
+            <th scope="col" class="gi-products__col-num">Base price</th>
+            <th scope="col" class="gi-products__col-num">Available</th>
+            <th scope="col">Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of items(); track row.id) {
+            <tr [routerLink]="['/products', row.id]" class="gi-products__row">
+              <td class="gi-products__col-img">
+                @if (row.primaryImageUrl) {
+                  <img [src]="row.primaryImageUrl" [alt]="row.name" loading="lazy" />
+                } @else {
+                  <span class="material-icons-round gi-products__thumb-placeholder">image</span>
+                }
+              </td>
+              <td>
+                <div class="gi-products__name">{{ row.name }}</div>
+                <div class="gi-products__slug">/products/{{ row.slug }}</div>
+              </td>
+              <td><code>{{ row.sku }}</code></td>
+              <td>
+                <span class="gi-products__pill">{{ categoryLabels[row.category] }}</span>
+              </td>
+              <td>
+                <span
+                  class="gi-products__pill"
+                  [class.is-active]="row.status === 'ACTIVE'"
+                  [class.is-draft]="row.status === 'DRAFT'"
+                  [class.is-archived]="row.status === 'ARCHIVED'">
+                  {{ row.status }}
+                </span>
+              </td>
+              <td class="gi-products__col-num">
+                {{ formatPrice(row.baseCurrency, row.basePrice) }}
+              </td>
+              <td class="gi-products__col-num">
+                {{ row.available }}
+              </td>
+              <td class="gi-products__col-updated">
+                {{ row.updatedAt | date: 'MMM d, y' }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (pageCount() > 1) {
+      <nav class="gi-products__pager" aria-label="Pagination">
+        <button type="button" class="gi-btn gi-btn--ghost" [disabled]="!hasPrev()" (click)="prevPage()">
+          <span class="material-icons-round">arrow_back</span>
+          Previous
+        </button>
+        <span class="gi-products__pager-pos">
+          Page {{ page() + 1 }} of {{ pageCount() }} — {{ total() }} products
+        </span>
+        <button type="button" class="gi-btn gi-btn--ghost" [disabled]="!hasNext()" (click)="nextPage()">
+          Next
+          <span class="material-icons-round">arrow_forward</span>
+        </button>
+      </nav>
+    }
+  }
+
+</section>

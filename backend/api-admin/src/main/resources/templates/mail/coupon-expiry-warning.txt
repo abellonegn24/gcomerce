@@ -1,0 +1,17 @@
+Gadaa Istar Admin — Coupon Expiry Warning
+
+The following {couponCount} active coupon(s) will expire within the next
+{warningDays} days. Review and extend or deactivate them as needed.
+
+{#for c in coupons}
+  Code:       {c.code}
+  Discount:   {c.discount}
+  Redeemed:   {c.redeemedCount}
+  Expires:    {c.expiresAt}
+{/for}
+
+Manage coupons: {adminLink}
+
+--
+Gadaa Istar Business Group S.C. · Addis Ababa, Ethiopia
+This is an automated message — please do not reply.

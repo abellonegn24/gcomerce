@@ -1,0 +1,47 @@
+/*
+ * api-admin — the admin-facing REST API.
+ * Second Quarkus runtime module in the monorepo, exposed on port 8081.
+ *
+ * Shares JWT / filters / exception mapper with api-storefront via :web-common,
+ * scanned at build time through `quarkus.index-dependency.web-common.*` in
+ * this module's application.properties.
+ */
+
+plugins {
+    id 'io.quarkus'
+}
+
+description = 'Admin-facing REST API (Quarkus runtime)'
+
+dependencies {
+    implementation project(':common')
+    implementation project(':persistence')
+    implementation project(':web-common')
+
+    implementation 'io.quarkus:quarkus-resteasy-reactive'
+    implementation 'io.quarkus:quarkus-resteasy-reactive-jackson'
+    implementation 'io.quarkus:quarkus-smallrye-openapi'
+    implementation 'io.quarkus:quarkus-smallrye-health'
+    implementation 'io.quarkus:quarkus-micrometer-registry-prometheus'
+    implementation 'io.quarkus:quarkus-mailer'
+    implementation 'io.quarkus:quarkus-scheduler'
+    implementation 'io.quarkus:quarkus-cache'
+    implementation 'io.quarkus:quarkus-config-yaml'
+
+    implementation "at.favre.lib:bcrypt:${bcryptVersion}"
+    implementation 'commons-codec:commons-codec:1.17.1'
+
+    // MinIO Java SDK — S3-compatible client used for product media uploads.
+    // Bucket lives inside the MinIO container in dev and inside AWS S3 (or
+    // Wasabi / Cloudflare R2, both S3-compatible) in prod.
+    implementation 'io.minio:minio:8.5.11'
+
+    // Thumbnailator — simple, dependency-free image resizing for generating
+    // product card (300px) and detail (800px) variants on upload.
+    implementation 'net.coobird:thumbnailator:0.4.20'
+
+    testImplementation 'io.quarkus:quarkus-junit5'
+    testImplementation 'io.rest-assured:rest-assured'
+    testImplementation 'org.testcontainers:postgresql:1.20.3'
+    testImplementation 'org.testcontainers:junit-jupiter:1.20.3'
+}

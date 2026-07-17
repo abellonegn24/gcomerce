@@ -1,0 +1,34 @@
+/*
+ * persistence — JPA entities, Panache repositories, and Flyway migrations.
+ * Depends on Quarkus Hibernate ORM + PostgreSQL driver.
+ *
+ * The Flyway Gradle plugin is wired here so `./gradlew :persistence:flywayMigrate`
+ * (and flywayValidate / flywayInfo / flywayClean) work from the CLI and CI.
+ * At runtime Quarkus's own flyway extension still manages migration ordering;
+ * this plugin is for CI validation and developer convenience.
+ */
+
+plugins {
+    id 'org.flywaydb.flyway' version "${flywayVersion}"
+}
+
+apply plugin: 'java-library'
+
+description = 'JPA entities, Panache repositories, Flyway migrations'
+
+dependencies {
+    api project(':common')
+    api 'io.quarkus:quarkus-hibernate-orm-panache'
+    api 'io.quarkus:quarkus-hibernate-validator'
+    runtimeOnly 'io.quarkus:quarkus-jdbc-postgresql'
+    api 'io.quarkus:quarkus-flyway'
+    runtimeOnly "org.flywaydb:flyway-database-postgresql:${flywayVersion}"
+}
+
+flyway {
+    url = System.getenv('QUARKUS_DATASOURCE_URL') ?: 'jdbc:postgresql://localhost:5432/GCOMERCE'
+    user = System.getenv('QUARKUS_DATASOURCE_USERNAME') ?: 'gadaa'
+    password = System.getenv('QUARKUS_DATASOURCE_PASSWORD') ?: 'gadaa'
+    locations = ['filesystem:src/main/resources/db/migration']
+    cleanDisabled = true
+}

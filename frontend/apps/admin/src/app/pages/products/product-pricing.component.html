@@ -1,0 +1,141 @@
+<section class="gi-pricing">
+  @if (successMessage(); as msg) {
+    <div class="gi-pricing__banner gi-pricing__banner--success" role="status">
+      <span class="material-icons-round">check_circle</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+  @if (errorMessage(); as msg) {
+    <div class="gi-pricing__banner gi-pricing__banner--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="gi-pricing__skeleton" aria-live="polite">Loading price tiers…</div>
+  } @else if (!hasAnyList()) {
+    <div class="gi-pricing__empty">
+      <span class="material-icons-round">sell</span>
+      <h3>No price lists yet</h3>
+      <p>
+        Wholesale tier pricing lives inside price lists. Create at least one
+        price list first, then come back here to add per-product tiers.
+      </p>
+      <a routerLink="/price-lists" class="gi-btn gi-btn--gold">
+        <span class="material-icons-round">add</span>
+        Manage price lists
+      </a>
+    </div>
+  } @else {
+    <div class="gi-pricing__grid">
+      <!-- Existing tiers per price list -->
+      <section class="gi-pricing__panel">
+        <h3>Existing tiers</h3>
+        @if (rows().length === 0) {
+          <p class="gi-pricing__hint">
+            This product has no explicit price-list entries yet. Customers fall
+            back to the product's base price.
+          </p>
+        } @else {
+          <div class="gi-pricing__lists">
+            @for (row of rows(); track row.priceList.id) {
+              <article class="gi-pricing__list">
+                <header>
+                  <div>
+                    <strong>{{ row.priceList.name }}</strong>
+                    <span class="gi-pricing__list-meta">
+                      {{ row.priceList.customerGroupCode }} · {{ row.priceList.currency }}
+                      @if (!row.priceList.active) {
+                        <span class="gi-pricing__flag">INACTIVE</span>
+                      }
+                    </span>
+                  </div>
+                </header>
+                <table class="gi-pricing__table">
+                  <thead>
+                    <tr>
+                      <th scope="col" class="gi-pricing__col-num">Min qty</th>
+                      <th scope="col" class="gi-pricing__col-num">Unit price</th>
+                      <th scope="col" class="gi-pricing__col-actions"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (e of row.entries; track e.id) {
+                      <tr>
+                        <td class="gi-pricing__col-num">{{ e.minQuantity }}+</td>
+                        <td class="gi-pricing__col-num">{{ formatPrice(row.priceList.currency, e.price) }}</td>
+                        <td class="gi-pricing__col-actions">
+                          <button
+                            type="button"
+                            class="gi-btn gi-btn--danger"
+                            [disabled]="saving()"
+                            (click)="removeEntry(row, e)">
+                            <span class="material-icons-round">delete_outline</span>
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </article>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Add / upsert tier -->
+      <section class="gi-pricing__panel">
+        <h3>Add / update tier</h3>
+        <p class="gi-pricing__hint">
+          Submitting a tier with an existing min-quantity replaces its price.
+          Use small min-quantities for retail lists and larger ones for
+          wholesale tiers.
+        </p>
+        <form class="gi-pricing__form" [formGroup]="form" (ngSubmit)="submitEntry()">
+          <label class="gi-field">
+            <span class="gi-field__label">Price list <span class="gi-req">*</span></span>
+            <select formControlName="priceListId">
+              <option [ngValue]="null">— Choose —</option>
+              @for (pl of priceLists(); track pl.id) {
+                <option [ngValue]="pl.id">
+                  {{ pl.name }} ({{ pl.customerGroupCode }} · {{ pl.currency }})
+                </option>
+              }
+            </select>
+          </label>
+
+          <label class="gi-field">
+            <span class="gi-field__label">Minimum quantity <span class="gi-req">*</span></span>
+            <input type="text" formControlName="minQuantity" placeholder="1" />
+            @if (form.controls.minQuantity.touched && form.controls.minQuantity.invalid) {
+              <span class="gi-field__error">Positive decimal (up to 3 decimal places).</span>
+            }
+          </label>
+
+          <label class="gi-field">
+            <span class="gi-field__label">Unit price <span class="gi-req">*</span></span>
+            <input type="text" formControlName="price" placeholder="15.5000" />
+            @if (form.controls.price.touched && form.controls.price.invalid) {
+              <span class="gi-field__error">Positive decimal (up to 4 decimal places).</span>
+            }
+          </label>
+
+          <button
+            type="submit"
+            class="gi-btn gi-btn--gold"
+            [disabled]="saving() || form.invalid">
+            @if (saving()) {
+              <span class="material-icons-round gi-spin">progress_activity</span>
+              Saving…
+            } @else {
+              <span class="material-icons-round">save</span>
+              Save tier
+            }
+          </button>
+        </form>
+      </section>
+    </div>
+  }
+</section>

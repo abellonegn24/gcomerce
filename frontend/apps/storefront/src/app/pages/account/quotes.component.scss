@@ -1,0 +1,120 @@
+.gi-quotes {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.gi-quotes__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+
+  h2 { margin: 0; font-size: 1.15rem; }
+}
+
+.gi-quotes__count {
+  color: var(--gi-text-secondary);
+  font-size: 0.85rem;
+}
+
+.gi-quotes__loading {
+  display: flex; gap: 0.5rem; align-items: center;
+  color: var(--gi-text-secondary);
+  padding: 1rem 0;
+}
+
+.gi-spin { animation: gi-spin 1s linear infinite; }
+@keyframes gi-spin { to { transform: rotate(360deg); } }
+
+.gi-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  border: 1px dashed var(--gi-border);
+  border-radius: var(--gi-radius-lg);
+  background: var(--gi-cream-50);
+
+  .material-icons-round { font-size: 2.5rem; color: var(--gi-gold-600); }
+  h3 { margin: 0.5rem 0 0.35rem; }
+  p  { color: var(--gi-text-secondary); margin: 0 0 1.25rem; }
+}
+
+.gi-quotes__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.gi-quotes__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  background: #fff;
+  border: 1px solid var(--gi-border);
+  border-radius: var(--gi-radius-md);
+  text-decoration: none;
+  color: var(--gi-navy-900);
+  transition: border-color var(--gi-transition), background var(--gi-transition);
+
+  &:hover {
+    border-color: var(--gi-navy-700);
+    background: rgba(44, 83, 145, 0.02);
+  }
+}
+
+.gi-quotes__row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.gi-quotes__id {
+  font-weight: 600;
+  font-family: var(--gi-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+}
+
+.gi-quotes__meta {
+  color: var(--gi-text-secondary);
+  font-size: 0.82rem;
+}
+
+.gi-quotes__row-side {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  strong { font-variant-numeric: tabular-nums; }
+}
+
+.gi-quotes__status {
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: var(--gi-cream-100);
+  color: var(--gi-navy-900);
+
+  &.is-ok        { background: rgba(46, 160, 67, 0.15); color: #256029; }
+  &.is-done      { background: rgba(44, 83, 145, 0.15); color: var(--gi-navy-700); }
+  &.is-pending   { background: rgba(190, 138, 43, 0.15); color: var(--gi-gold-700); }
+  &.is-info      { background: rgba(30, 136, 229, 0.15); color: #1565c0; }
+  &.is-cancelled { background: rgba(201, 51, 39, 0.1); color: var(--gi-red-600); }
+}
+
+.gi-quotes__chevron {
+  color: var(--gi-text-secondary);
+}
+
+.gi-quotes__more {
+  align-self: center;
+  margin-top: 0.5rem;
+}

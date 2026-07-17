@@ -1,0 +1,320 @@
+<section class="gi-cust">
+  <nav class="gi-cust__crumbs" aria-label="Breadcrumb">
+    <a routerLink="/customers">
+      <span class="material-icons-round">arrow_back</span>
+      Back to customers
+    </a>
+  </nav>
+
+  @if (loading()) {
+    <div class="gi-cust__skeleton" aria-live="polite">Loading customer…</div>
+  } @else if (errorMessage() && !customer()) {
+    <div class="gi-cust__banner gi-cust__banner--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  } @else if (customer(); as c) {
+    @if (successMessage(); as msg) {
+      <div class="gi-cust__banner gi-cust__banner--success" role="status">
+        <span class="material-icons-round">check_circle</span>
+        <span>{{ msg }}</span>
+      </div>
+    }
+    @if (errorMessage(); as msg) {
+      <div class="gi-cust__banner gi-cust__banner--error" role="alert">
+        <span class="material-icons-round">error_outline</span>
+        <span>{{ msg }}</span>
+      </div>
+    }
+
+    <header class="gi-cust__head">
+      <div>
+        <p class="gi-cust__eyebrow">Customer</p>
+        <h1>
+          @if (c.customerType === 'B2B' && c.companyName) {
+            {{ c.companyName }}
+          } @else {
+            {{ (c.firstName || '') + ' ' + (c.lastName || '') | slice: 0 }}
+            @if (!c.firstName && !c.lastName) { {{ c.email }} }
+          }
+        </h1>
+        <p class="gi-cust__sub">
+          <a class="gi-cust__email" [href]="'mailto:' + c.email">{{ c.email }}</a>
+          @if (c.phone) { · <span>{{ c.phone }}</span> }
+          @if (!c.emailVerified) {
+            <span class="gi-cust__flag" title="Email not verified">UNVERIFIED</span>
+          }
+        </p>
+      </div>
+      <div class="gi-cust__head-tags">
+        <span class="gi-cust__type" [class.is-b2b]="c.customerType === 'B2B'">
+          {{ c.customerType }}
+        </span>
+        <span class="gi-cust__pill"
+              [class.is-ok]="statusVariant(c.status) === 'ok'"
+              [class.is-pending]="statusVariant(c.status) === 'pending'"
+              [class.is-warn]="statusVariant(c.status) === 'warn'"
+              [class.is-off]="statusVariant(c.status) === 'off'">
+          {{ statusLabels[c.status] }}
+        </span>
+      </div>
+    </header>
+
+    <div class="gi-cust__grid">
+      <!-- LEFT column: identity + business + addresses -->
+      <div class="gi-cust__left">
+        <section class="gi-cust__card">
+          <h3>Identity</h3>
+          <dl class="gi-cust__dl">
+            <div>
+              <dt>Customer ID</dt>
+              <dd><code>{{ c.id }}</code></dd>
+            </div>
+            <div>
+              <dt>Signed up</dt>
+              <dd>{{ c.createdAt | date: 'MMM d, y, h:mm a' }}</dd>
+            </div>
+            <div>
+              <dt>Last login</dt>
+              <dd>
+                @if (c.lastLoginAt) {
+                  {{ c.lastLoginAt | date: 'MMM d, y, h:mm a' }}
+                } @else {
+                  <span class="gi-cust__muted">Never</span>
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Email verified</dt>
+              <dd>
+                @if (c.emailVerifiedAt) {
+                  {{ c.emailVerifiedAt | date: 'MMM d, y' }}
+                } @else {
+                  <span class="gi-cust__muted">Not verified</span>
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Preferred currency</dt>
+              <dd>{{ c.preferredCurrency }}</dd>
+            </div>
+            <div>
+              <dt>Preferred locale</dt>
+              <dd>{{ c.preferredLocale }}</dd>
+            </div>
+            <div>
+              <dt>Orders placed</dt>
+              <dd>{{ c.orderCount }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        @if (c.customerType === 'B2B') {
+          <section class="gi-cust__card">
+            <h3>Business profile</h3>
+            <dl class="gi-cust__dl">
+              <div>
+                <dt>Company name</dt>
+                <dd>
+                  @if (c.companyName) { {{ c.companyName }} }
+                  @else { <span class="gi-cust__muted">Not provided</span> }
+                </dd>
+              </div>
+              <div>
+                <dt>Contact</dt>
+                <dd>
+                  @if (c.firstName || c.lastName) {
+                    {{ (c.firstName || '') + ' ' + (c.lastName || '') }}
+                  } @else { <span class="gi-cust__muted">—</span> }
+                </dd>
+              </div>
+              <div>
+                <dt>TIN</dt>
+                <dd>
+                  @if (c.companyTin) { <code>{{ c.companyTin }}</code> }
+                  @else { <span class="gi-cust__muted">—</span> }
+                </dd>
+              </div>
+              <div>
+                <dt>VAT #</dt>
+                <dd>
+                  @if (c.companyVatNumber) { <code>{{ c.companyVatNumber }}</code> }
+                  @else { <span class="gi-cust__muted">—</span> }
+                </dd>
+              </div>
+              <div class="gi-cust__dl-wide">
+                <dt>Business licence</dt>
+                <dd>
+                  @if (c.businessLicenseUrl) {
+                    <a [href]="c.businessLicenseUrl" target="_blank" rel="noopener noreferrer">
+                      Open licence file
+                      <span class="material-icons-round">open_in_new</span>
+                    </a>
+                  } @else {
+                    <span class="gi-cust__muted">Not uploaded</span>
+                  }
+                </dd>
+              </div>
+            </dl>
+          </section>
+        }
+
+        <section class="gi-cust__card">
+          <h3>Addresses <span class="gi-cust__count">({{ c.addresses.length }})</span></h3>
+          @if (c.addresses.length === 0) {
+            <p class="gi-cust__muted">No addresses on file yet.</p>
+          } @else {
+            <ul class="gi-cust__addresses">
+              @for (a of c.addresses; track a.id) {
+                <li class="gi-cust__address" [class.is-default]="a.isDefault">
+                  <div class="gi-cust__address-head">
+                    <strong>{{ a.fullName || (c.firstName || '') + ' ' + (c.lastName || '') }}</strong>
+                    <span class="gi-cust__address-tags">
+                      <span class="gi-cust__tag">{{ a.addressType }}</span>
+                      @if (a.isDefault) { <span class="gi-cust__tag gi-cust__tag--gold">DEFAULT</span> }
+                    </span>
+                  </div>
+                  @if (a.company) { <div>{{ a.company }}</div> }
+                  <div>{{ a.streetLine1 }}</div>
+                  @if (a.streetLine2) { <div>{{ a.streetLine2 }}</div> }
+                  <div>
+                    {{ a.city }}
+                    @if (a.region) { , {{ a.region }} }
+                    @if (a.postalCode) { {{ a.postalCode }} }
+                  </div>
+                  <div>{{ a.countryCode }}</div>
+                  @if (a.phone) { <div class="gi-cust__muted">Tel: {{ a.phone }}</div> }
+                </li>
+              }
+            </ul>
+          }
+        </section>
+      </div>
+
+      <!-- RIGHT column: admin actions -->
+      <aside class="gi-cust__actions">
+        @if (canApproveB2B()) {
+          <section class="gi-cust__card gi-cust__card--highlight">
+            <h3>B2B pending approval</h3>
+            <p class="gi-cust__hint">
+              Verify the business licence out-of-band, then approve to flip
+              this account to ACTIVE.
+            </p>
+            <button type="button" class="gi-btn gi-btn--gold" [disabled]="busy()" (click)="approveB2B()">
+              @if (busy()) {
+                <span class="material-icons-round gi-spin">progress_activity</span> Working…
+              } @else {
+                <span class="material-icons-round">verified</span> Approve B2B
+              }
+            </button>
+          </section>
+        }
+
+        <section class="gi-cust__card">
+          <h3>Move status</h3>
+          @if (isTerminal()) {
+            <p class="gi-cust__hint">
+              This customer is <strong>{{ statusLabels[c.status] }}</strong>. No further
+              status transitions are allowed from the admin console.
+            </p>
+          } @else {
+            <label class="gi-field">
+              <span class="gi-field__label">Target status</span>
+              <select
+                [ngModel]="targetStatus()"
+                (ngModelChange)="targetStatus.set($event)"
+                [ngModelOptions]="{ standalone: true }">
+                <option value="">— Choose —</option>
+                @for (s of c.allowedNextStatuses; track s) {
+                  <option [ngValue]="s">{{ statusLabels[s] }}</option>
+                }
+              </select>
+            </label>
+
+            <label class="gi-field">
+              <span class="gi-field__label">Reason (optional, kept in the audit log)</span>
+              <textarea
+                rows="3"
+                [ngModel]="statusReason()"
+                (ngModelChange)="statusReason.set($event)"
+                [ngModelOptions]="{ standalone: true }"
+                placeholder="Chargeback investigation, customer request, fraud signal, …"></textarea>
+            </label>
+
+            <button
+              type="button"
+              class="gi-btn gi-btn--gold"
+              [disabled]="busy() || !targetStatus()"
+              (click)="submitStatusChange()">
+              @if (busy()) {
+                <span class="material-icons-round gi-spin">progress_activity</span> Applying…
+              } @else {
+                <span class="material-icons-round">swap_horiz</span> Apply
+              }
+            </button>
+          }
+        </section>
+
+        <section class="gi-cust__card">
+          <h3>Customer group</h3>
+          <p class="gi-cust__hint">
+            Controls which price list this customer sees on the storefront.
+            Leave blank for base pricing.
+          </p>
+          <label class="gi-field">
+            <span class="gi-field__label">Group</span>
+            <select
+              [ngModel]="targetGroupId()"
+              (ngModelChange)="targetGroupId.set($event)"
+              [ngModelOptions]="{ standalone: true }">
+              <option [ngValue]="null">— No group (base pricing) —</option>
+              @for (g of groups(); track g.id) {
+                <option [ngValue]="g.id">{{ g.name }} ({{ g.code }})</option>
+              }
+            </select>
+          </label>
+          <button
+            type="button"
+            class="gi-btn gi-btn--ghost"
+            [disabled]="busy()"
+            (click)="saveGroup()">
+            <span class="material-icons-round">save</span> Save group
+          </button>
+        </section>
+
+        <section class="gi-cust__card">
+          <h3>Advanced</h3>
+
+          @if (!c.emailVerified) {
+            <button
+              type="button"
+              class="gi-btn gi-btn--ghost gi-cust__stack-btn"
+              [disabled]="busy()"
+              (click)="verifyEmail()">
+              <span class="material-icons-round">mark_email_read</span>
+              Force email as verified
+            </button>
+          }
+
+          <button
+            type="button"
+            class="gi-btn gi-btn--ghost gi-cust__stack-btn"
+            [disabled]="busy()"
+            (click)="sendPasswordReset()">
+            <span class="material-icons-round">lock_reset</span>
+            Send password-reset email
+          </button>
+
+          <button
+            type="button"
+            class="gi-btn gi-btn--danger gi-cust__stack-btn"
+            [disabled]="busy()"
+            (click)="revokeSessions()">
+            <span class="material-icons-round">logout</span>
+            Revoke all sessions
+          </button>
+        </section>
+      </aside>
+    </div>
+  }
+</section>

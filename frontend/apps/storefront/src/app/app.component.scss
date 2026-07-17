@@ -1,0 +1,389 @@
+// =============================================================================
+// Storefront shell layout
+// =============================================================================
+
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+// -----------------------------------------------------------------------------
+// Header
+// -----------------------------------------------------------------------------
+.gi-header {
+  background: var(--gi-navy-900);
+  color: var(--gi-text-inverse);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--gi-shadow-md);
+}
+
+.gi-header__inner {
+  max-width: var(--gi-content-max);
+  margin: 0 auto;
+  padding: 0.75rem 1.5rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 2rem;
+}
+
+// -----------------------------------------------------------------------------
+// Brand mark
+// -----------------------------------------------------------------------------
+.gi-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.gi-brand__mark {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--gi-navy-700);
+  border: 2px solid var(--gi-navy-500);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gi-red-500);
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.gi-brand__arrow { transform: rotate(-15deg); }
+
+.gi-brand__star {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  color: var(--gi-gold-500);
+  font-size: 0.85rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.gi-brand__wordmark {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+
+.gi-brand__name {
+  font-family: var(--gi-font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.06em;
+  color: #fff;
+}
+
+.gi-brand__tagline {
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  color: var(--gi-red-500);
+  text-transform: uppercase;
+}
+
+// -----------------------------------------------------------------------------
+// Nav
+// -----------------------------------------------------------------------------
+.gi-nav {
+  display: flex;
+  gap: 1.25rem;
+  justify-content: center;
+
+  a {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.92rem;
+    padding: 0.35rem 0;
+    position: relative;
+    transition: color var(--gi-transition);
+  }
+
+  a::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -4px;
+    width: 0;
+    height: 2px;
+    background: var(--gi-gold-500);
+    transform: translateX(-50%);
+    transition: width var(--gi-transition);
+  }
+
+  a:hover {
+    color: #fff;
+  }
+
+  a:hover::after {
+    width: 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  .gi-nav { display: none; }
+  .gi-header__search { display: none; }
+  .gi-header__inner { grid-template-columns: auto auto; }
+}
+
+// -----------------------------------------------------------------------------
+// Header search bar
+// -----------------------------------------------------------------------------
+.gi-header__search {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--gi-radius-sm);
+  padding: 0.3rem 0.6rem;
+  transition: border-color var(--gi-transition), background var(--gi-transition);
+
+  &:focus-within {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--gi-gold-500);
+  }
+}
+
+.gi-header__search-icon {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+}
+
+.gi-header__search-input {
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: #fff;
+  font-size: 0.85rem;
+  width: 160px;
+  padding: 0;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  &::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Header actions
+// -----------------------------------------------------------------------------
+.gi-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gi-currency {
+  display: inline-flex;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--gi-radius-sm);
+  overflow: hidden;
+  margin-right: 0.5rem;
+}
+
+.gi-currency__btn {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  border: 0;
+  padding: 0.3rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--gi-transition), color var(--gi-transition);
+
+  &:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &.is-active {
+    background: var(--gi-gold-500);
+    color: var(--gi-navy-900);
+  }
+}
+
+.gi-icon-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  transition: background var(--gi-transition);
+
+  &:hover { background: rgba(255, 255, 255, 0.08); }
+}
+
+.gi-icon-btn__badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--gi-red-600);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &--wishlist {
+    background: var(--gi-gold-500);
+    color: #fff;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Auth affordances in the header
+// -----------------------------------------------------------------------------
+.gi-btn-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--gi-radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--gi-transition), color var(--gi-transition),
+              border-color var(--gi-transition);
+
+  &--ghost {
+    color: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  &--ghost:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  &--gold {
+    background: var(--gi-gold-500);
+    color: var(--gi-navy-900);
+  }
+  &--gold:hover {
+    background: var(--gi-gold-300);
+  }
+}
+
+.gi-account-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.85rem;
+  max-width: 220px;
+  text-decoration: none;
+
+  .material-icons-round { font-size: 1rem; }
+  &:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+  }
+}
+
+.gi-account-chip__name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+// -----------------------------------------------------------------------------
+// Main / footer
+// -----------------------------------------------------------------------------
+.gi-main {
+  flex: 1 0 auto;
+  width: 100%;
+  background: var(--gi-bg-page);
+}
+
+.gi-footer {
+  background: var(--gi-espresso-900);
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 4rem;
+}
+
+.gi-footer__inner {
+  max-width: var(--gi-content-max);
+  margin: 0 auto;
+  padding: 3rem 1.5rem 2rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+
+  h4 {
+    color: var(--gi-gold-500);
+    font-family: var(--gi-font-display);
+    font-size: 1.05rem;
+    margin: 0 0 0.75rem 0;
+  }
+
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { margin-bottom: 0.4rem; }
+  a { color: rgba(255, 255, 255, 0.85); font-size: 0.92rem; }
+  a:hover { color: var(--gi-gold-500); }
+
+  p { font-size: 0.9rem; line-height: 1.5; margin: 0 0 0.5rem 0; }
+}
+
+@media (max-width: 800px) {
+  .gi-footer__inner {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.gi-footer__motto {
+  font-style: italic;
+  color: var(--gi-gold-300);
+  font-size: 0.85rem;
+}
+
+.gi-footer__bottom {
+  max-width: var(--gi-content-max);
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.gi-footer__pay {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.gi-pay-badge {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--gi-radius-sm);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}

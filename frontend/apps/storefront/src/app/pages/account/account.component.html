@@ -1,0 +1,33 @@
+<section class="gi-account-portal">
+  <header class="gi-account-portal__header">
+    <div>
+      <p class="gi-account-portal__eyebrow">Your account</p>
+      <h1>
+        Welcome back,
+        <span>{{ customer()?.firstName || customer()?.companyName || customer()?.email }}</span>
+      </h1>
+      <p class="gi-account-portal__lead">
+        Manage your profile, shipping addresses, and order history.
+      </p>
+    </div>
+  </header>
+
+  <div class="gi-account-portal__body">
+    <aside class="gi-account-portal__tabs" aria-label="Account sections">
+      @for (t of tabs; track t.path) {
+        <a
+          [routerLink]="t.path"
+          routerLinkActive="is-active"
+          [routerLinkActiveOptions]="{ exact: t.exact }"
+          class="gi-account-portal__tab">
+          <span class="material-icons-round">{{ t.icon }}</span>
+          <span>{{ t.label }}</span>
+        </a>
+      }
+    </aside>
+
+    <div class="gi-account-portal__content">
+      <router-outlet />
+    </div>
+  </div>
+</section>

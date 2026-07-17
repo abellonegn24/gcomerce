@@ -1,0 +1,125 @@
+<section class="gi-orders">
+  <header class="gi-orders__header">
+    <div>
+      <h1>Orders</h1>
+      <p class="gi-orders__lead">
+        Every placed order across the storefront. Filter by status or search
+        by invoice number, customer email, or company name.
+      </p>
+    </div>
+  </header>
+
+  <!-- Filters -->
+  <div class="gi-orders__filters">
+    <form class="gi-orders__search" (submit)="submitSearch(); $event.preventDefault()">
+      <span class="material-icons-round">search</span>
+      <input
+        type="text"
+        placeholder="Search by invoice number, email, or company…"
+        [ngModel]="q()"
+        (ngModelChange)="q.set($event)"
+        name="q"
+        autocomplete="off" />
+      @if (q()) {
+        <button type="button" class="gi-orders__search-clear" (click)="clearSearch()">
+          <span class="material-icons-round">close</span>
+        </button>
+      }
+    </form>
+
+    <div class="gi-orders__status">
+      <label for="status-filter">Status</label>
+      <select
+        id="status-filter"
+        [ngModel]="status()"
+        (ngModelChange)="applyStatus($event)"
+        name="status">
+        @for (s of statuses; track s.code) {
+          <option [ngValue]="s.code">{{ s.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (errorMessage(); as msg) {
+    <div class="gi-orders__banner" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+      <button type="button" class="gi-btn gi-btn--ghost" (click)="load()">Retry</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="gi-orders__skeleton" aria-live="polite">Loading orders…</div>
+  } @else if (items().length === 0) {
+    <div class="gi-orders__empty">
+      <span class="material-icons-round">receipt_long</span>
+      <h3>No orders match your filters</h3>
+      <p>Try clearing filters or check back once customers have placed orders.</p>
+    </div>
+  } @else {
+    <div class="gi-orders__table-wrap">
+      <table class="gi-orders__table" role="table">
+        <thead>
+          <tr>
+            <th scope="col">Invoice</th>
+            <th scope="col">Customer</th>
+            <th scope="col" class="gi-orders__col-num">Items</th>
+            <th scope="col">Status</th>
+            <th scope="col" class="gi-orders__col-num">Total</th>
+            <th scope="col">Placed</th>
+            <th scope="col" class="gi-orders__col-actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of items(); track row.uuid) {
+            <tr [routerLink]="['/orders', row.uuid]" class="gi-orders__row">
+              <td>
+                <code>{{ row.invoiceNumber }}</code>
+              </td>
+              <td>
+                <div class="gi-orders__customer">
+                  <span class="gi-orders__customer-name">
+                    {{ row.customerName || row.customerEmail }}
+                  </span>
+                  @if (row.customerName) {
+                    <span class="gi-orders__customer-email">{{ row.customerEmail }}</span>
+                  }
+                </div>
+              </td>
+              <td class="gi-orders__col-num">{{ row.itemCount }}</td>
+              <td>
+                <span class="gi-orders__pill" [class]="'is-' + statusVariant(row.status)">
+                  {{ row.status }}
+                </span>
+              </td>
+              <td class="gi-orders__col-num">
+                {{ formatMoney(row.currency, row.grandTotal) }}
+              </td>
+              <td>{{ row.placedAt | date: 'MMM d, y, h:mm a' }}</td>
+              <td class="gi-orders__col-actions">
+                <span class="material-icons-round">chevron_right</span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (pageCount() > 1) {
+      <nav class="gi-orders__pager" aria-label="Pagination">
+        <button type="button" class="gi-btn gi-btn--ghost" [disabled]="!hasPrev()" (click)="prevPage()">
+          <span class="material-icons-round">arrow_back</span>
+          Previous
+        </button>
+        <span class="gi-orders__pager-pos">
+          Page {{ page() + 1 }} of {{ pageCount() }} — {{ total() }} orders
+        </span>
+        <button type="button" class="gi-btn gi-btn--ghost" [disabled]="!hasNext()" (click)="nextPage()">
+          Next
+          <span class="material-icons-round">arrow_forward</span>
+        </button>
+      </nav>
+    }
+  }
+</section>

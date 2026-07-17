@@ -1,0 +1,127 @@
+<header class="gi-header">
+  <div class="gi-header__inner">
+    <a routerLink="/" class="gi-brand" aria-label="Gadaa Istar — Home">
+      <span class="gi-brand__mark" aria-hidden="true">
+        <span class="gi-brand__star">★</span>
+        <span class="gi-brand__arrow">↗</span>
+      </span>
+      <span class="gi-brand__wordmark">
+        <span class="gi-brand__name">GADAA ISTAR</span>
+        <span class="gi-brand__tagline">Business Group S.C.</span>
+      </span>
+    </a>
+
+    <nav class="gi-nav" aria-label="Primary">
+      @for (cat of categories; track cat.slug) {
+        <a [routerLink]="['/shop', cat.slug]">{{ cat.label }}</a>
+      }
+      <a routerLink="/wholesale">Wholesale</a>
+      <a routerLink="/about">Our Story</a>
+      <a routerLink="/contact">Contact</a>
+      <a routerLink="/track-order">Track Order</a>
+    </nav>
+
+    <div class="gi-header__search">
+      <span class="material-icons-round gi-header__search-icon">search</span>
+      <input
+        type="search"
+        class="gi-header__search-input"
+        placeholder="Search products…"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+        (keydown.enter)="submitSearch()"
+        aria-label="Search products" />
+    </div>
+
+    <div class="gi-header__actions">
+      <gi-language-switcher />
+      <div class="gi-currency" role="group" aria-label="Currency">
+        @for (c of ['USD', 'EUR', 'GBP']; track c) {
+          <button
+            type="button"
+            class="gi-currency__btn"
+            [class.is-active]="currency() === c"
+            (click)="setCurrency($any(c))">
+            {{ c }}
+          </button>
+        }
+      </div>
+      @if (isAuthenticated()) {
+        <a routerLink="/account" class="gi-account-chip" [attr.aria-label]="'Signed in as ' + greetingName()">
+          <span class="material-icons-round">person_outline</span>
+          <span class="gi-account-chip__name">{{ greetingName() }}</span>
+        </a>
+        <button type="button" class="gi-icon-btn" (click)="signOut()" aria-label="Sign out">
+          <span class="material-icons-round">logout</span>
+        </button>
+      } @else {
+        <a routerLink="/login" class="gi-btn-inline gi-btn-inline--ghost">Sign in</a>
+        <a routerLink="/register" class="gi-btn-inline gi-btn-inline--gold">Sign up</a>
+      }
+      <a routerLink="/wishlist" class="gi-icon-btn gi-icon-btn--wishlist" aria-label="Wishlist">
+        <span class="material-icons-round">favorite_border</span>
+        @if (wishlistCount() > 0) {
+          <span class="gi-icon-btn__badge gi-icon-btn__badge--wishlist">{{ wishlistCount() }}</span>
+        }
+      </a>
+      <a routerLink="/cart" class="gi-icon-btn gi-icon-btn--cart" aria-label="Cart">
+        <span class="material-icons-round">shopping_bag</span>
+        @if (cartCount() > 0) {
+          <span class="gi-icon-btn__badge">{{ cartCount() }}</span>
+        }
+      </a>
+    </div>
+  </div>
+</header>
+
+<main class="gi-main">
+  <router-outlet />
+</main>
+
+<footer class="gi-footer">
+  <div class="gi-footer__inner">
+    <div class="gi-footer__col">
+      <h4>Gadaa Istar</h4>
+      <p>Direct-from-origin Ethiopian coffee, honey, and spices for the world.</p>
+      <p class="gi-footer__motto">
+        <em>"We are in you, you are in us."</em>
+      </p>
+    </div>
+    <div class="gi-footer__col">
+      <h4>Shop</h4>
+      <ul>
+        @for (cat of categories; track cat.slug) {
+          <li><a [routerLink]="['/shop', cat.slug]">{{ cat.label }}</a></li>
+        }
+      </ul>
+    </div>
+    <div class="gi-footer__col">
+      <h4>Company</h4>
+      <ul>
+        <li><a routerLink="/about">About</a></li>
+        <li><a routerLink="/wholesale">Wholesale &amp; Export</a></li>
+        <li><a routerLink="/contact">Contact</a></li>
+        <li><a routerLink="/track-order">Track Order</a></li>
+        <li><a routerLink="/wishlist">Wishlist</a></li>
+        <li><a routerLink="/faq">FAQ</a></li>
+      </ul>
+    </div>
+    <div class="gi-footer__col">
+      <h4>Legal</h4>
+      <ul>
+        <li><a routerLink="/terms">Terms of Service</a></li>
+        <li><a routerLink="/privacy">Privacy Policy</a></li>
+        <li><a routerLink="/shipping-returns">Shipping &amp; Returns</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="gi-footer__bottom">
+    <span>© {{ year }} Gadaa Istar Business Group S.C. All rights reserved.</span>
+    <span class="gi-footer__pay">
+      <span class="gi-pay-badge">VISA</span>
+      <span class="gi-pay-badge">MASTERCARD</span>
+      <span class="gi-pay-badge">AMEX</span>
+      <span class="gi-pay-badge">JCB</span>
+    </span>
+  </div>
+</footer>

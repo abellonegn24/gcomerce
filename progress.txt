@@ -1,0 +1,2501 @@
+Gadaa Istar E-Commerce — Build Progress Log
+===========================================
+
+[2026-07-14] Phase 0 scaffolding kickoff (v1.1 of the plan)  — DONE
+[2026-07-14] Phase 1 storefront auth foundation                — DONE
+[2026-07-14] Phase 2.1 admin auth + TOTP MFA                   — DONE
+[2026-07-14] Phase 2.2 email verify + password reset + MFA reset — DONE
+[2026-07-14] Phase 2.3a product catalog backend + admin-users UI — DONE
+[2026-07-14] Phase 2.3b storefront catalog UI + /account + admin products list — DONE
+[2026-07-14] Phase 2.4 CI + rate limiting + client QR + profile editing — DONE
+[2026-07-14] Phase 3a cart data model + backend cart API + order schema — DONE
+[2026-07-14] Phase 3b address book + orders + CyberSource + admin orders — DONE
+[2026-07-14] Phase 3c storefront cart/checkout/orders UI + CyberSource redirect — DONE
+[2026-07-14] Phase 3d storefront addresses CRUD + admin orders / product editor / price-list mgmt — DONE
+[2026-07-14] Phase 4a direct file upload for product media (MinIO / S3) — DONE
+[2026-07-14] Phase 4b admin /customers management (list + detail + status + B2B approve + group) — DONE
+[2026-07-15] Phase 4c admin-initiated customer password reset + price-list editing — DONE
+[2026-07-15] Phase 4d.1 shipping methods table + rate calculator + admin CRUD + checkout picker — DONE
+[2026-07-15] Phase 4d.2 order refund flow (CyberSource REST + admin modal + audit ledger) — DONE
+[2026-07-15] Phase 4d.3 abandoned-order sweeper (auto-cancel PENDING_PAYMENT + release reservations) — DONE
+[2026-07-15] Phase 4d.4 customer-groups CRUD + MOQ multiplier enforcement — DONE
+[2026-07-15] Phase 4d.5 product editor nested router-outlet (deep-linkable tabs) — DONE
+[2026-07-15] Phase 4d.6 Redis-backed rate limiter + distributed lease for the sweeper — DONE
+[2026-07-15] Phase 4d.7 Flyway Gradle plugin + ESLint config (CI hard-fails)  — DONE
+[2026-07-15] Phase 4d.8 product_variant table + variant-level inventory       — DONE
+[2026-07-16] Phase 5.1 server-side image thumbnail generation (300px + 800px)  — DONE
+[2026-07-16] Phase 5.2 email templater — coupon expiry + usage reports          — DONE
+[2026-07-16] Phase 6a CMS backend — Page + Banner entities, Flyway V14, CRUD   — DONE
+[2026-07-16] Phase 6b Admin frontend — CMS page editor + banner manager UI      — DONE
+[2026-07-16] Phase 6c Storefront frontend — static pages + homepage hero banner — DONE
+[2026-07-16] Phase 6d SEO — JSON-LD, meta tags, canonical URLs, sitemap, robots — DONE
+[2026-07-16] Phase 6e Transactional emails — shipment + B2B approval/rejection  — DONE
+[2026-07-16] Phase 6f Admin notification center — bell icon + dropdown         — DONE
+[2026-07-16] Phase 6g i18n scaffolding — en/am/om translations + switcher      — DONE
+
+===========================================================================
+PHASE 0 — Scaffolding                                          [COMPLETE]
+===========================================================================
+- Monorepo directory structure at d:\Abel_Project\IPG\gadaa-istar-ecom\
+- Root README.md with quick-start instructions
+- .gitignore, .env.example, docker-compose.yml
+- Backend: Gradle multi-module skeleton (common, persistence, api-storefront)
+- Backend: Quarkus application.properties (dev + prod profiles)
+- Backend: SystemResource — GET /api/storefront/v1/system/hello (hello world)
+- Backend: Flyway V1 migration — settings, admin_user, role, permission,
+  role_permission, company_tax_profile, tax_class, tax_rule, invoice_sequence
+- Backend: Dockerfile (JVM mode)
+- Frontend: Angular 20 workspace (package.json, angular.json, tsconfig)
+- Frontend: @gadaa/ui-kit library with brand SCSS tokens + Material theme
+- Frontend: storefront app shell — header, hero, footer with brand palette
+- Frontend: admin app shell — login placeholder + sidebar layout with brand palette
+- Infra: docker-compose (MySQL, MinIO, MailHog, backend, frontends)
+- Infra: nginx.conf sample
+
+===========================================================================
+PHASE 1 — Storefront Auth Foundation                           [COMPLETE]
+===========================================================================
+Backend (Quarkus)
+-----------------
+- Flyway V2 migration: customer_group, customer, customer_address,
+  customer_refresh_token, email_verification_token, password_reset_token
+  + seed data (RETAIL / WHOLESALE_T1 / WHOLESALE_T2 / VIP groups)
+- Common: enums (CustomerType, CustomerStatus, AddressType, Audience,
+  PriceTier), exception hierarchy (ApiException → NotFound / Conflict /
+  Unauthorized / Forbidden / Validation / BadRequest), PagedResponse<T>
+- Persistence: BaseEntity + Customer / CustomerAddress / CustomerGroup /
+  AdminUser / AdminRole entities, and CustomerRefreshToken /
+  EmailVerificationToken / PasswordResetToken auth entities
+- Persistence: Panache repositories for every entity above
+- Security: PasswordHasher (BCrypt cost=12), JwtIssuer (HS256 via Nimbus
+  JOSE with per-audience issuer + secret), RefreshTokenService with
+  rotating refresh tokens and reuse-detection revocation, SecurityContextHolder
+  (@RequestScoped), JwtAuthFilter (path-based audience selection)
+- Web: CorrelationIdFilter (attaches X-Correlation-Id + MDC key),
+  GlobalExceptionMapper mapping ApiException / ConstraintViolation /
+  WebApplicationException / anything else to the standard envelope
+- Auth: AuthDtos (register/login/refresh/logout/me), AuthMapper,
+  AuthService with B2C-vs-B2B branching (B2B → PENDING_APPROVAL),
+  AuthResource under /api/storefront/v1/auth/
+- Tax: TaxService.resolveFor(country) + TaxService.compute(subtotal, country),
+  TaxResource: GET /api/storefront/v1/tax/rules/{country}
+- Config: application.properties updated with per-audience JWT keys
+  and TTLs (dev defaults validated by JwtIssuer at boot: >=32 chars).
+
+Frontend (Angular)
+------------------
+- Environments: environment.ts (prod) + environment.development.ts (dev)
+- Core models: ApiError / ApiErrorEnvelope with type guard
+- Core auth: CustomerDto / AuthResponse / RegisterPayload / LoginPayload /
+  StoredSession types; AuthService signal-based store with computed
+  currentCustomer(), isAuthenticated(), accessToken(); login / register /
+  refresh / logout / loadCurrentCustomer; localStorage persistence
+  (SSR-safe via isPlatformBrowser)
+- HTTP interceptors (functional, registered in order):
+    1. correlationInterceptor  — attaches X-Correlation-Id
+    2. authInterceptor         — attaches Bearer, refresh-and-retry on 401
+    3. errorInterceptor        — normalizes to NormalizedApiError
+- Route guards: authGuard (redirects to /login?next=…), guestGuard
+  (redirects authenticated users to /account)
+- Storefront pages: LoginComponent + RegisterComponent (reactive forms
+  with B2C/B2B toggle, per-field error messages, friendly error mapping
+  by API code, submitting-state signal)
+- Storefront app.component: sign-in / sign-up affordances in the header
+  when anonymous; account chip + sign-out button when signed in
+- Storefront routes: /login and /register (guestGuard), /account (authGuard,
+  placeholder pending Phase 2 portal)
+
+===========================================================================
+PHASE 2.1 — Admin Auth + TOTP MFA                              [COMPLETE]
+===========================================================================
+Backend
+-------
+- Refactor: extracted shared web/security infra to new `web-common` module
+  (JwtIssuer, PasswordHasher, SecurityContextHolder, JwtAuthFilter,
+   CorrelationIdFilter, GlobalExceptionMapper) under `com.gadaaistar.web.*`.
+  Both `api-storefront` and `api-admin` depend on it via
+  `quarkus.index-dependency.web-common.*` so Quarkus scans its @Provider
+  and @ApplicationScoped beans at build time.
+- JwtIssuer extended with `issueShortLivedToken()` + `verifyPurpose()` —
+  the JOSE `typ` header carries a purpose label ("mfa-challenge", "email-
+  verify", ...) so short-lived tokens can't be replayed across flows.
+- SecurityContextHolder gained `requireAnyRole(String...)` for RBAC.
+
+- Flyway V3 migration: `admin_refresh_token` table + `mfa_enrolled_at`
+  column on `admin_user`. Seeds a bootstrap super-admin
+  (admin@gadaaistar.com / ChangeMe-Admin-2026!) with MFA not yet enrolled.
+
+- Persistence: `AdminRefreshToken` entity + `AdminRefreshTokenRepository`.
+  `AdminUser` gained `mfaEnrolledAt` and `isMfaEnrolled()`.
+
+- New Gradle module `api-admin` (Quarkus runtime on port 8081, own
+  application.properties, own SystemResource /hello).
+  * `TotpService` — self-contained RFC 6238 implementation (30s step,
+    6-digit code, HMAC-SHA1, base32 secret with local RFC 4648 codec, no
+    dependency added). Builds Google-Authenticator-compatible
+    `otpauth://totp/...` provisioning URIs.
+  * `AdminRefreshTokenService` — rotation + reuse-detection, parallel to
+    the storefront's `RefreshTokenService` but coupled to AdminUser.
+  * `AdminAuthService` implements the two-step MFA flow:
+      1. POST /login    → returns short-lived challenge JWT + state
+         (MFA_REQUIRED or MFA_ENROLLMENT_REQUIRED with provisioning URI).
+      2. POST /verify-mfa → verifies challenge JWT + TOTP code, sets
+         mfa_enrolled_at on first success, issues access+refresh tokens.
+  * `AdminAuthResource` under /api/admin/v1/auth: login / verify-mfa /
+    refresh / logout / me.
+
+- Docker: parameterized backend Dockerfile via `--build-arg MODULE=<name>`
+  + PORT; docker-compose now builds two backend services (api-storefront
+  on 8080, api-admin on 8081) from the same Dockerfile.
+
+Frontend
+--------
+- Fixed the missing `fileReplacements` config in angular.json so both
+  storefront and admin now pick up `environment.development.ts` during
+  `ng serve` — the dev URLs actually get used now.
+- Admin app got its own environment files pointing at localhost:8081.
+- Admin core:
+    - `AdminAuthService` — signal-based store with a two-step state machine.
+      Exposes `pendingChallenge()` (sessionStorage-backed) that survives a
+      hard refresh between /login and /verify-mfa.
+    - Interceptors: `correlationInterceptor`, `authInterceptor` (Bearer +
+      refresh-on-401), `errorInterceptor` (envelope → NormalizedApiError).
+    - Guards: `authGuard`, `guestGuard`, `mfaChallengeGuard` (blocks
+      /verify-mfa unless a pending challenge exists), `roleGuard`
+      (reads route.data.roles).
+- Pages:
+    - `/login` — email + password only; on success sends the browser to
+      /verify-mfa with a friendly error mapping table.
+    - `/verify-mfa` — dual-mode. If setup is present it renders a QR code
+      (via api.qrserver.com placeholder, flagged for in-app QR renderer
+      swap before prod) + manual secret; otherwise just the 6-digit input.
+    - `/dashboard` — placeholder KPI grid + "what ships next" panel.
+- Admin shell (`app.component`) is now a real chrome — navy topbar with
+  brand mark, user chip showing full name + role, sign-out button.
+
+===========================================================================
+PHASE 2.2 — Email verify + password reset + admin MFA reset    [COMPLETE]
+===========================================================================
+Backend (api-storefront)
+------------------------
+- New `MailService` in com.gadaaistar.storefront.mail — thin wrapper around
+  Quarkus reactive Mailer + Qute. Renders paired HTML + text templates and
+  sets the From header from application.properties.
+- Qute templates under `src/main/resources/templates/mail/`:
+    verify-email.html + verify-email.txt
+    password-reset.html + password-reset.txt
+  All brand-consistent (navy header, gold accent, espresso footer) with
+  plain-text fallbacks for text-only clients.
+- New `EmailVerificationService`:
+    * start(customer)  — issues token, invalidates prior unused tokens,
+                         SHA-256 hash stored server-side, raw token in URL
+    * resend(email)    — anti-enumeration: silent even for unknown emails
+    * confirm(token)   — flips PENDING_VERIFICATION → ACTIVE (B2C only;
+                         B2B still requires admin approval)
+- New `PasswordResetService`:
+    * start(email, ip) — always silent (anti-enumeration), invalidates
+                         prior tokens, hashes new one, queues email
+    * complete(token, newPassword) — validates + rotates password AND
+                         revokes every refresh token for the user
+- `AuthService.register()` now enqueues the verification email as a
+  best-effort side-effect (registration succeeds even if the mailer is
+  unavailable — customer can retry via /auth/resend-verification).
+- New endpoints on `AuthResource`:
+    POST /auth/resend-verification (202 AckResponse)
+    POST /auth/verify-email        (returns CustomerDto)
+    POST /auth/forgot-password     (202 AckResponse)
+    POST /auth/reset-password      (204 No Content)
+- New AuthDtos: ResendVerificationRequest, AckResponse.
+- New config keys (all in application.properties + .env.example):
+    gadaa.frontend.storefront-url
+    gadaa.frontend.admin-url
+    gadaa.auth.email-verification-ttl-minutes (default 60)
+    gadaa.auth.password-reset-ttl-minutes     (default 30)
+
+Backend (api-admin)
+-------------------
+- New `AdminUsersResource` under /api/admin/v1/admin-users:
+    GET  /admin-users             — list every admin with role + MFA state
+    POST /admin-users/{id}/mfa/reset — SUPERADMIN-only; wipes target
+        admin's mfa_secret + mfa_enrolled_at AND revokes every refresh
+        token for that admin. Guards against self-reset (must sign out
+        and use the enrollment flow instead).
+- Uses `SecurityContextHolder.requireAnyRole("SUPERADMIN")` — first live
+  consumer of the RBAC helper added in Phase 2.1.
+- New DTOs: AdminUserSummary, ListResponse, ResetMfaResponse.
+
+Frontend (storefront)
+---------------------
+- `AuthService` extended with four new methods:
+    resendVerification(email)            → AckResponse
+    verifyEmail(token)                    → CustomerDto (also refreshes
+        the stored session's customer snapshot so UI updates immediately)
+    forgotPassword(email)                → AckResponse
+    resetPassword(token, newPassword)    → clears local session (backend
+        just revoked every session for this user)
+- New shared SCSS at pages/_shared/auth-panel.scss — single style file
+  imported by all 4 new components via styleUrl.
+- Four new pages (all lazy-loaded via loadComponent):
+    /verify-email/pending  — "check your inbox" screen with resend button
+    /verify-email/:token   — auto-submits on load; success/error states
+    /forgot-password       — email input; ack screen on submit
+    /reset-password/:token — new-password form with confirm + match
+        validator; redirects to /login?reset=1 on success (2.5s delay)
+- Register page now sends B2C users to /verify-email/pending after
+  register (was /account previously).
+- Login page shows a green success banner when arriving via ?reset=1.
+- Login page continues to route to /forgot-password (link already there).
+- app.routes.ts wired for the four new paths.
+
+Env & Docker
+------------
+- .env.example gained STOREFRONT_BASE_URL, GADAA_EMAIL_VERIFICATION_TTL_MINUTES,
+  GADAA_PASSWORD_RESET_TTL_MINUTES.
+- No docker-compose changes needed — MailHog was already spun up in the
+  local stack; templates hit it out of the box.
+
+===========================================================================
+PHASE 2.3a — Product catalog backend + admin-users UI          [COMPLETE]
+===========================================================================
+Backend — persistence
+---------------------
+- Flyway V4 migration:
+    product              — sku, slug, name, description, category enum,
+                           status (DRAFT/ACTIVE/ARCHIVED), weight_kg, hs_code,
+                           origin_country, tax_class_id, base_currency,
+                           base_price, cost_price, min_order_quantity,
+                           packaging_notes. Version column for optimistic locking.
+    product_media        — url/alt_text/media_type, is_primary, sort_order
+                           with CASCADE delete on product.
+    price_list           — per-customer-group, currency, effective_from/to,
+                           active flag.
+    price_list_entry     — (price_list × product × min_quantity) → price.
+                           UNIQUE constraint on the triple supports tiered
+                           wholesale pricing.
+    inventory            — one row per product, quantity + reserved_quantity
+                           + restock_threshold. variant_id column reserved
+                           for future product_variant table.
+  Seed data: 4 sample products (Yirgacheffe green 500g, Sidamo medium roast
+  250g, Ivory teff flour 1kg, Berbere spice blend 100g), primary placeholder
+  images, wholesale price lists at 80/70/65% of retail for T1/T2/VIP, and
+  starter inventory per category.
+
+- Common: ProductCategory enum (RAW_COFFEE, PROCESSED_COFFEE, WHITE_PRODUCTS,
+  SPICY_PRODUCTS with display names + slugs) and ProductStatus enum.
+- Persistence entities: Product, ProductMedia, PriceList, PriceListEntry,
+  Inventory (with available()/isLow() helpers).
+- Panache repos including ProductRepository.adminSearch(q, status, category,
+  page, size) with dynamic SQL and PriceListEntryRepository.resolvePrice
+  (largest min_quantity <= requested qty — used by the storefront pricing
+  resolver).
+
+Backend — api-admin catalog
+---------------------------
+All under /api/admin/v1. Read endpoints allow any admin; write endpoints
+require SUPERADMIN or PRODUCT_MANAGER role (enforced via requireAnyRole).
+
+- GET  /products                        — paged list, q/status/category filters
+- GET  /products/{id}                   — full detail incl. media + inventory
+- POST /products                        — create (validates SKU + slug uniqueness)
+- PATCH /products/{id}                  — partial update, null fields ignored
+- DELETE /products/{id}                 — soft-archive (status = ARCHIVED)
+- POST /products/{id}/media             — attach image/video URL, promotes
+                                          new isPrimary and demotes others
+- DELETE /products/{id}/media/{mediaId} — remove a media entry
+
+- GET  /price-lists                     — list with entry counts
+- GET  /price-lists/{id}                — list + all entries
+- POST /price-lists                     — create (per customer group + currency)
+- DELETE /price-lists/{id}              — delete list + cascade entries
+- PUT  /price-lists/{id}/entries        — upsert (product, min_qty) → price
+- DELETE /price-lists/{id}/entries/{entryId}
+
+- GET  /inventory                       — every product's stock
+- GET  /inventory/products/{productId}
+- POST /inventory/products/{productId}/adjust   — signed delta, guarded against negative
+- PUT  /inventory/products/{productId}          — overwrite quantity + threshold
+
+Backend — api-storefront read-only catalog
+------------------------------------------
+- GET /catalog/products?category&page&size  — cards with resolved display price
+- GET /catalog/products/{slug}              — full detail with tier ladder for B2B
+
+- StorefrontCatalogService resolves the caller's effective price:
+    * Anonymous / RETAIL customer → product.basePrice
+    * Signed-in B2B with a customer_group + matching active price list
+      → the entry whose min_quantity is largest but still <= 1 for cards,
+        the full tier list on the detail page
+  Discount vs. base is emitted as a positive percent (0 for retail).
+- DRAFT and ARCHIVED products return 404 to public callers (no leakage).
+- Cost prices never appear in storefront DTOs.
+
+Frontend — admin
+----------------
+- New core services under core/admins/:
+    admin-users.model.ts     — TS mirror of AdminUsersDtos
+    admin-users.service.ts   — GET /admin-users, POST /admin-users/{id}/mfa/reset
+- New page /admin-users:
+    Signal-based table with per-row action button
+    Reset MFA button is disabled for the current user + non-SUPERADMINs
+    Confirm() prompt before firing; success banner + refresh on 200
+    Friendly error messages for SELF_RESET_FORBIDDEN / role mismatches
+- Admin shell got a sidebar (Dashboard, Products, Orders, Customers,
+  Admin users) with routerLinkActive highlighting. Sidebar hides below
+  720px (mobile hamburger arrives in Phase 3). Login + verify-mfa pages
+  bypass the shell (unauthenticated screens fill the viewport).
+- Routes: /admin-users lazily loaded, guarded by authGuard.
+
+===========================================================================
+PHASE 2.3b — Storefront catalog UI + /account + admin products list [COMPLETE]
+===========================================================================
+Storefront — catalog UI
+-----------------------
+- core/catalog/catalog.model.ts + catalog.service.ts:
+    TS mirrors of StorefrontCatalogDtos (ProductCard, ProductDetail, TieredPrice).
+    CATEGORIES metadata table + categoryBySlug / categoryByCode helpers.
+    Prices stored as strings (BigDecimal-safe) — parsed only for display.
+- pages/shop/shop-list.component.* — grid + category rail:
+    /shop shows all ACTIVE products; /shop/:category filters (raw-coffee,
+    processed-coffee, white-products, spicy-products).
+    Signal-based state; toSignal wraps the route param so the list reloads
+    reactively when the URL changes.
+    Category rail (sticky on desktop, wraps on mobile <840px) with routerLink
+    navigation and "All" chip.
+    Card grid: aspect-1/1 image, category eyebrow, name, two-line clamp on
+    description, price with strike-through when a wholesale tier is active,
+    "Save X%" gold badge, "Out of stock" overlay when depleted.
+    Loading skeleton (6 shimmer cards), error banner with retry, empty state.
+    Pagination: 12 per page, Previous/Next with smooth scroll-to-top on change.
+    Currency formatted via Intl.NumberFormat.
+- pages/product-detail/product-detail.component.* — /products/:slug:
+    Breadcrumbs Home > Shop > Category > Product Name.
+    Sticky media gallery on desktop with thumbnail rail (aspect-1/1 hero,
+    click to swap active image); placeholder icon when no media.
+    Sale + Out-of-stock badges.
+    Info column: category eyebrow, display-font product name, short desc,
+    price with strike-through + "Your tier price — save X%" success pill.
+    Facts list: origin (ET → Ethiopia), unit weight, HS code, MOQ.
+    Quantity stepper respecting MOQ (rounds up to smallest integer >= MOQ).
+    Add-to-cart button — disabled with "shipping in next phase" tooltip.
+    Tier ladder table (only when tiers[] non-empty — i.e. authenticated B2B).
+    Full description + packaging notes sections.
+    404, error, and loading skeleton states.
+
+Storefront — /account portal
+----------------------------
+- pages/account/account.component.* — shell with sticky vertical tab rail
+  (Profile / Addresses / Orders) and router-outlet. Welcome header uses
+  first name → company name → email fallback. Mobile switches to a
+  horizontal scrolling tab strip.
+- pages/account/profile.component.* — read-only account card:
+    Avatar chip, "Business account" / "Retail account" pill, dl grid with
+    email + verification pill, first/last name, phone, company/tax ID (B2B
+    only), preferred currency. Edit and change-password buttons are present
+    but disabled with "arrives in Phase 3" tooltip.
+- pages/account/addresses.component.ts + orders.component.ts — inline
+  templates sharing pages/account/account-empty.scss ("Coming in Phase 3"
+  placeholder). Orders links back to /shop with a "Browse the catalog" CTA.
+- Router: /account is a parent with three children (default '', addresses,
+  orders); still guarded by authGuard. Old home-page placeholder retired.
+
+Storefront — router
+-------------------
+- app.routes.ts wired for /shop, /shop/:category, /products/:slug, and
+  the new nested /account subtree. Header nav already points at /shop/{cat}
+  and now resolves correctly.
+
+Admin — products list
+---------------------
+- core/catalog/catalog.model.ts + products.service.ts — TS mirrors of the
+  admin catalog DTOs. list() supports q/status/category/page/size params.
+- pages/products/products-list.component.* — signal-based table:
+    Search input with clear button (submit-on-enter).
+    Category chips + status <select>.
+    Table columns: 44px thumbnail, name+slug stack, SKU (mono), category
+    pill, status pill (active/draft/archived color-coded), base price
+    (currency-formatted), available stock, updated-at date.
+    Loading, empty, and error states.
+    Pagination — 20 per page, position indicator with total count.
+    "New product" button placeholder with tooltip pointing to the backend
+    Swagger UI (create/edit forms ship in the next iteration).
+- Routes: /products lazy loaded, guarded by authGuard. Sidebar link
+  already existed from Phase 2.3a — it now resolves.
+
+===========================================================================
+PHASE 2.4 — CI + rate limiting + client QR + profile editing    [COMPLETE]
+===========================================================================
+CI (GitHub Actions)
+-------------------
+- .github/workflows/backend-ci.yml — Java 21 Temurin + Gradle cache, MySQL 8
+  service container with health-check gate, secrets injected as env vars,
+  runs `./gradlew build`, uploads test reports as artifacts. Second job
+  `flyway-validate` reserves a slot for the Flyway Gradle plugin (currently
+  a soft `|| true` scaffold; flips to hard fail when Phase 3 wires the plugin).
+- .github/workflows/frontend-ci.yml — Node 20 + `npm ci`, format:check +
+  lint (both continue-on-error until the ESLint config lands in Phase 3),
+  parallel builds of storefront + admin, artifacts uploaded from
+  `frontend/dist/{storefront,admin}` with 3-day retention.
+
+Backend rate limiting
+---------------------
+- common/exceptions/RateLimitExceededException — extends ApiException, HTTP 429,
+  carries retryAfterSeconds; encoded into the standard error envelope so
+  clients can key off code=RATE_LIMIT_EXCEEDED.
+- api-storefront/ratelimit/RateLimit — @Retention(RUNTIME), targets METHOD +
+  TYPE. Fields: bucket, max, windowSeconds. Purely metadata — no @NameBinding.
+- api-storefront/ratelimit/RateLimitService — in-memory sliding-window store
+  keyed by "bucket|clientId". ConcurrentHashMap<String, ArrayDeque<Long>>;
+  per-queue synchronized to keep pruning + insert atomic. Config knobs:
+  gadaa.ratelimit.enabled + gadaa.ratelimit.max-queue-size. @Scheduled every 5m
+  reaps queues idle for 15+ minutes. Returns Decision(allowed, retryAfterSeconds).
+- api-storefront/ratelimit/RateLimitFilter — @Provider ContainerRequestFilter
+  at Priorities.AUTHENTICATION - 100 (runs before JWT filter). Reads @RateLimit
+  from the resource method or class via injected ResourceInfo. Derives client
+  identity from X-Forwarded-For (first token), else X-Real-IP, else Vert.x
+  socket remote address, else "unknown". On denial, throws
+  RateLimitExceededException so GlobalExceptionMapper handles response shape.
+- GlobalExceptionMapper — new branch for RateLimitExceededException that
+  adds the standard `Retry-After: <seconds>` header. Refactored helper into
+  BuiltResponse record so both the rate-limit path (with extra header) and
+  the plain ApiException path share the envelope builder without duplication.
+- AuthResource — @RateLimit annotations applied per-endpoint:
+    POST /register              → bucket=auth-register,             5 / 10min
+    POST /login                 → bucket=auth-login,                10 / 1min
+    POST /resend-verification   → bucket=auth-resend-verification,   3 / 10min
+    POST /forgot-password       → bucket=auth-forgot-password,       3 / 10min
+    POST /reset-password        → bucket=auth-reset-password,       10 / 10min
+    POST /me/change-password    → bucket=auth-change-password,       5 / 10min
+- Configuration: gadaa.ratelimit.enabled (default true) + max-queue-size in
+  application.properties; %test override disables the limiter so integration
+  suites don't false-trip.
+
+Backend profile management
+--------------------------
+- AuthDtos gained UpdateProfileRequest (all fields optional, bean-validated)
+  and ChangePasswordRequest (current + new, min 8).
+- AuthService.updateProfile(id, req) — partial update; blank fields ignored
+  so a phone-only PATCH doesn't nuke name/address. Trims + uppercases
+  currency to keep DB values canonical.
+- AuthService.changePassword(id, req) — verifies current password, refuses
+  to accept the same password (BCrypt double-hash match), swaps the hash,
+  and calls RefreshTokenService.revokeAllForCustomer(id) to force sign-out
+  on every device. Errors: UnauthorizedException (INVALID_CREDENTIALS),
+  ValidationException (same password).
+- AuthResource:
+    PATCH /me                   → updateProfile, returns CustomerDto
+    POST  /me/change-password   → changePassword, returns 204 + rate-limited
+
+Frontend admin — client-side QR
+-------------------------------
+- package.json gained "angularx-qrcode" ^19.0.0 dep + qrcode + @types/qrcode.
+- verify-mfa.component imports QRCodeComponent and renders <qrcode> inline
+  as SVG at 220px with M-level correction, brand navy on white. The
+  previously-inlined api.qrserver.com third-party URL is gone — the TOTP
+  secret never leaves the browser now.
+
+Frontend storefront — profile editing
+-------------------------------------
+- core/auth/auth.model.ts gained UpdateProfilePayload + ChangePasswordPayload.
+- core/auth/auth.service.ts gained updateProfile() (PATCH /auth/me, mirrors
+  updated CustomerDto into the persisted session) and changePassword()
+  (POST /auth/me/change-password, clears local session on 204 since the
+  server just revoked every refresh token).
+- pages/account/profile.component.ts refactored into a signal-based state
+  machine (mode = 'view' | 'edit' | 'password'):
+    Reactive edit form auto-fills from the current customer via effect().
+    Change-password form uses a group validator to check newPassword ==
+    confirmPassword.
+    On successful password change we redirect to /login?passwordChanged=1
+    (backend has already revoked all sessions; AuthService cleared local).
+    On successful profile save we flip back to 'view' with a green success
+    banner and the mapped customer signal is already updated.
+    Error mapping covers INVALID_CREDENTIALS, VALIDATION_FAILED (same
+    password), RATE_LIMIT_EXCEEDED, and NETWORK_ERROR.
+- profile.component.html now branches on mode(); shared gi-form / gi-field
+  styles + success/error banner block added to profile.component.scss.
+- pages/login/login.component now shows a new "Password updated. All your
+  devices have been signed out — please sign in again." banner when arriving
+  via ?passwordChanged=1, alongside the existing ?reset=1 banner.
+
+Env & config
+------------
+- application.properties adds gadaa.ratelimit.enabled + max-queue-size with
+  env-var overrides; %test profile disables the limiter.
+- .env.example adds GADAA_RATELIMIT_ENABLED + GADAA_RATELIMIT_MAX_QUEUE_SIZE.
+
+===========================================================================
+KNOWN DEFERRALS  (intentional, tracked here)
+===========================================================================
+- Redis-backed multi-instance RateLimitService (drop-in swap of the in-memory
+  one) — Phase 3 when we scale beyond a single API pod.
+- Flyway Gradle plugin wiring in the persistence module so the
+  `flyway-validate` CI job stops being a scaffold — Phase 3.
+- ESLint config + Prettier formatting sweep so the CI lint / format:check
+  steps stop being continue-on-error — Phase 3.
+- Frontend admin: product create/edit form, media upload UI, price-list
+  editor, inventory adjust dialog — Phase 3 (backend endpoints all live).
+- Storefront: address book CRUD UI (customer_address already in DB) — Phase 3.
+- Storefront: cart + checkout with CyberSource Secure Acceptance redirect,
+  order history UI — Phase 3.
+- product_variant table + variant-level inventory (schema slot reserved via
+  inventory.variant_id column) — Phase 3.
+
+===========================================================================
+PHASE 3a — Cart data model + backend cart API + order schema  [COMPLETE]
+===========================================================================
+Backend — persistence (Flyway V5)
+---------------------------------
+- cart               — one active cart per customer (UNIQUE customer_id).
+                       currency, created_at, updated_at.
+- cart_item          — (cart, product) unique line; quantity, unit_price_snap
+                       (added-time snapshot), currency, added_at, updated_at.
+                       CASCADE delete on cart.
+- checkout_order     — placed orders (name avoids the SQL reserved word).
+                       uuid + invoice_number both UNIQUE; status VARCHAR(24);
+                       full money columns (subtotal / tax_total / shipping_total
+                       / discount_total / grand_total, all DECIMAL(19,4));
+                       ship_to_address_id + bill_to_address_id → customer_address;
+                       payment_reference + payment_provider (populated on
+                       CyberSource callback in Phase 3b);
+                       placed_at / paid_at / cancelled_at / updated_at;
+                       customer_notes + internal_notes.
+- order_item         — snapshotted line: order_id + product_id + copied sku +
+                       name + unit_price + quantity + tax_rate + tax_amount +
+                       line_total. CASCADE delete on checkout_order.
+- order_status_event — append-only audit log: (from_status, to_status, source
+                       [SYSTEM/CUSTOMER/ADMIN/PAYMENT], actor_id, note,
+                       occurred_at). CASCADE delete on checkout_order.
+
+Backend — common
+----------------
+- OrderStatus enum: DRAFT / PENDING_PAYMENT / PAID / FULFILLING / SHIPPED /
+  DELIVERED / CANCELLED / REFUNDED. Includes isTerminal() and
+  canTransitionTo(next) using an internal EnumMap state machine — Phase 3b
+  services will enforce these via OrderService.
+- BadRequestException gained a 3-arg (code, message, details) constructor
+  matching the pattern already on ConflictException.
+
+Backend — persistence entities + repos
+--------------------------------------
+- cart/Cart, CartItem (with unit-price snapshot + lineTotal helper) +
+  CartRepository (findByCustomer), CartItemRepository (findByCartAndProduct,
+  deleteByCart).
+- order/CheckoutOrder (auto-generates uuid + placedAt on @PrePersist),
+  OrderItem, OrderStatusEvent (Source enum inner type).
+- order/CheckoutOrderRepository (findByUuid, findByInvoiceNumber,
+  listForCustomer paged, listByStatus paged), OrderItemRepository,
+  OrderStatusEventRepository (historyFor).
+
+Backend — api-storefront cart API
+---------------------------------
+All under /api/storefront/v1/cart. Requires an authenticated customer.
+
+- GET    /cart                          — get-or-create + fresh totals
+- POST   /cart/items                    — add product; increments qty if line exists
+- PATCH  /cart/items/{productId}        — overwrite qty; 0 quantity removes the line
+- DELETE /cart/items/{productId}        — remove a single line
+- DELETE /cart                          — empty the cart in one call
+
+Every mutation is rate-limited under bucket cart-mutate at 60/min per IP.
+
+Business rules enforced in CartService:
+- Product must be ACTIVE (409 PRODUCT_NOT_PURCHASABLE otherwise).
+- Requested qty must be ≥ product.min_order_quantity (400 MIN_ORDER_QUANTITY).
+- Requested qty may not exceed inventory.quantity − inventory.reserved
+  (409 INSUFFICIENT_STOCK).
+- Cart currency locks to the first product's currency; mixing gets
+  409 CURRENCY_MISMATCH.
+
+Response shape (CartDtos.CartResponse) always includes:
+- All lines with unit_price snapshot AND freshly-resolved current_unit_price,
+  a boolean price_changed flag, and per-line stock status.
+- Aggregates: distinctItems count, totalUnits (sum of qty across lines),
+  subtotal (line snapshots — tax + shipping added in Phase 3b at checkout).
+
+Price resolution mirrors StorefrontCatalogService: caller's group's active
+price list ↦ entry with largest min_quantity ≤ requested qty; falls back
+to product.basePrice. Duplicated in CartService for now; will be lifted
+into a shared PriceResolver bean when Phase 3b's OrderService needs it.
+
+===========================================================================
+KNOWN DEFERRALS  (intentional, tracked here)
+===========================================================================
+- Guest cart (session-keyed rather than customer-keyed) — probably Phase 3c;
+  keeps the MVP simple by requiring sign-in before add-to-cart.
+- Coupon / discount codes — Phase 4.
+- Shipping-methods table + shipping calculator — Phase 3b/4.
+- Redis-backed multi-instance RateLimitService — Phase 3.
+- Flyway Gradle plugin wiring (flyway-validate CI job scaffolded but soft) — Phase 3.
+- ESLint / Prettier sweep so CI lint stops being continue-on-error — Phase 3.
+- Admin catalog editor screens (all backend endpoints live) — Phase 3d.
+- product_variant table + variant-level inventory — Phase 3+.
+
+===========================================================================
+PHASE 3b — Address book + orders + CyberSource + admin orders  [COMPLETE]
+===========================================================================
+Backend api-storefront — address book
+-------------------------------------
+- CustomerAddressRepository (persistence): listForCustomer, findForCustomer,
+  clearDefaultFor(customerId, type).
+- AddressDtos: CreateAddressRequest (all validated, countryCode regex-guarded
+  to ISO-3166 alpha-2), UpdateAddressRequest (all optional; null=skip,
+  blank=clear), AddressDto response.
+- AddressService: first address is auto-default; flipping default clears the
+  flag on overlapping-type addresses; deleting the default promotes another
+  address to default so /checkout always has one pre-selected.
+- AddressResource — GET/POST/PATCH/DELETE /me/addresses.
+
+Backend api-storefront — pricing extraction
+-------------------------------------------
+- New PriceResolver bean (storefront.pricing) — single source of truth for
+  "given customer + product + qty, what's the unit price?". Falls back to
+  product.basePrice when there's no group / no active price list. Both
+  CartService and OrderService inject it now.
+
+Backend api-storefront — invoice numbering
+------------------------------------------
+- InvoiceNumberService.allocate() — SELECT ... FOR UPDATE against the
+  invoice_sequence row for (doc_type='INVOICE', fiscal_year=current) inside
+  a JTA transaction. Bootstrap-inserts a missing row on new fiscal-year
+  boundaries. Formats as PREFIX-YYYY-00042 (5-digit zero-padded).
+  currentFiscalYear() honours gadaa.company.fiscal-year-start-month
+  (default 7 for the Ethiopian Hamle-Sene year).
+
+Backend api-storefront — orders
+-------------------------------
+- OrderDtos: PlaceOrderRequest, CancelOrderRequest, OrderSummary (list row),
+  OrderDetail (lines + status history + addresses inline).
+- OrderMapper: injects AddressMapper so order detail carries full ship/bill
+  address DTOs.
+- OrderService.createFromCart — the checkout workhorse:
+    validates cart is non-empty + owned addresses exist,
+    re-resolves each line price via PriceResolver (cart snapshot is advisory),
+    re-checks stock and RESERVES inventory (quantity untouched, reservedQuantity
+      bumped) inside the same tx,
+    applies TaxService for the ship-to country (15% ET, 0% zero-rated export),
+    allocates a gap-free invoice number via InvoiceNumberService,
+    snapshots product sku + name on each OrderItem,
+    persists the order with status=PENDING_PAYMENT,
+    emits the initial OrderStatusEvent(source=CUSTOMER, note="Order placed."),
+    empties the cart.
+- OrderService.cancelByCustomer — only allowed on PENDING_PAYMENT; releases
+  reservations and marks CANCELLED with a status event.
+- OrderService.transition(order, next, source, actorId, note) — enforces
+  OrderStatus.canTransitionTo() state machine, appends the audit event.
+  @TxType.MANDATORY so it can only run inside an existing tx.
+- OrderService.markPaid(order, txRef, provider) — called by the webhook:
+  reservedQuantity − qty AND quantity − qty (converts reservation into a real
+  decrement), sets paymentReference / paymentProvider / paidAt, transitions
+  to PAID via the state machine.
+- OrderService.markPaymentFailed(order, reason) — releases reservations,
+  transitions to CANCELLED.
+
+- OrderResource endpoints (all under /api/storefront/v1/me/orders):
+    GET   /                       — paged list (up to 100/page)
+    GET   /{uuid}                  — full detail (owned check via customer id)
+    POST  /                        — placeOrder (rate-limited "order-place" 6/min)
+    GET   /{uuid}/payment-payload  — signed CyberSource form fields
+    POST  /{uuid}/cancel           — customer-initiated cancel
+
+Backend api-storefront — CyberSource Secure Acceptance
+------------------------------------------------------
+- CyberSourceConfig — typed wrapper around gadaa.cybersource.* keys with
+  isConfigured() gate so dev environments without real credentials fail
+  fast with a 409 PAYMENT_GATEWAY_NOT_CONFIGURED envelope.
+- CyberSourceService:
+    buildRedirectPayload(order) — constructs the LinkedHashMap of form fields
+      the browser POSTs to the hosted checkout page. Fields include access_key,
+      profile_id, transaction_uuid, signed_date_time (ISO-UTC), locale,
+      transaction_type=sale, reference_number=invoice_number, amount (2dp),
+      currency, override_custom_receipt_page + override_custom_cancel_page
+      pointing at /checkout/return + /checkout/cancel on the storefront URL,
+      full bill_to_* block from the order's bill-to address.
+    Signature: HMAC-SHA256 over "field1=value1,field2=value2,..." in the
+      exact order declared in signed_field_names (which is itself signed).
+      Base64-encoded output goes into the "signature" field.
+    verifySignature(params) — constant-time comparison to defeat timing
+      side-channels; used by the webhook.
+- CyberSourceWebhookResource (public, JAX-RS @Consumes form-urlencoded):
+    Verifies HMAC before any state mutation; failed verification returns 400
+      with INVALID_SIGNATURE (no body echo — defensive).
+    Looks up the order by req_reference_number (= invoice_number).
+    Idempotency: if the order is no longer PENDING_PAYMENT we return
+      { "status": "already_processed" } without re-mutating.
+    Decision switch:
+      ACCEPT           → orderService.markPaid(order, transaction_id, "CYBERSOURCE")
+      DECLINE/CANCEL/ERROR → orderService.markPaymentFailed(order, reason)
+      REVIEW / unknown → left in PENDING_PAYMENT for manual review, logs warn.
+
+Backend api-admin — orders
+--------------------------
+- AdminOrderDtos: TransitionRequest, OrderRow (list), OrderDetail (rich —
+  includes inline CustomerSnapshot + AddressSnapshot + LineItem + StatusEvent
+  records; no imports from api-storefront).
+- AdminOrderMapper — inline projection (no cross-module dep).
+- AdminOrderService: paged list with (status, search) filters over
+  invoice_number / customer.email / customer.companyName; count(); get(uuid);
+  transition(uuid, next, note, adminId) enforcing OrderStatus.canTransitionTo,
+  emitting OrderStatusEvent(source=ADMIN, actorId=admin), releasing
+  inventory reservations only when the origin was still PENDING_PAYMENT
+  (post-PAID cancels don't double-release).
+- AdminOrderResource endpoints (all under /api/admin/v1/orders):
+    GET   /?status=&q=&page=&size=  — paged, filtered
+    GET   /{uuid}                    — full detail
+    POST  /{uuid}/transition         — { next: OrderStatus, note? }
+
+Common
+------
+- BadRequestException gained (code, message, details) constructor
+  (added in Phase 3a; used throughout OrderService for structured errors).
+
+===========================================================================
+KNOWN DEFERRALS  (intentional, tracked here)
+===========================================================================
+- Guest cart (session-keyed) — deferred, MVP requires sign-in.
+- Coupons / discount codes — Phase 4.
+- Shipping-methods table + calculator — Phase 4. Order.shippingTotal is
+  hardcoded to 0 for now.
+- Redis-backed multi-instance RateLimitService — Phase 3+.
+- Flyway Gradle plugin wiring (flyway-validate CI job scaffolded) — Phase 3+.
+- ESLint / Prettier sweep so CI lint stops being continue-on-error — Phase 3+.
+- Admin catalog editor screens (all backend endpoints live) — Phase 3d.
+- product_variant table + variant-level inventory — Phase 3+.
+- Frontend /cart, /checkout, /account/addresses, /account/orders — Phase 3c.
+- Abandoned-order sweeper (release reservations on stuck PENDING_PAYMENT
+  after N hours) — Phase 3c/4.
+- Order refund flow (partial + full via CyberSource REST API) — Phase 4.
+- Extract order-domain module so api-storefront + api-admin share the
+  state-machine + mapper — Phase 4.
+
+===========================================================================
+PHASE 3c — Storefront cart / checkout / orders UI + CyberSource redirect [COMPLETE]
+===========================================================================
+Frontend storefront — core services (signal-based)
+--------------------------------------------------
+- core/cart/cart.model.ts + cart.service.ts — signal store wrapping
+  /cart. Reads: cart, loading, itemCount (bound to header badge),
+  totalUnits, subtotal. Mutations: reload, addItem, updateItem,
+  removeItem, clearCart. Auto-refresh via effect() on AuthService.
+  isAuthenticated changes (fetches on sign-in, clears on sign-out).
+  reset() lets the checkout flow clear the local snapshot after
+  placing an order.
+- core/addresses/address.model.ts + address.service.ts — signal cache
+  for /me/addresses (list, create, update, delete). Cache-first read
+  (list(force=false)); computed defaultAddress helper for the
+  checkout picker.
+- core/orders/order.model.ts + order.service.ts — wraps /me/orders:
+  list (paged), get (single), place (POST from cart),
+  paymentPayload (GET signed CyberSource fields), cancel.
+
+Frontend storefront — pages
+---------------------------
+- pages/cart/cart.component (+ .html + .scss) — line list with product
+  thumb + name + SKU + price/unit + qty stepper + remove; sticky
+  summary card with subtotal + "Proceed to checkout" CTA; per-line
+  price-changed + insufficient-stock flags surfaced from the API;
+  empty state + error banner + spinner-on-mutate.
+- pages/checkout/checkout.component (+ .html + .scss) — two-column
+  grid: (left) saved-address picker with radio cards + inline "Add a
+  new address" reactive form (fullName / company / street / city /
+  region / postal / countryCode with regex validator / phone),
+  optional customer notes textarea; (right) sticky summary with
+  scrollable line-thumb list + totals. "Continue to secure payment"
+  button flow:
+    1. POST /me/orders (rate-limited by the backend 6/min)
+    2. cartService.reset() locally so the header badge drops to 0
+    3. GET /me/orders/{uuid}/payment-payload
+    4. Dynamically build a hidden HTML <form method="POST"> with each
+       signed field appended as <input hidden>, in insertion order
+       (crucial — the HMAC signed the field-order too), submit()
+       redirects the whole tab into CyberSource.
+    Special dev fallback: 409 PAYMENT_GATEWAY_NOT_CONFIGURED routes
+    the customer to /account/orders/:uuid?gatewayMissing=1 with an
+    inline warning banner explaining the environment gap.
+- pages/checkout/checkout-return.component (+ .html) —
+  /checkout/return?order=<uuid> landing after CyberSource redirects
+  the browser back. Polls GET /me/orders/{uuid} every 3s (up to 10
+  attempts / 30s) while status stays PENDING_PAYMENT so the customer
+  sees the flip to PAID live without a manual refresh. Three visual
+  states: waiting (hourglass icon + gold border), paid (task_alt +
+  green border), cancelled (block + red border). Shows invoice
+  number, status, total, paidAt.
+- pages/checkout/checkout-cancel.component (+ .html) — landing after
+  customer aborts the hosted-checkout page. If order is still
+  PENDING_PAYMENT it offers "Retry payment" (calls paymentPayload +
+  auto-POSTs again) and "Cancel this order" (calls POST /cancel).
+- pages/account/orders.component — replaces the Phase 2.3b
+  placeholder with a real paged list backed by GET /me/orders.
+  Rows show invoice number, placed date, item count, status pill
+  (colour-coded: is-ok / is-done / is-pending / is-cancelled),
+  formatted total, chevron. "Load more" pagination (20/page).
+- pages/account/order-detail.component (+ .html + .scss) — new
+  /account/orders/:uuid route. Header with invoice number eyebrow +
+  status pill; line-items list with thumbnails + SKU + qty × price;
+  totals block (subtotal, discount if > 0, tax, shipping, grand);
+  ship-to + bill-to address cards; status-history timeline (colored
+  dot + timestamp + source + optional note). PENDING_PAYMENT orders
+  show "Continue payment" (re-runs the auto-POST redirect) + "Cancel
+  order" CTAs. gatewayMissing query param surfaces the dev banner.
+
+Frontend storefront — wiring
+----------------------------
+- app.component now injects CartService and binds cartCount to
+  cart.itemCount — the header badge shows the real distinct-item count
+  and auto-updates on every cart mutation via the shared signal.
+- pages/product-detail/product-detail.component — "Add to cart"
+  button is now live:
+    Signed-out visitors are bounced to /login?returnUrl=/products/{slug}.
+    Signed-in visitors get an in-flight "Adding…" state, then a green
+    "Added to cart" flash for 3s, then reverts to idle.
+    Backend structured errors (INSUFFICIENT_STOCK / MIN_ORDER_QUANTITY /
+    PRODUCT_NOT_PURCHASABLE) surface verbatim in a red inline note.
+- app.routes.ts adds five lazy routes (all authGuard-protected except
+  the return / cancel pages which still require auth to prove the
+  customer owns the referenced order):
+    /cart                 → CartComponent
+    /checkout             → CheckoutComponent
+    /checkout/return      → CheckoutReturnComponent
+    /checkout/cancel      → CheckoutCancelComponent
+    /account/orders/:uuid → AccountOrderDetailComponent
+
+===========================================================================
+KNOWN DEFERRALS  (intentional, tracked here)
+===========================================================================
+- Frontend storefront /account/addresses real CRUD screen — Phase 3d.
+- Frontend admin /orders + /orders/:uuid list/detail/transition UI — Phase 3d.
+- Frontend admin catalog editor screens (product create/edit + media +
+  price-list + inventory) — Phase 3d.
+- Guest cart (session-keyed) — deferred beyond MVP.
+- Shipping-methods table + calculator — Phase 4 (order.shippingTotal
+  still hardcoded 0).
+- Coupons / discount codes — Phase 4.
+- Redis-backed multi-instance RateLimitService — Phase 3+.
+- Flyway Gradle plugin wiring so flyway-validate CI job stops being
+  scaffold — Phase 3+.
+- ESLint config so CI lint stops being continue-on-error — Phase 3+.
+- Abandoned-order sweeper (release reservations on stuck
+  PENDING_PAYMENT) — Phase 4.
+- Order refund flow via CyberSource REST API — Phase 4.
+- Extract order-domain into shared module — Phase 4.
+- product_variant table + variant-level inventory — Phase 4.
+
+===========================================================================
+PHASE 3d — Storefront addresses CRUD + admin orders / product editor  [COMPLETE]
+===========================================================================
+Backend api-admin — small new endpoint
+--------------------------------------
+- CustomerGroupsResource — GET /api/admin/v1/customer-groups: read-only
+  lookup of the fixed group set (RETAIL / WHOLESALE_T1 / WHOLESALE_T2 /
+  VIP). Powers the admin price-list "customer group" dropdown. Response:
+  [{id, code, name, priceTier, active}]. No write endpoints (groups
+  remain seed-driven for now; full CRUD is a Phase 4 candidate).
+
+Frontend storefront — /account/addresses REAL CRUD
+--------------------------------------------------
+- pages/account/addresses.component.{ts,html,scss}: replaces the Phase
+  2.3b placeholder with a real address book UI backed by the existing
+  AddressService (built for the checkout picker in Phase 3c).
+    * List mode: cards sorted default-first, then most-recently-updated;
+      per-card actions "Make default", "Edit", "Delete" with a busy
+      lock during in-flight ops.
+    * Create + Edit share one ReactiveForms form (fullName, company,
+      street lines, city, region, postal code, ISO-2 countryCode with
+      regex validator, phone, address type BILLING/SHIPPING/BOTH,
+      isDefault checkbox).
+    * Delete uses a native confirm(); delete of the default promotes
+      another address server-side (handled in Phase 3b AddressService).
+    * Empty state guides the first-address flow with a "Add your first
+      address" CTA. Success + error banners inline.
+
+Frontend admin — core services (all signal-based, @Injectable('root'))
+----------------------------------------------------------------------
+- core/catalog/catalog.model.ts extended with ProductDetail,
+  ProductMedia, InventorySummary, CreateProductPayload,
+  UpdateProductPayload, CreateMediaPayload, PriceList + entry types,
+  InventoryDto, AdjustInventoryPayload, SetInventoryPayload,
+  CustomerGroupDto, plus CATEGORY_OPTIONS + STATUS_OPTIONS constants.
+- core/catalog/products.service.ts extended: list (existing), get,
+  create, update, archive, addMedia, removeMedia — all against
+  /api/admin/v1/products. Media adds return the fresh media list so
+  the UI patches in-place without a re-fetch.
+- core/catalog/price-lists.service.ts — new: list, get, create, delete,
+  upsertEntry, deleteEntry against /api/admin/v1/price-lists.
+- core/catalog/inventory.service.ts — new: list, getForProduct, adjust,
+  set against /api/admin/v1/inventory.
+- core/catalog/customer-groups.service.ts — new: signal-cached list of
+  the fixed customer groups. Cache-first read (force=true to refresh).
+- core/orders/order.model.ts — new: OrderStatus, OrderRow, LineItem,
+  OrderStatusEvent, OrderDetail, PagedOrders, TransitionOrderPayload,
+  and ALLOWED_TRANSITIONS map mirroring the backend state-machine
+  (DRAFT → PENDING_PAYMENT/CANCELLED; PENDING_PAYMENT → PAID/CANCELLED;
+  PAID → FULFILLING/REFUNDED/CANCELLED; FULFILLING → SHIPPED/CANCELLED/
+  REFUNDED; SHIPPED → DELIVERED/REFUNDED; DELIVERED/CANCELLED/REFUNDED
+  terminal). orderStatusVariant() maps status → colour hint.
+- core/orders/orders.service.ts — new: list (paged, filtered), get,
+  transition against /api/admin/v1/orders. No local cache (order state
+  changes via customer payment events + other admins).
+
+Frontend admin — /orders list + detail
+--------------------------------------
+- pages/orders/orders-list.component: paged table (20/page) with a free-
+  text search box (invoice # / customer email / company name) and a
+  status <select>. Row shows invoice # (mono), customer name+email
+  stack, item count, colour-coded status pill (is-ok/is-done/is-pending/
+  is-cancelled/is-draft), formatted total, placed date, chevron.
+  Clicking a row navigates to /orders/:uuid. Empty + error + skeleton
+  states covered.
+- pages/orders/order-detail.component: 2-column grid. LEFT: line items
+  with SKU + qty × unit-price + line total, totals dl (subtotal +
+  discount if > 0 + tax + shipping + grand), customer facts card
+  (name, email link, company, phone), ship-to + bill-to address cards,
+  and — when present — customer + internal notes. RIGHT (sticky):
+  "Move status" panel with a state-machine-aware target dropdown
+  (only ALLOWED_TRANSITIONS[currentStatus] is offered), a note
+  textarea (required for CANCELLED + REFUNDED), and an "Apply"
+  button; terminal orders show a locked-out hint instead. Below the
+  transition panel: full status-history timeline with colored dots +
+  from → to pills + source label + optional note. Payment reference
+  card appears once available.
+
+Frontend admin — /products/new + /products/:id editor
+-----------------------------------------------------
+- pages/products/product-form.component: reusable ReactiveForms
+  component with an @Input mode = 'create' | 'edit' plus @Input
+  initial: ProductDetail | null. Fires @Output save + cancel; parent
+  drives submitting + errorMessage. SKU is disabled in edit mode
+  (immutable after creation). Validators for SKU pattern (A-Z, 0-9,
+  dot, dash, underscore), slug (kebab-case), decimal patterns for
+  basePrice/costPrice/minOrderQuantity/weightKg, ISO-2 origin country,
+  ISO-3 currency. Three fieldsets: Identity, Classification, Pricing
+  & ordering.
+- pages/products/product-new.component: thin wrapper — hosts the form
+  in create mode; on success navigates to /products/{id}?created=1.
+- pages/products/product-editor.component: shell for /products/:id.
+  Fetches the product once, then hosts a tabbed panel:
+    * Details   → ProductFormComponent (edit mode)
+    * Media     → ProductMediaComponent
+    * Inventory → ProductInventoryComponent
+    * Pricing   → ProductPricingComponent
+  Header shows product name + SKU + slug + updatedAt + colour-coded
+  status pill; Archive button (danger, confirm-guarded) on non-archived
+  products. Details-tab save patches the local product signal; media
+  mutations patch product.media in-place so tabs stay in sync without
+  a full reload. gatewayMissing-style success + error banners inline.
+
+- pages/products/product-media.component: 2-column grid. LEFT: current
+  media list with thumbnails, URL, alt text, media type/order tags,
+  "PRIMARY" gold tag on the current primary, and per-row "Make
+  primary" + "Remove" actions. Confirm() gate on removal. RIGHT: add-
+  by-URL form (url regex-validated to /^https?:\/\//, altText,
+  mediaType IMAGE|VIDEO, sortOrder, isPrimary checkbox). "Make primary"
+  works by re-adding the same URL with isPrimary=true — the backend
+  demotes the previous primary in the same call.
+  NOTE: direct file upload (MinIO presigned POSTs) is deferred; the
+  current URL-based flow leverages the existing addMedia endpoint.
+- pages/products/product-inventory.component: fetches the live
+  inventory row on mount. Shows the current snapshot (on-hand +
+  reserved + available with LOW STOCK red flag when low, restock
+  threshold, updated-at) then two forms side-by-side:
+    * "Adjust (signed delta)" — POST /inventory/products/{id}/adjust
+      with signed delta + optional reason.
+    * "Overwrite (stock take)" — PUT /inventory/products/{id} with
+      quantity + optional restockThreshold; guarded by confirm().
+- pages/products/product-pricing.component: parallel-fetches every
+  price list via forkJoin() and filters entries down to just this
+  product. Groups them by list; each list shows a mini-table of
+  (min-qty, unit price, remove). Right panel: upsert form (price list
+  dropdown from CustomerGroupsService, min-quantity, price). Empty
+  state links to /price-lists when no lists exist yet.
+
+Frontend admin — /price-lists
+-----------------------------
+- pages/price-lists/price-lists.component: master list of every price
+  list with per-row (name, customer group code, currency, entry count,
+  effective from/to, active pill, delete). "New price list" toggles an
+  inline ReactiveForms create form (customer group dropdown driven by
+  CustomerGroupsService, name, currency ISO-3, effective from/to date
+  pickers, active checkbox). Delete is confirm()-guarded and cascades
+  entries server-side (Phase 3b). Success + error banners inline.
+
+Frontend admin — wiring updates
+-------------------------------
+- app.routes.ts adds five new authGuard-protected routes:
+    /products/new         → ProductNewComponent
+    /products/:id         → ProductEditorComponent  (Details/Media/Inventory/Pricing tabs)
+    /price-lists          → PriceListsComponent
+    /orders               → OrdersListComponent
+    /orders/:uuid         → OrderDetailComponent
+- app.component sidebar gains a "Price lists" link (sell icon)
+  between Products and Orders. Existing Orders link now resolves to
+  the real list; Customers stays as a placeholder.
+- pages/products/products-list.component enables the "New product"
+  button (routerLink to /products/new) and makes each row clickable
+  (routerLink to /products/:id). Removes the obsolete "editors ship in
+  the next iteration" footnote. Row hover switches to a gold tint,
+  cursor becomes pointer.
+
+===========================================================================
+PHASE 4a — Direct file upload for product media (MinIO / S3)  [COMPLETE]
+===========================================================================
+Design decision
+---------------
+We chose a **proxy upload** (browser → api-admin → MinIO) instead of
+presigned POST URLs. Rationale: (1) no CORS surprises on the MinIO side,
+(2) same JWT bearer flow as every other admin call (auth interceptor
+just works), (3) content-type + size validation happens in one place,
+server-side. Presigned POSTs remain an option for very large files or
+multi-part uploads later; the current file-size ceiling (20 MB) makes
+proxying trivial for the MVP.
+
+Backend api-admin
+-----------------
+- build.gradle: added `io.minio:minio:8.5.11` — pure-Java S3-compatible
+  client. Works against MinIO in dev + AWS S3 / R2 / Wasabi in prod.
+- application.properties: new `gadaa.s3.*` config keys —
+    endpoint         — backend → storage URL (docker network: minio:9000)
+    public-base-url  — browser-facing URL (dev: localhost:9000; prod: CDN)
+    region, access-key, secret-key, bucket-media
+    max-upload-bytes — hard ceiling; default 20 MB (20_971_520)
+  Plus `quarkus.http.limits.max-body-size=25M` so the multipart body
+  doesn't hit the default 10 MB limit before our validator can even
+  read it.
+- .env.example + infra/docker-compose.yml: added S3_PUBLIC_BASE_URL
+  (defaults to http://localhost:9000 for dev), S3_MAX_UPLOAD_BYTES, and
+  wired every S3_* var into the api-admin container. api-admin now
+  depends on the minio service in docker-compose.
+
+- storage/S3Service.java (new):
+    * @ApplicationScoped bean, lazy `MinioClient` in `@PostConstruct`
+    * `ensureBucketReady()` — idempotent create-bucket-if-missing +
+      apply an anonymous-read policy on every startup. Runs on the
+      first upload rather than at boot so the API can still serve
+      admin traffic when MinIO is temporarily offline.
+    * Bucket policy: allows `s3:GetObject` on `arn:aws:s3:::<bucket>/*`
+      so the browser can render <img src="..."> directly without
+      signed URLs. Standard e-commerce pattern.
+    * `uploadProductMedia(InputStream, sizeBytes, contentType, filename)`
+      → streams to `products/YYYY/MM/<uuid>.<ext>` and returns
+      `UploadResult(url, objectKey, contentType, sizeBytes)`. The url
+      is built from `public-base-url + / + bucket + / + key` so it's
+      immediately consumable by the frontend.
+    * `inferExtension()` prefers the client's filename extension
+      (whitelisted regex `^\.[a-z0-9]{2,5}$`), falls back to a MIME →
+      extension map (image/jpeg → .jpg, video/mp4 → .mp4, etc.).
+
+- storage/UploadDtos.java (new): `UploadResponse(url, objectKey,
+  contentType, sizeBytes)` record.
+
+- storage/UploadsResource.java (new): POST /api/admin/v1/uploads/product-media
+    * `@Consumes(MULTIPART_FORM_DATA)` with `@RestForm("file") FileUpload
+      file` (RESTEasy Reactive multipart, no extra deps needed —
+      quarkus-resteasy-reactive covers it).
+    * Requires SUPERADMIN or PRODUCT_MANAGER — same as any catalog write.
+    * Validates: file present, size > 0, size ≤ maxUploadBytes,
+      contentType in the allowlist (jpeg/png/webp/gif + mp4/mov/webm).
+    * Streams `Files.newInputStream(file.uploadedFile())` into
+      S3Service so we never slurp large videos into a heap buffer.
+    * Returns `UploadResponse` JSON.
+
+Frontend admin
+--------------
+- core/catalog/catalog.model.ts extended: UploadResponse type,
+  UPLOAD_ACCEPTED_TYPES constant (mirrors the backend allowlist), and
+  UPLOAD_ACCEPT_ATTR (comma-joined string for the file input's
+  `accept` attribute).
+- core/catalog/uploads.service.ts (new):
+    * `uploadProductMedia(file: File): Observable<UploadEvent>`
+    * Emits `{phase:'progress', percent}` events during upload and one
+      terminal `{phase:'done', response}` on completion. Filters out
+      Sent/ResponseHeader/DownloadProgress events so consumers get a
+      clean two-state stream.
+    * Uses `HttpRequest` + `reportProgress:true` — the existing auth
+      interceptor attaches the bearer, the correlation interceptor
+      adds `X-Correlation-Id`, and the error interceptor normalises
+      failures. The browser sets Content-Type automatically (with
+      multipart boundary) because we pass a FormData body.
+
+- pages/products/product-media.component (extended):
+    * New drag-drop zone at the top of the "Add media" panel:
+      dashed gold border on hover, solid gold on drag-over, solid
+      navy while uploading, ARIA role="button" + Enter/Space keyboard
+      support for accessibility.
+    * Progress bar during upload showing the current percent.
+    * Success chip after upload succeeds — reminds the admin they
+      still need to click "Attach media" to actually save the DB row
+      (keeps the storage vs DB writes decoupled + undo-able).
+    * Post-upload the URL field auto-populates with the returned
+      public URL and mediaType is set based on contentType. The
+      admin only has to tweak alt-text or the primary flag and
+      submit.
+    * "or paste an existing URL" divider between the drop-zone and
+      the URL field for admins hosting on an external CDN.
+    * Client-side type check against UPLOAD_ACCEPTED_TYPES before we
+      even open the network request — friendlier error message when
+      the admin drops a .heic or a .pdf.
+
+===========================================================================
+PHASE 4b — Admin /customers management  [COMPLETE]
+===========================================================================
+Design decision — customer status state machine
+-----------------------------------------------
+Kept intentionally narrow. Admin-initiated transitions are limited to:
+  PENDING_VERIFICATION  → DEACTIVATED
+  PENDING_APPROVAL      → DEACTIVATED             (reject B2B application)
+  ACTIVE                → SUSPENDED | DEACTIVATED
+  SUSPENDED             → ACTIVE | DEACTIVATED
+  DEACTIVATED           → (terminal — no exit)
+Everything else must go through customer-facing flows:
+  * PENDING_VERIFICATION → ACTIVE via the storefront email-verification link
+    (or the admin's dedicated "verify-email" action for out-of-band cases).
+  * PENDING_APPROVAL → ACTIVE via the dedicated "approve-b2b" action.
+This keeps the audit trail clean — status changes have clear intent and can't
+be used to smuggle around the licence-approval step.
+
+Backend api-admin
+-----------------
+- CustomerRepository (persistence, extended): pageForAdmin() + countForAdmin()
+  build a single dynamic JPQL query from optional filters (q on email +
+  first/last/company name via LOWER LIKE, exact match on customerType and
+  status). Sort is always createdAt DESC so the newest signups sit at the
+  top. Page size capped at 100.
+- customers/CustomersDtos.java NEW: CustomerRow (list), CustomerAddressDto,
+  CustomerDetail (with orderCount + machine-readable allowedNextStatuses),
+  ChangeStatusRequest, SetGroupRequest, ActionResponse. Kept as records.
+- customers/CustomersService.java NEW:
+    * ALLOWED_STATUS_TRANSITIONS map — the state machine described above.
+    * list(q, type, status, page, size) → PagedCustomers (rows + total +
+      hasNext/hasPrev).
+    * get(id) → CustomerDetail w/ addresses sorted default-first then
+      updated-desc + orderCount via CheckoutOrderRepository.countForCustomer.
+    * changeStatus(id, target, reason, actorId) — validates target is in
+      ALLOWED_STATUS_TRANSITIONS[current], throws BAD_REQUEST/NO_OP/
+      ILLEGAL_TRANSITION otherwise. Side effect: when moving to SUSPENDED
+      or DEACTIVATED, calls CustomerRefreshTokenRepository.revokeAllForCustomer
+      to kick every device.
+    * approveB2B(id, actorId) — PENDING_APPROVAL + B2B → ACTIVE; also
+      force-completes emailVerifiedAt (sales rep vets licence out-of-band,
+      the customer doesn't need to click a link).
+    * forceVerifyEmail(id, actorId) — sets emailVerifiedAt=now; for B2C
+      accounts stuck in PENDING_VERIFICATION, also flips status to ACTIVE.
+    * revokeSessions(id, actorId) — nukes refresh tokens. Doesn't touch
+      status. Returns the actual count for the success toast.
+    * setGroup(id, groupId | null, actorId) — attach or clear the price
+      group. Emits an audit log line either way.
+    * All writes are @Transactional and INFO-log the actor id + target id.
+- customers/CustomersResource.java NEW: GET / (paged) + GET /{id} open to
+  any admin; POST /{id}/{status | approve-b2b | verify-email |
+  revoke-sessions | group} require SUPERADMIN or CUSTOMER_MANAGER
+  (mirrors the catalog write-role convention).
+
+Frontend admin — new core
+-------------------------
+- core/customers/customer.model.ts NEW: TS mirrors of every DTO plus the
+  customerStatusVariant() helper mapping status → 'ok' | 'pending' | 'warn'
+  | 'off' for consistent colour-coded pills across list + detail.
+- core/customers/customers.service.ts NEW: list/get/changeStatus/approveB2B/
+  forceVerifyEmail/revokeSessions/setGroup all wrapped in @Injectable('root')
+  HttpClient calls. Bearer + correlation + error interceptors handle
+  everything else.
+
+Frontend admin — pages
+----------------------
+- pages/customers/customers-list.component: paged 20/row table with:
+    * Full-text search (email / first / last / company) via a search form
+      that only fires on submit (avoids per-keystroke round-trips).
+    * Type filter (B2C / B2B / both).
+    * Status filter drawn from CUSTOMER_STATUS_OPTIONS.
+    * Row: display name + email + optional UNVERIFIED red flag; type pill
+      (B2C plain, B2B gold); colour-coded status pill; price group code as
+      inline <code>; preferred currency; signed-up date; last-login date
+      (Never fallback); chevron. Rows are routerLink to /customers/:id
+      (gold hover, pointer cursor). Empty + error + skeleton states.
+- pages/customers/customer-detail.component: 2-col layout.
+    LEFT column:
+      - Identity card: id + timestamps + preferred currency/locale + order
+        count.
+      - Business profile card (only for B2B): company name / TIN / VAT #
+        / licence URL (opens in new tab) + primary contact.
+      - Addresses card: default-first sorted list of every saved address
+        with BILLING/SHIPPING/BOTH + DEFAULT tags.
+    RIGHT column (sticky):
+      - "B2B pending approval" highlight card, only visible when
+        canApproveB2B() (customerType=B2B + status=PENDING_APPROVAL). Gold
+        button flips the account to ACTIVE.
+      - "Move status" card with a target dropdown pre-populated from
+        c.allowedNextStatuses (server-authoritative), an audit-log reason
+        textarea, and Apply button. Terminal accounts show a "no further
+        transitions" hint instead.
+      - "Customer group" card with a dropdown driven by the reused
+        CustomerGroupsService (Phase 3d). Null option clears the group.
+      - "Advanced" card: force-email-verify (only shown when email is not
+        yet verified) + revoke-all-sessions (danger button).
+    All destructive actions are confirm()-gated. Success triggers a
+    re-fetch so the allowedNextStatuses list is always fresh.
+
+Frontend admin — wiring
+-----------------------
+- app.routes.ts adds two lazy authGuard-protected routes:
+    /customers      → CustomersListComponent
+    /customers/:id  → CustomerDetailComponent
+- app.component sidebar already had the /customers link from Phase 3d —
+  it now resolves to the real list instead of a 404 placeholder.
+
+===========================================================================
+PHASE 4c — Admin password reset + price-list editing  [COMPLETE]
+===========================================================================
+Two independent items shipped in one phase because they close the two most
+frequently-hit customer-support paper cuts from Phase 4b sign-off.
+
+------------------------
+Part 1 — Admin-initiated customer password reset
+------------------------
+Design choice — no cross-module refactor
+The obvious approach would have been to move api-storefront's
+PasswordResetService into web-common so both apps share it. That would
+mean also relocating MailService (which owns Qute templates) and the
+sha256Hex helper. Too much surface area for a single support tool.
+Instead: duplicate the tiny reset primitive inside api-admin. It only
+needs to (a) mint a token, (b) hash it identically to the storefront so
+the storefront's *complete()* endpoint can consume it, (c) send the mail.
+The token entity + repo already live in the persistence module — both
+apps read/write the same rows.
+
+Anti-enumeration silence removed
+Storefront /forgot-password intentionally returns 200 for both known
+and unknown emails (so callers can't harvest addresses). Admin path is
+different: the caller is an authenticated admin whose intent is to
+help a specific known customer. If the ID is bad, return 404 loudly
+so the admin sees the misclick.
+
+Side effects on success
+  1. All previously-unused password_reset_token rows for this customer
+     are marked usedAt=now — only the freshly-minted link is live.
+  2. All customer_refresh_token rows for this customer are revoked
+     (revokeAllForCustomer) — prevents an attacker holding a stolen
+     access token from acting during the reset window.
+  3. The templated HTML+text email is queued via Quarkus Mailer.
+     Copy differs from the storefront template: it identifies the
+     message as admin-initiated and adds "reply to your usual contact
+     if you didn't expect this".
+
+Backend api-admin
+- resources/templates/mail/password-reset.{html,txt} NEW: copied +
+  reworded from the storefront originals. Duplication is fine — the
+  two flows have subtly different copy (storefront: "we received a
+  request"; admin: "a support team member issued a reset link"). Same
+  {displayName} / {resetLink} / {expiresMinutes} params so Qute
+  contract matches.
+- application.properties: two new keys —
+    * gadaa.auth.admin-password-reset-ttl-minutes (default 60,
+      double the storefront's 30 because admin issues links during
+      business hours for customers who may be in a different tz)
+    * gadaa.frontend.storefront-url (used to build the reset link —
+      NOT the admin URL; the customer clicks through to the
+      storefront to complete).
+- infra/docker-compose.yml: STOREFRONT_BASE_URL and
+  GADAA_ADMIN_PASSWORD_RESET_TTL_MINUTES env vars threaded through so
+  the containerised admin service inherits them.
+- customers/AdminCustomerResetService.java NEW: ApplicationScoped
+  @Transactional bean.
+    * start(customerId, actorId) → CustomersDtos.ActionResponse.
+    * Uses HexFormat.of().formatHex(digest) — identical lowercase
+      output to the storefront's manual "%02x" loop, so hashes match
+      byte-for-byte and the storefront's PasswordResetService.complete()
+      accepts the token unchanged.
+    * ipAddress column is set to "admin:{actorId}" instead of the real
+      caller IP, giving the audit trail one hop back to the acting
+      admin.
+    * Mailer send failure is caught + logged (never blocks the request)
+      because we've already committed the token row — from the admin's
+      perspective the reset is "issued" regardless of SMTP hiccups.
+- CustomersResource.java: injects AdminCustomerResetService as a peer
+  of CustomersService; adds POST /{id}/reset-password gated to the
+  same SUPERADMIN + CUSTOMER_MANAGER roles as the other write
+  endpoints in the resource.
+
+Frontend admin
+- core/customers/customers.service.ts: sendPasswordReset(id) →
+  Observable<CustomerActionResponse>. Thin wrapper.
+- pages/customers/customer-detail.component: new "Send password-reset
+  email" button in the Advanced card, sitting between "Force email as
+  verified" (ghost button) and "Revoke all sessions" (danger button).
+  Uses the same confirm() + handle() pattern the other Advanced
+  actions use, so success/error banners + re-fetch land automatically.
+  Confirm copy spells out the three consequences (prior links
+  invalidated / sessions revoked / customer completes on storefront).
+
+------------------------
+Part 2 — Editing an existing price list
+------------------------
+Design choice — customer group is immutable
+Retargeting a list from RETAIL to WHOLESALE_T1 would silently move
+every entry to a group that wasn't intended to receive them. Almost
+always a bug when it happens. The server enforces this by leaving
+customerGroup off UpdatePriceListRequest entirely — no way to change
+it via PATCH. If you truly need a different tier, delete + recreate.
+
+Design choice — explicit clear flags for dates
+{"effectiveFrom": null} is ambiguous in a PATCH: does the admin mean
+"leave alone" or "wipe"? Solved by adding clearEffectiveFrom /
+clearEffectiveTo booleans. Backend logic:
+  - clearXxx=true       → set to null.
+  - value present       → set to that value.
+  - both null/false     → leave the existing value.
+Frontend derives the flag by comparing the form's blank string to the
+original row's populated value, so the admin never has to check a
+box themselves.
+
+Backend api-admin
+- catalog/CatalogDtos.java: UpdatePriceListRequest record NEW —
+  every field optional; clearEffectiveFrom + clearEffectiveTo booleans.
+- catalog/PriceListsService.java: update(id, req) — partial update
+  guarded against null/blank strings; toUpperCase currency; the two
+  clear flags take precedence over their value counterparts.
+- catalog/PriceListsResource.java: adds PATCH /{id} handler gated to
+  SUPERADMIN + PRODUCT_MANAGER (same write-roles as the rest of the
+  catalog resources; Note: this is NOT CUSTOMER_MANAGER because price
+  sheets are a catalog concern, not a customer-management one).
+
+Frontend admin
+- core/catalog/catalog.model.ts: UpdatePriceListPayload interface
+  NEW (mirrors the DTO); JSDoc calls out both design decisions.
+- core/catalog/price-lists.service.ts: update(id, payload) → PATCH.
+- pages/price-lists/price-lists.component: adds a second FormGroup
+  (editForm — same shape as create minus customerGroupId), plus
+  editingId + editingOriginal signals. openEdit(list) pre-populates
+  the form from the row snapshot; submitEdit() computes the
+  clearEffectiveFrom/To booleans by comparing the form's blank
+  strings to the original row.
+- pages/price-lists/price-lists.component.html: each row's action
+  column now shows Edit + Delete (or Close while editing). When
+  editingId matches, a full-width <tr> with colspan=7 is inserted
+  immediately below the row, hosting the edit <form>. Header + intro
+  banner reminds the admin that the customer group is immutable and
+  the group code is displayed as a <code> callout.
+- pages/price-lists/price-lists.component.scss: new
+  gi-plists__form--inline (tighter border, gold-tint background so it
+  reads as one panel with the row above); gi-plists__form-intro
+  banner; is-editing row highlight; col-actions widened to 200px
+  with white-space:nowrap so Edit + Delete never wrap onto two
+  lines.
+
+Design detail — mutual exclusivity
+openCreate() closes any open edit row, and openEdit() closes the
+create panel + disables Edit buttons on every other row. Prevents the
+admin from having two conflicting forms open at once.
+
+===========================================================================
+KNOWN DEFERRALS  (intentional, tracked here)
+===========================================================================
+- Presigned direct-to-MinIO uploads (skip the api-admin proxy for
+  very large media / bandwidth optimisation) — post-MVP.
+- Full CRUD on customer groups (name / price tier / MOQ multiplier
+  editor) — Phase 4d. Seed groups are stable for now; admin can already
+  attach / clear groups on a customer.
+- Nested router-outlet + per-tab URL for the product editor
+  (/products/:id/media etc.) — Phase 4d refinement. The current
+  in-component signal-driven tab switch works but doesn't
+  deep-link.
+- Guest cart (session-keyed) — deferred beyond MVP.
+- Coupons / discount codes — Phase 4d.
+- Redis-backed multi-instance RateLimitService — Phase 4d.
+- Flyway Gradle plugin wiring so flyway-validate CI job stops being
+  a scaffold — Phase 4d.
+- ESLint config so CI lint stops being continue-on-error — Phase 4d.
+- Abandoned-order sweeper (release reservations on stuck
+  PENDING_PAYMENT) — Phase 4d.
+- Order refund flow via CyberSource REST API — Phase 4d.
+- Extract order-domain into shared module — Phase 4d.
+- product_variant table + variant-level inventory — Phase 4d.
+- Server-side image re-encode / thumbnail generation (currently the
+  original file is served as-is) — Phase 5.
+
+===========================================================================
+PHASE 4d.1 — Shipping methods + rate calculator + picker           [COMPLETE]
+===========================================================================
+Closes what was the biggest MVP gap after Phase 4c: `Order.shippingTotal`
+was hard-coded to zero because there was no shipping-method table and no
+rate-quote path. Customers can now be billed for shipping.
+
+Backend (Quarkus, api-admin + api-storefront)
+--------------------------------------------
+- Flyway V6 migration `V6__shipping_methods.sql`:
+    - `shipping_method(id, code, name, description, currency,
+      base_cost, per_kg_rate, min_days, max_days, active, sort_order,
+      created_at, updated_at)` with `UNIQUE(currency, code)` and
+      `INDEX (active, currency, sort_order)` for the storefront pick.
+    - `orders`: added `shipping_method_id` (FK, ON DELETE SET NULL to
+      preserve historical rows even after an admin deletes the method),
+      plus `shipping_method_code` + `shipping_method_name` snapshot
+      columns so the invoice remains legible if the method is later
+      deleted or renamed.
+    - Seeds three defaults for USD: STANDARD_GROUND (5.00 + 1.50/kg,
+      5–7 days), EXPRESS_AIR (20.00 + 5.00/kg, 1–2 days), and
+      DHL_INTL (35.00 + 8.00/kg, 3–7 days) so a fresh install can
+      immediately transact.
+- Persistence: `ShippingMethod` entity (BaseEntity + soft flags,
+  BigDecimal money columns with scale 2/4) and
+  `ShippingMethodRepository` (Panache) with
+  `findByCurrencyAndCode`, `listActiveForCurrency`, `codeExists`.
+  `CheckoutOrder` gained the FK relation + snapshot columns.
+- api-admin: `ShippingDtos` (request + response records),
+  `ShippingMethodsService` (create / read / update / delete with
+  currency+code uniqueness guard and dependent-orders detection on
+  delete), `ShippingMethodsResource` at
+  `/api/admin/v1/shipping-methods` with the usual `@RoleRequired`
+  admin-scope gate.
+- api-storefront: `ShippingQuoteService` computes the cost per cart
+  as `baseCost + perKgRate × totalWeightKg`. Weight is summed from
+  `product.weightKg × quantity`; missing `weightKg` contributes 0
+  (so a digital gift certificate would ship at flat `baseCost`).
+  The compute helper (`totalWeightKg`, `computeCost`) is static so
+  `OrderService.createFromCart` re-derives the same number
+  server-side at placement — the client value is only a hint.
+  `ShippingResource` exposes `GET /api/storefront/v1/me/shipping/quotes`
+  which returns already-priced quotes + the cart weight the server
+  used, so the picker can transparently show "for 3.20 kg".
+- `PlaceOrderRequest` now takes an optional `shippingMethodId`. Null
+  means "pickup / FCA — no shipping method, shippingTotal 0". A
+  non-null id must resolve to `active=true` with a matching
+  currency; otherwise the placement throws 409 with error codes
+  `SHIPPING_METHOD_INACTIVE` or `SHIPPING_METHOD_CURRENCY_MISMATCH`.
+  `OrderService.createFromCart` snapshots `shippingMethodCode` +
+  `shippingMethodName` on placement and adds shipping to grandTotal.
+- Both storefront `OrderDetail` and admin `AdminOrderDetail`
+  responses now include `shippingMethodCode` + `shippingMethodName`.
+
+Frontend admin (Angular 20)
+---------------------------
+- `core/shipping/shipping.model.ts` + `shipping-methods.service.ts`
+  wrap the CRUD endpoints.
+- New `/shipping-methods` route + sidebar link ("local_shipping"
+  icon). Component mirrors the `/price-lists` inline-edit pattern:
+  header + banners + inline create form + table where each row
+  expands into its own edit form. Fields cover code / name /
+  description / currency / base cost / per-kg rate / min-max
+  transit days / active / sort order. Delete asks for confirmation
+  and explains that historical orders retain the snapshot.
+- `AdminOrderDetail` totals row now annotates "Shipping" with the
+  chosen method's name + code so support can eyeball what freight
+  was billed on any invoice.
+
+Frontend storefront (Angular 20)
+--------------------------------
+- `core/shipping/shipping.model.ts` + `shipping.service.ts`
+  (`getQuotes()` — no params, cart-scoped on the server).
+- `PlaceOrderPayload` gained an optional `shippingMethodId`.
+- `/checkout` picker sits between the address card and the notes
+  card. Loads quotes right after cart reload, auto-selects the
+  cheapest option (ties broken by `sortOrder`), lets the customer
+  override. Renders card-style radios matching the address list
+  visual language, showing name / description / ETA / price. If
+  the admin has zero methods configured, placement still succeeds
+  (server computes shippingTotal = 0). The order summary shows a
+  real "Shipping — <Method Name>: cost" line + an estimated total
+  that includes it; tax remains "applied at payment · CURRENCY".
+- Storefront `/account/orders/:uuid` totals row now shows the
+  chosen method name after "Shipping" too.
+
+Deferred (to a future 4d minor)
+-------------------------------
+- Per-country rate tables (e.g. DHL rates that vary by destination).
+  Current model is currency-scoped, not destination-scoped. Fine
+  for MVP because the sales team advertises fixed price bands.
+- Weight-tier pricing (bracket rates instead of linear per-kg).
+- Rate quotes that respect free-shipping thresholds — coupons /
+  discount codes land in a later 4d minor and will hook here.
+
+===========================================================================
+PHASE 4d.2 — Order refund flow                                 [COMPLETE]
+===========================================================================
+Closed the second-biggest MVP gap: support could not refund a paid order.
+Customer-service was doing it manually through the CyberSource dashboard
+and pasting notes on the internal_notes column. Now refunds are a
+first-class admin action with a full audit ledger.
+
+Backend (Quarkus, common + persistence + api-admin)
+---------------------------------------------------
+- `OrderStatus`: added `PARTIALLY_REFUNDED` and rewired the transition
+  map so PAID / FULFILLING / SHIPPED / DELIVERED can all transition
+  into PARTIALLY_REFUNDED and REFUNDED. PARTIALLY_REFUNDED can loop
+  back to itself as further partial refunds accumulate, and can
+  transition to REFUNDED once cumulative refunds meet grand_total.
+  `isTerminal()` still only reports true for DELIVERED / CANCELLED /
+  REFUNDED — PARTIALLY_REFUNDED is deliberately a soft state so the
+  order can still be fulfilled.
+- Flyway V7 migration `V7__order_refunds.sql`:
+    - `order_refund(id, uuid, order_id, amount, reason, status,
+      gateway_provider, gateway_reference, gateway_error_code,
+      gateway_error_message, initiated_by_admin_id, created_at,
+      updated_at)` with `UNIQUE(uuid)`, `INDEX(order_id, created_at)`,
+      `INDEX(status)`. FK to checkout_order is ON DELETE RESTRICT
+      (the audit log must survive), FK to admin_user is ON DELETE SET
+      NULL (removing an admin user should not wipe history).
+    - `checkout_order.refunded_total DECIMAL(19,4) NOT NULL DEFAULT 0`
+      denormalises the cumulative refund total so the admin list can
+      render "40.00 / 100.00" without a JOIN.
+- Persistence: `OrderRefund` entity + `Status` enum (PENDING /
+  SUCCEEDED / FAILED) + `OrderRefundRepository` with `findByUuid`,
+  `listForOrder`, and a `sumSucceededForOrder` sanity check.
+  `CheckoutOrder` gained the `refundedTotal` column and a
+  `List<OrderRefund> refunds` collection ordered oldest-first.
+- api-admin `payment/CyberSourceRefundConfig`: typed wrapper over the
+  CyberSource REST credentials (merchant-id, key-id, secret-key,
+  host, timeout-seconds). Deliberately separate from the storefront
+  Secure Acceptance config — the two APIs use different auth schemes
+  and different credentials on the CyberSource side; conflating them
+  would let ops paste a Secure Acceptance secret and think refunds
+  would work. `isConfigured()` returns false when any credential is
+  blank so the service layer can gracefully fall back to MANUAL.
+- api-admin `payment/CyberSourceRefundClient`: JDK 11+ `HttpClient`
+  wrapper around POST /pts/v2/payments/{captureId}/refunds. Auth uses
+  the CyberSource "HTTP Signature v1" scheme: SHA-256 body digest,
+  RFC-1123 date, HMAC-SHA256 signing string over
+  `host / date / (request-target) / digest / v-c-merchant-id`, and a
+  `Signature` header carrying keyid + algorithm + headers + signature.
+  Base64-decodes the secret with a UTF-8 fallback so a mis-formatted
+  secret produces a 401 (actionable) not a boot NPE. Returns a
+  `RefundOutcome(success, refundId, errorCode, errorMessage)` record;
+  timeouts and IO exceptions are captured as failure outcomes rather
+  than propagated, so the caller can persist a FAILED row for the
+  audit log.
+- api-admin `refunds/RefundDtos`: `CreateRefundRequest(amount,
+  reason, manual?)` with Jakarta Bean-Validation, and `RefundEntry`
+  used by both the list endpoint and embedded in AdminOrderDetail.
+- api-admin `refunds/RefundService`: the single @Transactional entry
+  point. Validates the current status is refundable (rejects
+  PENDING_PAYMENT / CANCELLED / already-REFUNDED with distinct error
+  codes ORDER_NOT_REFUNDABLE / ORDER_FULLY_REFUNDED), validates the
+  amount does not exceed grand_total − refunded_total
+  (REFUND_EXCEEDS_REMAINING), calls the gateway when configured
+  (skipping the call when the admin ticked "manual" or when creds are
+  blank — either way the row is persisted with gateway_provider=
+  MANUAL and status=SUCCEEDED), and on gateway success writes the
+  order_refund row + updates order.refundedTotal + transitions the
+  order to PARTIALLY_REFUNDED or REFUNDED at scale-2 precision.
+  Emits an OrderStatusEvent for the timeline on every attempt,
+  successful or failed — support can see "attempted a $40 refund; the
+  gateway said DECLINED" without spelunking the log files.
+- api-admin `refunds/RefundResource`: two endpoints under
+  `/api/admin/v1/orders/{uuid}/refunds` — GET lists the full history,
+  POST issues a new refund. POST is gated by SUPERADMIN or
+  ORDER_MANAGER only (moving real money is more restrictive than
+  reading orders). The refund list is embedded in AdminOrderDetail so
+  the UI doesn't need a second round-trip.
+
+Frontend admin (Angular 20)
+---------------------------
+- `core/orders/refund.model.ts` + `refunds.service.ts` mirror the
+  admin DTOs. RefundStatus is PENDING / SUCCEEDED / FAILED.
+- `core/orders/order.model.ts`: `OrderStatus` gained
+  `'PARTIALLY_REFUNDED'`; `OrderDetail` gained `refundedTotal` and
+  `refunds: RefundEntry[]`. `ALLOWED_TRANSITIONS` and
+  `ORDER_STATUS_OPTIONS` were kept in sync with the backend state
+  machine — PARTIALLY_REFUNDED has no dropdown-reachable transitions
+  because both paths (further partial + full REFUND) go through the
+  refund modal, not the transition select. `orderStatusVariant`
+  reuses the "cancelled" pill colour for both refund states.
+- `/orders/:uuid` page:
+    - Totals dl gained a red "− Refunded" line whenever
+      `refundedTotal > 0`.
+    - New "Refunds" card in the right column. Shows a summary
+      sentence (either "X refunded of Y — remaining Z" or
+      "Refunds are unavailable for status …"), and an audit list
+      styled per row: bold amount + status pill (green /red / amber),
+      metadata line (timestamp · gateway · reference), the reason,
+      and a red error strip on FAILED rows.
+    - "Issue refund" button in the card header is gated by
+      `canRefund()` which combines a positive remaining balance with
+      an allowed status (PAID / FULFILLING / SHIPPED / DELIVERED /
+      PARTIALLY_REFUNDED).
+    - Refund modal: amount field prefilled with the remaining balance,
+      reason textarea (3–1000 chars), "record as manual" checkbox for
+      out-of-band refunds. Full client-side validation before hitting
+      the server; success message covers both SUCCEEDED ("Refunded X
+      — CyberSource") and gateway-rejected ("Refund attempt recorded,
+      but the gateway rejected it: <error>") outcomes.
+- SCSS: added `.gi-order__refunded`, `.gi-order__card-head`,
+  `.gi-refunds*` (list + row + status pills + reason + error),
+  `.gi-modal-backdrop` + `.gi-modal*` (component-scoped for now — if
+  a second admin page needs a modal we should promote to ui-kit),
+  and the new button variants `.gi-btn--ghost` / `.gi-btn--danger` /
+  `.gi-btn--danger-outline` plus `.gi-field--check` for the checkbox
+  row and hint text for the amount input.
+
+Deferred (to a future 4d minor)
+-------------------------------
+- Per-line refund allocation (the API refunds a bag of cents, not
+  specific line items). Fine for MVP — ops can put the line-item
+  breakdown in the free-text reason.
+- Restock control (currently refunding does NOT re-open the
+  inventory reservation because at DELIVERED it's already gone).
+  Wire this into the abandoned-order sweeper phase.
+- Refund receipt email to the customer. The order_refund row is the
+  source of truth; the storefront email templater is a Phase 5 item.
+- Idempotency-Key header on the CyberSource POST — worth adding once
+  we see a duplicate refund in prod (currently every attempt uses a
+  fresh clientReferenceInformation.code, so a retry after a network
+  timeout could double-refund; ops mitigate by looking up the refund
+  in CyberSource before retrying).
+
+===========================================================================
+PHASE 4d.3 — Abandoned-order sweeper                           [COMPLETE]
+===========================================================================
+Closed a silent MVP bug: `OrderService.createFromCart` reserves inventory
+on placement, but the only paths that release the reservation are the
+customer's explicit cancel and the CyberSource webhook's payment-failed
+callback. A customer who closes the tab on the CyberSource redirect page
+fires neither, so the reservation blocks other buyers forever. Now a
+scheduled sweeper expires those rows.
+
+Backend (Quarkus, persistence + api-storefront)
+-----------------------------------------------
+- `CheckoutOrderRepository.listStuckSince(status, olderThan, limit)`:
+  new Panache query — orders in `status` whose `placedAt` is strictly
+  older than `olderThan`, oldest-first, page-limited so a fresh boot
+  after a long outage doesn't try to cancel everything in one tx.
+- `OrderService.findAbandonedIds(olderThan, limit)`: `@Transactional`
+  read that hands back plain `List<Long>` — no entities cross the tx
+  boundary, so nothing lazy can blow up in the outer sweeper loop.
+- `OrderService.cancelAbandoned(orderId, reason)`:
+  `@Transactional(REQUIRES_NEW)` per-order write. Re-loads the row
+  inside the fresh tx, re-checks that it is still PENDING_PAYMENT
+  (turning a webhook race into a no-op instead of a corrupt row),
+  transitions to CANCELLED with source=SYSTEM + actorId=null, emits
+  the status event, calls the existing `releaseReservedStock` helper,
+  stamps `cancelledAt`, returns `true`/`false` so the caller can
+  distinguish "flipped" from "lost the race".
+- `AbandonedOrderSweeper` (@ApplicationScoped, quarkus-scheduler):
+    - `@Scheduled(every = "${gadaa.orders.abandoned-sweeper.every:5m}",
+      delay = 30s, concurrentExecution = SKIP)`. 30s startup delay so
+      we never race Flyway or initial CDI init on a fresh boot.
+    - AtomicBoolean re-entrancy guard on top of Quarkus's `SKIP` —
+      belt & braces because a stalled DB might not honour SKIP
+      instantly on all versions.
+    - Reads via `findAbandonedIds`, then iterates and calls
+      `cancelAbandoned` per id. Tally per run: cancelled / skipped /
+      failed. Failures are logged with the order id but never crash
+      the loop or the sweeper thread.
+    - `runNow()` test/ops hook lets an integration test drive a
+      sweep on demand; it is deliberately NOT exposed on any REST
+      path.
+- Config keys (application.properties in api-storefront):
+    - `gadaa.orders.abandoned-sweeper.enabled=true` (env
+      `GADAA_ORDERS_SWEEPER_ENABLED`)
+    - `gadaa.orders.abandoned-sweeper.ttl-minutes=60` (env
+      `GADAA_ORDERS_SWEEPER_TTL_MINUTES`) — CyberSource's hosted page
+      typically times out at 15 min, so 60 gives us a comfortable
+      margin for a slow customer who finally submits just before we
+      sweep.
+    - `gadaa.orders.abandoned-sweeper.batch-size=100`
+    - `gadaa.orders.abandoned-sweeper.every=5m`
+    - `%test.gadaa.orders.abandoned-sweeper.enabled=false` so
+      integration tests that plant `PENDING_PAYMENT` fixtures with
+      backdated `placed_at` never see them auto-cancelled
+      mid-assertion. A specific test can flip it back on and call
+      `AbandonedOrderSweeper#runNow()` explicitly.
+
+Deferred (to a future 4d minor)
+-------------------------------
+- Storefront email on auto-cancel. The customer might genuinely be
+  about to pay; a heads-up email ("we cancelled your unpaid order,
+  reorder here") would be friendlier. The status event is the
+  system of record for now; email templater lands in Phase 5.
+- Admin dashboard tile showing sweeper run stats (last-run at,
+  cancelled/skipped/failed counters). For now the log lines are the
+  observability.
+- Locking primitive for multi-instance deploys. The current sweeper
+  runs on every replica; two replicas can independently call
+  `cancelAbandoned(id)` on the same row — the second call is a no-op
+  thanks to the status re-check, but we pay for the extra tx. Once
+  we have Redis (see next section), moving the schedule under a
+  ShedLock-style lease would be trivial.
+
+===========================================================================
+PHASE 4d.4 — Customer-groups CRUD + MOQ multiplier                [COMPLETE]
+===========================================================================
+Closed the third silent Phase 4b hole: customer groups were seeded once by
+V2 and never editable. The MOQ multiplier on each group was stored but
+never applied — the cart happily let a WHOLESALE_T2 customer buy a single
+unit of a product whose group required 5× retail MOQ.
+
+Backend (Quarkus, persistence + api-admin + api-storefront)
+-----------------------------------------------------------
+- persistence:
+    - `CustomerGroupRepository` gained `codeExists(String)` (case-insensitive)
+      and `listSorted()` (retail-first, then B2B tiers by code).
+    - `CustomerRepository.countInGroup(long)` — the delete guard uses it to
+      block dropping a group that still has members.
+- api-admin/catalog:
+    - `CustomerGroupsDtos` — dedicated file with `CustomerGroupDto`
+      (id/code/name/description/priceTier/moqMultiplier/active/customerCount/
+      timestamps), `CreateCustomerGroupRequest` (all required except
+      description; moqMultiplier range 1..1000), and
+      `UpdateCustomerGroupRequest` (PATCH semantics + `clearDescription`
+      flag). Old public inner-class `CustomerGroupsResource.CustomerGroupDto`
+      was removed; nothing on the JVM classpath referenced it.
+    - `CustomerGroupsService` (@ApplicationScoped, @Transactional):
+      unique-code check on create AND on rename, PATCH-style update that
+      leaves omitted fields alone, delete guarded against non-zero
+      `customers.countInGroup(id)` and `priceLists.count("customerGroup.id")`
+      — rejects with `CUSTOMER_GROUP_IN_USE` (409) so ops must reassign
+      first. Every response DTO carries `customerCount` (a second SELECT
+      per row; acceptable because the list is O(dozens)).
+    - `CustomerGroupsResource` rewritten from read-only to full CRUD.
+      GET remains open to every admin (used by the price-list editor
+      dropdown and the customer-detail page). POST / PATCH / DELETE gated
+      by `SUPERADMIN` + `CUSTOMER_MANAGER` — same role pattern as
+      /customers, on the theory that group changes affect the same
+      customer accounts.
+- api-storefront/cart:
+    - `CartService.enforceMinOrderQuantity(Customer, Product, BigDecimal)`
+      now computes `effectiveMoq = productMoq × (customer.group?.moqMultiplier
+      ∥ 1)`, rounded up to product-MOQ scale (3) so a rounding accident
+      cannot leak below the configured minimum. The 400 response gained
+      `productMin` + `groupMultiplier` fields so the storefront can
+      explain "retail MOQ 1.000 × your tier multiplier 5.000" verbatim in
+      the inline error strip. RETAIL customers (multiplier=1) see the
+      original one-line message unchanged.
+    - Both cart write paths (`addItem`, `updateItem`) now pass the cart's
+      already-loaded customer to enforcement — no extra SELECTs. The
+      customer's group is a lazy @ManyToOne but resolves fine inside the
+      surrounding @Transactional method.
+
+Frontend admin (Angular 20)
+---------------------------
+- `core/catalog/catalog.model.ts` extended:
+    - `CustomerGroupDto` gained `description`, `moqMultiplier`,
+      `customerCount`, `createdAt`, `updatedAt`. Existing consumers
+      (/price-lists dropdown, /customers/:id set-group control) only
+      touch id/code/name so the change is fully additive.
+    - New `CreateCustomerGroupPayload` + `UpdateCustomerGroupPayload`
+      records mirroring the backend DTOs.
+    - `PRICE_TIER_LABELS` + `PRICE_TIER_OPTIONS` constants (retail /
+      wholesale T1 / T2 / VIP) for select controls.
+- `core/catalog/customer-groups.service.ts`:
+    - `create` / `update` / `delete` methods added. Every mutation
+      invalidates the internal cache signal so the /price-lists dropdown
+      and /customers/:id picker automatically pick up the change on
+      next read.
+    - `list()` cache path switched to rxjs `of()` for brevity.
+- New `/customer-groups` route + sidebar link ("group_work" icon):
+    - Component mirrors the /shipping-methods and /price-lists
+      inline-edit pattern exactly — header, banners, inline create
+      form, table with per-row expansion.
+    - Fields cover code / display name / description / price tier
+      (select) / MOQ multiplier (text with regex `^\d+(?:\.\d{1,3})?$`) /
+      active. MOQ hint text explains "1.000 = retail MOQ".
+    - Delete first checks `customerCount > 0` client-side and shows an
+      alert asking the admin to reassign members before deleting.
+      Server 409 with `CUSTOMER_GROUP_IN_USE` is the authoritative
+      guard — the client check is only to avoid a wasted round-trip.
+    - Table columns: Code / name, Tier, MOQ × (rendered as "5×" for
+      integers, "2.5×" for decimals), Customers count, Status pill,
+      actions.
+- SCSS: dedicated `customer-groups.component.scss` echoing the
+  `.gi-ship__*` structure under `.gi-cg__*` prefix. Long-term the
+  three sibling pages should share a common `gi-crud-table` partial.
+
+Deferred (to a future 4d minor)
+-------------------------------
+- MOQ multiplier bulk-preview — admins would like to see, before saving,
+  "switching this group to ×5 will move 12 existing cart lines below
+  effective MOQ". For MVP we accept the small window where existing
+  carts stay below the new effective MOQ until the customer next
+  touches them; the placement flow already re-validates stock but
+  not MOQ (documented for a later hardening pass).
+- `OrderService.createFromCart` re-enforcement of MOQ. Currently only
+  the cart write paths enforce it. Very unlikely to matter in practice
+  because the cart is the source of the placement, but a stricter
+  belt-and-braces check at checkout would catch someone racing an
+  admin's multiplier change.
+- Bulk reassignment tool ("move all customers of group X to group Y")
+  so ops can delete an obsolete tier without touching /customers rows
+  one at a time.
+
+===========================================================================
+PHASE 4d.5 — Product editor nested router-outlet                  [COMPLETE]
+===========================================================================
+The /products/:id editor rendered its Details/Media/Inventory/Pricing tabs
+via a local `signal<EditorTab>('details')`, so every out-of-app link to a
+specific tab (a bookmark to /products/42/media, a link pasted into Slack,
+a browser Back click after opening pricing) silently landed on Details.
+This closed that hole by turning each tab into a real routed child.
+
+Frontend admin (Angular 20)
+---------------------------
+- `pages/products/product-editor-state.service.ts` (new):
+    - `@Injectable()` (not root) — the shell lists it in `providers: []`
+      so switching to a different product tears down the cache and refetches.
+    - Signals: `product`, `loading`, `saving`, `archiving`, `errorMessage`,
+      `successMessage`; readonly views exposed to templates.
+    - `load(id)` fetches the product; `saveDetails(payload)` writes and
+      updates the product signal; `patchMedia(list)` swaps the media array
+      in-place without a re-fetch; `archive(cb)` wraps the DELETE and
+      hands the (ok, err?) result to a shell-provided callback so the
+      service stays Router-agnostic.
+- `pages/products/product-editor.component.ts` rewritten as a thin shell:
+    - Providers array registers the state service; children inject it.
+    - Only responsibilities left: read the `:id` route param, call
+      `state.load()`, render breadcrumb + header + banners + tab bar
+      + archive button + `<router-outlet>`. No more direct HTTP calls,
+      no more local `tab` signal, no more per-tab imports.
+- `pages/products/product-editor.component.html` refactored: tabs are now
+  `<a [routerLink]="['./', t.id]" routerLinkActive="is-active">` anchors,
+  and the switch-case block became `<router-outlet />`. Tab clicks call
+  `clearBanners()` on the state service so success/error strips don't
+  linger across tab changes.
+- `pages/products/product-editor.component.scss`: added `text-decoration:
+  none` to `.gi-pedit__tab` since the anchor now inherits the browser's
+  default underline.
+- Four tiny tab-wrapper components under `pages/products/tabs/`:
+    - `product-details-tab.component.ts` — renders `<gi-admin-product-form
+      mode="edit">` and adapts (save) → `state.saveDetails` and (cancel) →
+      Router `/products`.
+    - `product-media-tab.component.ts` — renders `<gi-admin-product-media>`
+      and adapts (changed) → `state.patchMedia`.
+    - `product-inventory-tab.component.ts` — renders
+      `<gi-admin-product-inventory>` with `state.product()?.id`.
+    - `product-pricing-tab.component.ts` — renders
+      `<gi-admin-product-pricing>` with `state.product()?.id`.
+  Each wrapper is ~30 lines and uses inline `template:` because the
+  markup is a single-child mount. The existing per-tab components
+  (`product-form`, `product-media`, `product-inventory`,
+  `product-pricing`) were not modified — their `@Input`/`@Output`
+  contracts stayed identical so `/products/new` still uses them.
+- `app.routes.ts`: `/products/:id` now has `children: []` with an
+  empty-path `pathMatch: 'full'` redirect to `details` (preserves every
+  existing deep-link and the products-list row-click that navigates via
+  `[routerLink]="['/products', row.id]"`) plus one lazy-loaded child per
+  tab. Deep-links like `/products/42/media` now open the media tab
+  directly, browser Back/Forward moves between tabs, and the URL is
+  shareable.
+
+Design notes
+------------
+- The scoped-service pattern beats `route.parent.data` because it also
+  gives children a place to _mutate_ shared state (e.g. media patching)
+  without prop-drilling `@Output` events up through the outlet.
+- Tab-wrappers exist rather than routing directly to the panel components
+  because the panels want `@Input` productId / initial / media and the
+  wrappers are where we adapt the state signal into those inputs. Keeps
+  the panel components reusable outside the editor context (details form
+  is reused by `/products/new`).
+- The state service does not touch the Router — `archive()` takes a
+  callback, and the shell decides where to navigate. This keeps the
+  service unit-testable without a router mock.
+
+Deferred (out of scope for this pass)
+-------------------------------------
+- Per-tab route data (e.g. lazy-fetch pricing entries only when the
+  pricing tab is active). Currently every tab loads its own data on
+  mount, which is fine for MVP — the state service holds the product,
+  each tab loads its side data separately.
+- A guard that skips the fetch when a valid product is already loaded
+  and the user just navigates between tabs. Angular re-runs `ngOnInit`
+  on the parent only on hard navigation, so the fetch already happens
+  once per session; the current behaviour is correct.
+
+===========================================================================
+PHASE 4d.6 — Redis rate limiter + distributed lease                [COMPLETE]
+===========================================================================
+Two related multi-instance holes closed in one pass:
+
+1. `RateLimitService` was a process-local sliding window. Behind a load
+   balancer with N replicas the effective quota was N × the configured
+   max — an /auth/login limit of 10/min accepted 20/min on two replicas,
+   30/min on three, etc. Real abuse would sail through.
+2. `AbandonedOrderSweeper` used only an in-JVM `AtomicBoolean` to prevent
+   overlapping runs. Two replicas would sweep in lockstep, racing on the
+   same PENDING_PAYMENT rows and wasting one full sweep every cycle.
+
+Both are now backed by a runtime-selectable strategy (memory | redis) so
+single-instance dev keeps working unchanged, and prod flips a single env
+var per feature to opt into shared state.
+
+Backend (Quarkus)
+-----------------
+- `build.gradle`: added `io.quarkus:quarkus-redis-client`. The dep is
+  always on the classpath but the client only actually connects when a
+  Redis backend is opted in.
+- `application.properties`:
+    * `gadaa.ratelimit.backend=memory|redis` (default memory)
+    * `gadaa.leases.backend=memory|redis`   (default memory)
+    * `quarkus.redis.hosts` sample line (commented) + `quarkus.redis.timeout=2s`
+- `infra/docker-compose.yml`: new optional `redis` service (redis:7-alpine,
+  persistence off, healthcheck ping, exposes 6379) behind the `redis` and
+  `app` profiles so `docker compose up mysql minio mailhog` still Just Works
+  without touching Redis. The api-storefront service now also passes
+  `GADAA_RATELIMIT_BACKEND` / `GADAA_LEASES_BACKEND` / `QUARKUS_REDIS_HOSTS`
+  through from the shell env.
+
+Rate limiter — pluggable strategy
+---------------------------------
+- `ratelimit/RateLimitBackend.java` (new): interface with
+  `tryAcquire(bucket, clientId, max, window) -> Decision`, `activeKeyCount()`,
+  `label()`.
+- `ratelimit/InMemoryRateLimitBackend.java` (new): the pre-4d.6 sliding
+  window logic extracted verbatim (ConcurrentHashMap of ArrayDeque<Long>
+  per key, synchronized-on-queue for correctness, `@Scheduled` reap of
+  15-min-idle keys). Behaviour identical to before.
+- `ratelimit/RedisRateLimitBackend.java` (new): atomic Lua sliding window
+  on a Redis ZSET.
+    * Per (bucket, clientId) key at `gi:rl:<bucket>:<clientId>`, members
+      = per-hit unique tokens (`<now-ms>:<seq>`), scores = now-ms.
+    * Single 12-line Lua script does ZREMRANGEBYSCORE → ZCARD → early
+      return with oldest score if `count >= max`, else ZADD + PEXPIRE.
+    * Caches the SHA and prefers EVALSHA; on `NOSCRIPT` (Redis restarted
+      or SCRIPT FLUSH'ed) transparently falls back to full EVAL and
+      reloads. Preloads the script in @PostConstruct; non-fatal if Redis
+      is unreachable at boot (retries on first call).
+    * Fail-open on any Redis exception — a Redis outage should not take
+      the site offline. The limiter is defence-in-depth, not the only
+      gate (bcrypt/PBKDF2, session invalidation, etc. still apply).
+    * `activeKeyCount()` returns -1 (SCAN would be O(keyspace); this
+      method is diagnostic-only).
+    * Uses the string-command overload of `RedisDataSource.execute`
+      (`"EVAL"`, `"EVALSHA"`, `"SCRIPT" "LOAD"`, `"SET"`) so we don't
+      depend on the exact layout of `io.vertx.mutiny.redis.client.Command`
+      across Vert.x minor versions.
+- `ratelimit/RateLimitService.java` refactored to a selector shim:
+    * Reads `gadaa.ratelimit.backend` at @PostConstruct, picks memory or
+      redis, logs the choice. If `redis` is requested but the bean can't
+      be resolved (redis-client dep pulled out), warns and falls back to
+      memory rather than failing startup.
+    * `tryAcquire` signature + `Decision` record unchanged, so
+      `RateLimitFilter` and every `@RateLimit` call site work as-is.
+    * Added `activeBackendLabel()` for /q/health surfacing.
+
+Distributed lease
+-----------------
+- `leases/LeaseToken.java` (new): immutable-ish handle (name, nonce,
+  expiresAt, release closure). `release()` is idempotent — the closure
+  runs at most once, so try-finally callers don't need to guard against
+  double release.
+- `leases/LeaseBackend.java` (new): `tryAcquire(name, ttl) -> Optional<LeaseToken>`.
+- `leases/InMemoryLeaseBackend.java` (new): ConcurrentHashMap of
+  currently-held tokens. Trims expired entries before deciding contention
+  so a crashed-mid-run holder doesn't lock forever. Release does a
+  match-and-clear on the map keyed by nonce so a stale expired token
+  can't wipe a successor's lease. Sufficient for single-instance deploys.
+- `leases/RedisLeaseBackend.java` (new): `SET key nonce NX PX <ttlMs>`
+  for acquire; a 4-line Lua check-and-delete (`GET == nonce → DEL`) for
+  release. Fail-CLOSED on acquire — returning empty when Redis errors
+  means the caller skips the run, which is strictly better than every
+  replica sweeping at once. Release swallows exceptions and logs; the
+  TTL will drop the key eventually if the DEL fails.
+- `leases/DistributedLease.java` (new): same selector-shim pattern as
+  RateLimitService. Reads `gadaa.leases.backend`, injects both backends,
+  picks one at @PostConstruct.
+
+Sweeper integration
+-------------------
+- `order/AbandonedOrderSweeper.java`:
+    * Added `LEASE_NAME = "abandoned-order-sweeper"` constant.
+    * `sweep()` now: check @Scheduled SKIP + AtomicBoolean re-entrancy
+      → `lease.tryAcquire(LEASE_NAME, 15min)` → if empty, DEBUG-log and
+      return; if held, call `doSweep()` in a try-finally, release the
+      token in the finally.
+    * The 15-minute lease TTL is 3× the default `every=5m` cadence so a
+      slow sweep doesn't lose the lease mid-flight. The TTL exists solely
+      to auto-recover from a JVM crash mid-run.
+    * `doSweep()` split out of `sweep()` — the original loop verbatim
+      (find abandoned ids in a short tx, cancel each in REQUIRES_NEW,
+      log counts). Structure kept identical so 4d.3's transactional
+      semantics carry through unchanged.
+
+Design invariants
+-----------------
+- Rate limiter: fail-OPEN (Redis dies → traffic keeps flowing). Rate
+  limits are belt-and-braces defence.
+- Lease: fail-CLOSED (Redis dies → sweep skipped). Overlapping sweeps
+  waste more than skipping one cycle costs.
+- Memory backends preserve pre-4d.6 behaviour bit-for-bit. Nothing in
+  the default `docker compose up mysql minio mailhog` bring-up path
+  needs Redis; setting `gadaa.ratelimit.backend=redis` without also
+  running Redis produces per-call WARN logs and fail-open behaviour, so
+  the failure mode is loud but non-fatal.
+- Every `@RateLimit` call site (`AuthResource`, `CartResource`,
+  `OrderResource`) unchanged — the annotation contract and the
+  `RateLimitFilter` DTO shape survived the refactor.
+
+Deferred (out of scope for MVP)
+-------------------------------
+- Sentinel / cluster Redis support. Quarkus's Redis client can be pointed
+  at a Sentinel or cluster URI list — the code doesn't care, but we
+  haven't tested it.
+- Prometheus metrics on the two backends (rate-limit hits/rejects,
+  lease acquires/skips). Wiring is straightforward given the existing
+  `quarkus-micrometer-registry-prometheus` extension; deferred until
+  ops actually asks for the graph.
+- Redis persistence for the rate-limit ZSETs. Right now `redis-server
+  --save "" --appendonly no` is intentional — restart loses the state,
+  which matches the memory backend's semantics and is what we want for
+  a limiter.
+
+===========================================================================
+PHASE 4d.8 — Product Variants + Variant-Level Inventory        [COMPLETE]
+===========================================================================
+Unlocks "select weight / grind / packaging" on storefront product
+pages. Each variant has its own SKU, optional price/weight override,
+its own inventory row, and key/value attributes. Products without
+variants keep working unchanged — the existing inventory row with
+variant_id = NULL is the "default" stock.
+
+Backend — persistence (Flyway V8)
+---------------------------------
+- product_variant: id, product_id (FK CASCADE), sku (UNIQUE), name,
+  price_override (NULL = use product.base_price), weight_kg_override
+  (NULL = use product.weight_kg), active, sort_order, timestamps.
+- product_variant_attribute: id, variant_id (FK CASCADE), attr_key,
+  attr_value, UNIQUE(variant_id, attr_key).
+- inventory: variant_id gains FK to product_variant (ON DELETE CASCADE).
+  One inventory row per product (variant_id NULL) or per variant.
+- cart_item: + variant_id (FK SET NULL). Unique constraint dropped +
+  recreated as (cart_id, product_id, variant_id) so the same product
+  can appear under different variants.
+- order_item: + variant_id, variant_sku, variant_name (snapshot cols).
+
+- Entities: ProductVariant, ProductVariantAttribute. Product gained
+  @OneToMany variants (cascade ALL, orphanRemoval, ordered by sortOrder
+  + id). Inventory changed product @OneToOne → @ManyToOne, added
+  @ManyToOne variant. CartItem + OrderItem gained @ManyToOne variant.
+  CartItem unique constraint annotation updated to include variant_id.
+- Repositories: ProductVariantRepository (findBySku, listByProduct,
+  listActiveByProduct, skuExists, countByProduct). InventoryRepository
+  gained findByVariant + findAllByProduct. CartItemRepository gained
+  findByCartProductAndVariant (delegates to findByCartAndProduct when
+  variantId is null).
+
+Backend — admin API (api-admin)
+-------------------------------
+- CatalogDtos: VariantDto, VariantAttributeDto, CreateVariantRequest,
+  UpdateVariantRequest, VariantInventoryDto. ProductDto gained
+  List<VariantDto> variants.
+- CatalogMapper: toVariantDto (resolves variant inventory via
+  InventoryRepository.findByVariant), toAttrDto, toVariantInventoryDto.
+  ProductDto mapping now includes variants list.
+- VariantsService (@ApplicationScoped, @Transactional):
+  * create() — validates SKU uniqueness, seeds zero-qty variant
+    inventory row, sets sortOrder to list size if omitted.
+  * update() — PATCH semantics, SKU uniqueness check on rename,
+    full attribute replacement when attributes provided.
+  * delete() — removes from product.variants + deletes variant
+    (cascade removes attributes + variant inventory).
+  * listVariantInventory() — variant-level inventory rows for a product.
+  * adjustVariantInventory() — signed delta, guards against negative.
+  * setVariantInventory() — overwrite quantity + optional threshold.
+- VariantsResource: /api/admin/v1/products/{productId}/variants
+  * GET    /variants              — list variants
+  * POST   /variants              — create variant
+  * PATCH  /variants/{variantId}  — update variant
+  * DELETE /variants/{variantId}  — delete variant
+  * GET    /variants/inventory    — list variant inventory
+  * POST   /variants/{variantId}/inventory/adjust — delta adjust
+  * PUT    /variants/{variantId}/inventory        — set quantity
+  Write endpoints gated by SUPERADMIN or PRODUCT_MANAGER.
+- AdminOrderDtos.LineItem gained variantSku + variantName.
+  AdminOrderMapper.toLine updated. AdminOrderService
+  .releaseReservedStockIfApplicable now variant-aware.
+
+Backend — storefront API (api-storefront)
+-----------------------------------------
+- StorefrontCatalogDtos: ProductDetail gained List<VariantSummary>
+  variants. New VariantSummary (id, sku, name, priceOverride,
+  weightKgOverride, active, sortOrder, attributes, inStock,
+  availableQuantity) + VariantAttribute (key, value).
+- StorefrontCatalogService.toDetail: maps active variants with their
+  inventory (filters to active=true only for public storefront).
+- CartDtos: AddItemRequest gained optional variantId. CartLine gained
+  variantId, variantSku, variantName.
+- CartService.addItem: resolves variant from product.variants, validates
+  active, uses findByCartProductAndVariant for dedup, applies
+  variant.priceOverride when present, enforces variant-level stock.
+- CartService.updateItem + removeItem: accept variantId param, use
+  findByCartProductAndVariant for lookup, variant-aware stock + price.
+- CartResource: PATCH/DELETE /items/{productId} accept ?variantId=
+  query param.
+- CartMapper.toLine: includes variant fields, variant-aware inventory
+  key lookup in toResponse (negative variant.id as key to distinguish
+  from product-level inventory).
+- OrderDtos.OrderLineDto gained variantSku + variantName.
+  OrderMapper.toLine updated.
+- OrderService.createFromCart: variant-aware price resolution
+  (priceOverride), variant-level inventory reservation, snapshots
+  variantSku + variantName on OrderItem.
+- OrderService.releaseReservedStock + markPaid: variant-aware inventory
+  lookup (findByVariant when item.variant != null).
+- ShippingQuoteService.totalWeightKg: uses variant.weightKgOverride
+  when present for accurate shipping cost calculation.
+
+Design invariants
+-----------------
+- Backward compatibility: all variant references are nullable. Products
+  without variants work exactly as before — inventory.variant_id NULL,
+  cart_item.variant_id NULL, order_item.variant_id NULL.
+- Variant SKU uniqueness is global (uk_variant_sku), matching product
+  SKU uniqueness. This simplifies fulfilment lookups.
+- Variant inventory is separate from product inventory. A product with
+  variants should have its product-level inventory set to 0 or removed;
+  the storefront toDetail shows product-level inStock/availableQuantity
+  for the "no variant selected" state and per-variant stock in the
+  variants list.
+- Cart unique constraint includes variant_id so the same product can
+  appear as multiple lines (one per variant). MySQL treats NULL as
+  distinct in unique constraints, so (cart=1, product=5, NULL) and
+  (cart=1, product=5, variant=3) coexist.
+- Price override: when variant.priceOverride is non-null, it takes
+  precedence over both the product base price and the customer's
+  price-list tier price. This is intentional — variant pricing is
+  absolute, not a delta.
+
+Deferred (frontend, next phase)
+-------------------------------
+- Admin UI: variant management tab in product editor (CRUD table +
+  inventory adjust dialog — backend endpoints all live).
+- Storefront UI: variant selector on product detail page (attribute-
+  based radio/dropdown, variant-aware add-to-cart, per-variant stock
+  display, variant price swap).
+- Storefront cart UI: show variant name/SKU on cart lines.                — DONE
+- Storefront order history: show variant name/SKU on order lines.         — DONE
+- Admin order detail: show variant name/SKU on line items.                — DONE
+
+===========================================================================
+PHASE 4d.9 — Coupons / discount codes + variant UI completions   [COMPLETE]
+===========================================================================
+Backend (Quarkus)
+- Flyway V9__coupons.sql: coupon table (code, description, discount_type
+  PERCENT|FIXED_AMOUNT, discount_value, currency, min_subtotal, free_shipping,
+  max_redemptions, max_per_customer, active, starts_at, expires_at, timestamps)
+  + coupon_redemption audit table (FK coupon + checkout_order + customer,
+  snapshot code + discount_amount) + checkout_order coupon snapshot columns
+  (coupon_code, coupon_description, coupon_discount).
+- Entities: Coupon (isPercent, isCurrentlyValid helpers), CouponRedemption.
+- CouponRepository: findByCode, codeExists, countRedemptionsForCustomer.
+- Admin API: CouponsService (CRUD + validation: code uniqueness, percent ≤ 100,
+  delete guard for redeemed coupons), CouponsResource at /api/admin/v1/coupons
+  (GET list/single, POST, PATCH, DELETE — writes gated SUPERADMIN/PRODUCT_MANAGER).
+- Storefront API: CouponService.validate() + computeDiscount() — checks active,
+  validity window, currency match, min subtotal, per-customer limits. Handles
+  PERCENT and FIXED_AMOUNT. CouponPreviewResource at
+  /api/storefront/v1/me/coupon-preview?code=X — validates + previews discount
+  against live cart subtotal.
+- OrderService.createFromCart: integrated coupon validation, discount applied
+  to grand total, free shipping override, CouponRedemption audit row +
+  redeemedCount increment — all inside the existing @Transactional placement.
+- OrderDtos: couponCode on PlaceOrderRequest, coupon snapshot fields on
+  OrderDetail. OrderMapper maps coupon fields.
+- AdminOrderDtos + AdminOrderMapper: coupon snapshot fields in admin order
+  detail.
+
+Admin frontend (Angular 20)
+- core/catalog/catalog.model.ts: CouponDto, CouponListResponse,
+  CreateCouponPayload, UpdateCouponPayload interfaces.
+- core/catalog/coupons.service.ts: HTTP CRUD service.
+- pages/coupons/coupons.component.{ts,html,scss}: inline-edit management page
+  — table with code, discount, currency, min subtotal, free shipping, limits,
+  redeemed count, active pill. Create panel + edit row with all fields
+  (discount type, value, currency, min subtotal, free shipping, max redemptions,
+  max per customer, active, starts/expires at, description).
+- app.routes.ts: /coupons route. app.component.ts: sidebar link with
+  confirmation_number icon.
+
+Storefront frontend (Angular 20)
+- order.model.ts: variantSku/variantName on OrderLine, coupon fields on
+  OrderDetail, couponCode on PlaceOrderPayload.
+- checkout.component.ts: coupon code input, preview API call via HttpClient,
+  discount in estimatedTotal computed, couponCode passed in place() payload.
+  Free shipping override reflected in totals.
+- checkout.component.html: coupon input section (between shipping and notes),
+  discount line + free shipping display in order summary totals.
+- checkout.component.scss: styles for coupon input, applied coupon card,
+  discount/free totals.
+- account/order-detail.component.html: variant name shown on order lines,
+  coupon code shown in discount totals row.
+- account/order-detail.component.scss: .gi-order-detail__line-variant style.
+
+Admin frontend (Angular 20) — variant display
+- core/orders/order.model.ts: variantSku/variantName on LineItem, coupon fields
+  on OrderDetail.
+- pages/orders/order-detail.component.html: variant name shown on line items,
+  coupon code shown in discount totals row.
+- pages/orders/order-detail.component.scss: .gi-order__line-variant style.
+
+Confirmed already complete (from prior sessions):
+- Admin variant management tab: product-variants.component.{ts,html,scss} with
+  full CRUD + inventory adjust/set modal, route at /products/:id/variants.
+- Storefront variant selector: product-detail.component with variant selection,
+  effective price/stock computed, variantId passed to cart.addItem().
+
+===========================================================================
+PHASE 5 — Platform Hardening & Operational Features             [COMPLETE]
+===========================================================================
+
+1. Server-side image re-encode / thumbnail generation: ✅ COMPLETE (2026-07-16)
+   - ImageProcessingService generates 300px card + 800px detail JPEG variants
+     on upload using Thumbnailator (quality 85%).
+   - S3Service.uploadThumbnail uploads variants alongside originals.
+   - UploadsResource reads file into memory, generates thumbnails, uploads
+     all three, returns URLs in UploadResponse.
+   - ProductMedia entity + V12 migration add card_thumbnail_url + detail_thumbnail_url.
+   - Admin CatalogDtos.ProductMediaDto + CreateMediaRequest include thumbnail URLs.
+   - Admin frontend: UploadResponse + ProductMedia + CreateMediaPayload interfaces
+     updated; product-media component captures thumbnail URLs from upload, passes
+     them on attach; media list uses cardThumbnailUrl for preview.
+   - Storefront DTOs: ProductCard gains cardThumbnailUrl, ProductDetail gains
+     detailThumbnailUrl. Product entity has primaryCardThumbnailUrl() +
+     primaryDetailThumbnailUrl() with fallback to full URL for legacy media.
+   - Storefront frontend: shop cards use cardThumbnailUrl, product detail hero
+     uses detailThumbnailUrl, wishlist uses detailThumbnailUrl — all with
+     fallback to primaryImageUrl for legacy media.
+
+2. Email templater for transactional emails: ✅ COMPLETE (2026-07-16)
+   - ✅ Order confirmation email (already existed — MailService.sendOrderConfirmation
+     in api-storefront, called from OrderService.createFromCart, Qute html+txt templates)
+   - ✅ Order cancellation email (already existed — MailService.sendOrderCancelled
+     in api-storefront, called from cancelByCustomer + cancelAbandoned sweeper)
+   - ✅ Refund receipt email (already existed — RefundMailService.sendRefundReceipt
+     in api-admin, called from RefundService on successful refund)
+   - ✅ Coupon expiry / usage reports (NEW):
+     - CouponReportMailService: sends expiry warning + usage report emails via
+       Qute templates (coupon-expiry-warning.{html,txt}, coupon-usage-report.{html,txt}).
+       Templates follow existing brand styling (navy gradient header, gold accents,
+       brown footer). ExpiryRow + UsageRow records for Qute iteration.
+     - CouponReportService: checkExpiringCoupons(warningDays) queries active coupons
+       with expiresAt within the warning window. sendUsageReport(reportDays) aggregates
+       total redemptions, total discount, active coupon count, and top 10 coupons
+       by redemption count from CouponRedemption table.
+     - CouponReportScheduler: daily @Scheduled expiry check (08:00 UTC, configurable
+       cron) + weekly usage report (Monday 09:00 UTC). Both use ConcurrentExecution.SKIP
+       + AtomicBoolean re-entrancy guard. Configurable enable/disable + warning days.
+     - Manual trigger endpoints: POST /api/admin/v1/coupons/reports/expiry-check and
+       POST /api/admin/v1/coupons/reports/usage-report (SUPERADMIN + PRODUCT_MANAGER).
+     - Config: gadaa.coupon.notification-email, gadaa.coupon.expiry-check.{enabled,
+       warning-days,cron}, gadaa.coupon.usage-report.{enabled,report-days,cron},
+       gadaa.frontend.admin-url.
+
+3. Admin dashboard KPIs: ✅ COMPLETE (2026-07-16)
+   - Backend StatsResource extended with:
+     - Revenue trend: today vs yesterday, this month vs last 30 days,
+       7-day daily revenue series (for sparkline/bar chart).
+     - Order status breakdown: count per status with percentages.
+     - Recent orders: 8 most recent orders with invoice, customer,
+       status, item count, total, date.
+     - Low-stock items: 10 most critical items with product name,
+       SKU, variant name, available qty, restock threshold.
+   - Frontend dashboard.component enhanced:
+     - 8 KPI tiles (added "Revenue today" with order count).
+     - Revenue trend card: today/month values with day-over-day and
+       month-over-month delta percentages, 7-day CSS bar chart.
+     - Order status breakdown card: status pills + count + progress bars.
+     - Recent orders table: invoice links to order detail, status pills,
+       item count, formatted total, short date.
+     - Low-stock alerts card: product name + variant + SKU + available
+       vs threshold, "N more" overflow indicator.
+   - All sections use computed signals from the single GET /stats call.
+   - Responsive 2-column grid collapses to 1 on narrow screens.
+
+4. Storefront UX polish: ✅ COMPLETE (2026-07-16)
+   - ✅ Guest cart (session-keyed, no sign-in required for add-to-cart)
+   - ✅ Wishlist / save-for-later (localStorage-based, heart toggle on PDP, header badge, /wishlist page)
+   - ✅ Product search (header search bar → /shop?q=…, shop page reads query param)
+   - ✅ Order tracking page (public /track-order, UUID+email lookup, rate-limited, status timeline)
+
+5. Operational: ✅ COMPLETE (2026-07-16)
+
+   5a. Prometheus metrics on rate limiter + lease backends:
+   - RateLimitService (api-storefront): Micrometer counter
+     `gi_ratelimit_requests_total{backend="storefront",result="allowed|rejected"}`
+     incremented on every check; gauge `gi_ratelimit_active_keys{backend="storefront"}`
+     reports the current number of tracked client keys. The @Scheduled reaper
+     updates the gauge after pruning idle queues.
+   - DistributedLease (api-storefront): Micrometer counter
+     `gi_lease_attempts_total{backend="storefront",result="acquired|skipped"}`
+     incremented on every tryAcquire / tryRenew call. Both services already
+     had `quarkus-micrometer-registry-prometheus` on the classpath.
+
+   5b. Per-country shipping rate tables:
+   - Flyway V13__shipping_rate_zones.sql: shipping_rate_zone table with
+     columns id, shipping_method_id (FK CASCADE), country_code (CHAR(2)),
+     base_cost, per_kg_rate, min_days, max_days (all nullable — only
+     non-null fields override the parent method), active (BOOL), timestamps.
+     UNIQUE(method_id, country_code) + index on (method_id, active).
+   - ShippingRateZone entity with @PrePersist/@PreUpdate lifecycle hooks.
+   - ShippingRateZoneRepository: findActiveZone(methodId, countryCode),
+     listByMethod(methodId), existsForMethodAndCountry(methodId, countryCode).
+   - Admin DTOs: ShippingRateZoneDto, CreateShippingRateZoneRequest,
+     UpdateShippingRateZoneRequest (all with Bean Validation).
+   - ShippingRateZonesService: transactional CRUD with duplicate-country
+     conflict checks, entity↔DTO mapping, active-flag toggle.
+   - Admin REST endpoints on ShippingMethodsResource:
+       GET   /shipping-methods/{id}/zones          — list zones for a method
+       POST  /shipping-methods/{id}/zones          — create zone
+       PATCH /shipping-methods/zones/{zoneId}      — update zone
+       DELETE /shipping-methods/zones/{zoneId}     — delete zone
+     Writes gated by SUPERADMIN + ORDER_MANAGER.
+   - Storefront integration:
+     - ShippingQuoteService.quotesForCustomer overloaded with optional
+       countryCode. computeCost uses zone.baseCost / zone.perKgRate when
+       an active zone exists for the method+country, falling back to the
+       method's own rates. Transit days (min/max) also use zone overrides.
+     - ShippingResource: ?countryCode= query param on the quotes endpoint.
+     - OrderService: shipping cost at order placement now calls the same
+       zone-aware computeCost, passing the ship-to address country code —
+       so the charged shipping matches the quote the customer saw.
+
+   5c. Bulk product import / export (CSV):
+   - ProductCsvService (api-admin, @ApplicationScoped):
+     - exportCsv(): streams all products as CSV with header row matching
+       the 15 editable Product fields (sku, slug, name, shortDescription,
+       description, category, status, weightKg, hsCode, originCountry,
+       baseCurrency, basePrice, costPrice, minOrderQuantity, packagingNotes).
+       Fields containing commas/quotes/newlines are RFC-4180 quoted.
+     - importCsv(csvText): parses CSV (handles quoted fields, embedded
+       commas, doubled-quote escaping). For each data row:
+         * Existing SKU → PATCH-style update (only non-empty cells applied;
+           literal `!CLEAR` sets a nullable field to null).
+         * New SKU → create as DRAFT with zero-qty inventory seed.
+         * Partial success: valid rows process even if other rows have
+           errors. Returns {created, updated, errors[]} summary.
+     - No external CSV library — manual parser sufficient for the schema.
+   - Admin REST endpoints on ProductsResource:
+       GET  /products/export.csv   — downloads products-export.csv (text/csv)
+       POST /products/import-csv   — accepts text/plain CSV body, returns
+         JSON summary with 200 (all ok) or 206 (partial success).
+     Import gated by SUPERADMIN + PRODUCT_MANAGER; export any admin.
+
+
+===========================================================================
+STAKEHOLDER DEPENDENCIES  (need info from Gadaa Istar to complete)
+===========================================================================
+- Real company TIN + VAT registration number (for tax invoice seeding)
+- CyberSource sandbox account credentials (access_key, profile_id, secret_key)
+- Domain names for dev / staging / prod (gadaaistar.com preferred)
+- Ethio Telecom Cloud enterprise account activation
+- Cloudflare account for DNS + CDN
+- SendGrid (or AWS SES) account for outbound email
+
+===========================================================================
+BUILD & RUN
+===========================================================================
+See README.md > Quick Start. Auth-flow smoke test after `npm install`:
+
+  # 1. Start infra + backend
+  cd infra && docker compose up -d mysql minio mailhog
+  cd ../backend && ./gradlew :api-storefront:quarkusDev
+
+  # 2. Register (in another shell)
+  curl -X POST http://localhost:8080/api/storefront/v1/auth/register \
+    -H 'Content-Type: application/json' \
+    -d '{
+      "email":     "buyer@example.com",
+      "password":  "correcthorsebattery",
+      "firstName": "Ada",
+      "lastName":  "Adigrat",
+      "customerType": "B2C"
+    }'
+
+  # 3. Login
+  curl -X POST http://localhost:8080/api/storefront/v1/auth/login \
+    -H 'Content-Type: application/json' \
+    -d '{"email":"buyer@example.com","password":"correcthorsebattery"}'
+
+  # 4. Tax rule lookup (Ethiopia -> 15% standard; anywhere else -> zero-rated)
+  curl http://localhost:8080/api/storefront/v1/tax/rules/ET
+  curl http://localhost:8080/api/storefront/v1/tax/rules/DE
+
+  # 5. Frontend (storefront + admin)
+  cd ../frontend && npm install
+  npm run start:storefront          # http://localhost:4200
+  npm run start:admin               # http://localhost:4300
+
+  # 6. Admin API smoke test (Phase 2.1)
+  # First sign-in triggers TOTP enrollment. The response includes an
+  # otpauth:// URI you can scan; verify with the current 6-digit code.
+
+  curl -X POST http://localhost:8081/api/admin/v1/auth/login \
+    -H 'Content-Type: application/json' \
+    -d '{"email":"admin@gadaaistar.com","password":"ChangeMe-Admin-2026!"}'
+  # → returns {state:"MFA_ENROLLMENT_REQUIRED", challengeToken, setup:{...}}
+
+  # Then, with a code from your authenticator:
+  curl -X POST http://localhost:8081/api/admin/v1/auth/verify-mfa \
+    -H 'Content-Type: application/json' \
+    -d '{"challengeToken":"<from previous step>","code":"123456"}'
+  # → returns {accessToken, refreshToken, admin:{...}}
+
+===========================================================================
+PHASE 6 — CMS, SEO, Notifications, i18n                      [COMPLETE]
+===========================================================================
+
+6a — CMS Backend (Page + Banner entities, admin CRUD, storefront public API)
+- Flyway V14 migration: cms_page + cms_banner tables.
+- CmsPage entity: slug, title, bodyHtml, seoTitle, seoDescription,
+  status (DRAFT/PUBLISHED), sortOrder, timestamps.
+- CmsBanner entity: placement (HOMEPAGE_HERO), imageUrl, linkUrl,
+  title, subtitle, status, sortOrder, startAt/endAt, timestamps.
+- Repositories: CmsPageRepository (findBySlug, listPublished),
+  CmsBannerRepository (listByPlacement).
+- Admin CRUD APIs: /api/admin/v1/cms/pages + /api/admin/v1/cms/banners.
+  Write gated by SUPERADMIN + PRODUCT_MANAGER.
+- Storefront public APIs: /api/storefront/v1/cms/pages/{slug} +
+  /api/storefront/v1/cms/banners?placement=HOMEPAGE_HERO.
+
+6b — Admin Frontend CMS UI
+- CMS page editor: list + create + edit form (title, slug, body HTML,
+  SEO fields, status, sort order). Lazy-loaded at /cms/pages.
+- Banner manager: list + create + edit form (placement, image URL,
+  link URL, title, subtitle, status, scheduling). Lazy-loaded at
+  /cms/banners.
+
+6c — Storefront Frontend CMS
+- CmsPageComponent at /pages/:slug — fetches page by slug, renders
+  bodyHtml with DomSanitizer.bypassSecurityTrustHtml, loading + error
+  states.
+- HomeComponent fetches HOMEPAGE_HERO banners and renders them above
+  the existing hero section.
+- StorefrontCmsService + CmsPageDto/CmsBannerDto models.
+
+6d — SEO
+- SeoService (Angular): manages <title>, <meta> description, canonical
+  <link>, Open Graph tags, JSON-LD <script type="application/ld+json">.
+  Called from HomeComponent, CmsPageComponent, ProductDetailComponent.
+- index.html: base SEO meta tags + Organization JSON-LD.
+- robots.txt in storefront public/ — disallows /api/, /login, /cart,
+  etc. Points to backend sitemap endpoint.
+- SeoResource (backend): GET /api/storefront/v1/seo/robots.txt +
+  GET /api/storefront/v1/seo/sitemap.xml. Sitemap includes static
+  pages, published CMS pages, and all active products.
+- ProductRepository.findAllActive() + CmsPageRepository.listPublished()
+  power the sitemap.
+
+6e — Transactional Emails
+- Shipment notification email sent when admin transitions order to
+  SHIPPED (AdminOrderService.transition → OrderStatusEvent → email).
+- B2B approval email sent when admin approves B2B customer
+  (CustomersService.approveB2B).
+- B2B rejection email sent when admin changes B2B customer status
+  to REJECTED (CustomersService.changeStatus).
+- All use Qute HTML + text templates via Quarkus ReactiveMailer.
+
+6f — Admin Notification Center
+- Backend: NotificationsResource at /api/admin/v1/notifications.
+  Returns NotificationsDto(newOrders, pendingB2bApprovals, lowStockItems,
+  total, asOf). Reuses same queries as StatsResource but lightweight.
+- Frontend: NotificationBellComponent in admin topbar — bell icon with
+  red badge showing total count. Dropdown shows per-category counts with
+  links to /orders, /products, /customers. Polls every 60 seconds.
+- NotificationsService + NotificationsDto model.
+
+6g — i18n Scaffolding
+- @angular/localize/init already in polyfills (angular.json).
+- I18nService (storefront): signal-based locale + currency, persists
+  to localStorage. Reactive t() computed function for translations.
+  formatPrice() using Intl.NumberFormat.
+- Translation files: en.ts, am.ts (Amharic), om.ts (Afaan Oromoo).
+  Covers nav labels, actions, hero, footer keys.
+- LanguageSwitcherComponent in storefront header — flag + code buttons
+  for EN/AM/OM. Inline template + styles.
+- Currency switcher now backed by I18nService (was local signal).
+  Persists selection across sessions.
+- LOCALE_OPTIONS + TranslationKey type-safe model.

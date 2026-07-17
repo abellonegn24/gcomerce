@@ -1,0 +1,83 @@
+<section class="gi-return">
+  @if (loading() && !order()) {
+    <div class="gi-return__loading">
+      <span class="material-icons-round gi-spin">progress_activity</span>
+      Finalising your payment…
+    </div>
+  }
+
+  @if (errorMessage(); as msg) {
+    <div class="gi-alert gi-alert--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  @if (order(); as o) {
+    <div class="gi-return__card"
+         [class.is-paid]="o.status === 'PAID' || o.status === 'FULFILLING' || o.status === 'SHIPPED' || o.status === 'DELIVERED'"
+         [class.is-pending]="o.status === 'PENDING_PAYMENT'"
+         [class.is-cancelled]="o.status === 'CANCELLED'">
+
+      @if (o.status === 'PENDING_PAYMENT') {
+        <span class="material-icons-round gi-return__icon">hourglass_top</span>
+        <h1>Waiting for your bank to confirm…</h1>
+        <p>
+          Your order <strong>{{ o.invoiceNumber }}</strong> is placed and we're
+          waiting on CyberSource to notify us. This usually takes a few seconds.
+        </p>
+        @if (stillPending()) {
+          <p class="gi-return__hint">
+            <span class="material-icons-round gi-spin">refresh</span>
+            Refreshing status automatically…
+          </p>
+        }
+      } @else if (o.status === 'CANCELLED') {
+        <span class="material-icons-round gi-return__icon gi-return__icon--warn">block</span>
+        <h1>Payment didn't go through</h1>
+        <p>
+          Order <strong>{{ o.invoiceNumber }}</strong> was cancelled because
+          the payment was declined or aborted. No charge was made.
+        </p>
+      } @else {
+        <span class="material-icons-round gi-return__icon gi-return__icon--ok">task_alt</span>
+        <h1>Thank you — your order is confirmed!</h1>
+        <p>
+          We received payment on <strong>{{ o.invoiceNumber }}</strong>. A
+          receipt has been sent to your email.
+        </p>
+      }
+
+      <dl class="gi-return__summary">
+        <div>
+          <dt>Order</dt>
+          <dd>{{ o.invoiceNumber }}</dd>
+        </div>
+        <div>
+          <dt>Status</dt>
+          <dd>{{ o.status }}</dd>
+        </div>
+        <div>
+          <dt>Total</dt>
+          <dd>{{ formatMoney(o.currency, o.grandTotal) }}</dd>
+        </div>
+        @if (o.paidAt) {
+          <div>
+            <dt>Paid</dt>
+            <dd>{{ o.paidAt | date:'medium' }}</dd>
+          </div>
+        }
+      </dl>
+
+      <div class="gi-return__actions">
+        <a [routerLink]="['/account/orders', o.uuid]" class="gi-btn-inline gi-btn-inline--gold">
+          <span class="material-icons-round">receipt_long</span>
+          View order details
+        </a>
+        <a routerLink="/shop" class="gi-btn-inline gi-btn-inline--ghost">
+          Keep shopping
+        </a>
+      </div>
+    </div>
+  }
+</section>

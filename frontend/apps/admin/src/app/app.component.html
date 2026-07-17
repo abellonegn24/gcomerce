@@ -1,0 +1,57 @@
+@if (isAuthenticated()) {
+  <header class="gi-admin-topbar">
+    <a routerLink="/dashboard" class="gi-admin-topbar__brand">
+      <span class="gi-admin-topbar__mark" aria-hidden="true">
+        <span class="gi-admin-topbar__arrow">↗</span>
+        <span class="gi-admin-topbar__star">★</span>
+      </span>
+      <div class="gi-admin-topbar__wordmark">
+        <span class="gi-admin-topbar__name">GADAA ISTAR</span>
+        <span class="gi-admin-topbar__sub">Admin Back-Office</span>
+      </div>
+    </a>
+
+    <div class="gi-admin-topbar__right">
+      <gi-notification-bell />
+      @if (admin(); as a) {
+        <div class="gi-admin-topbar__user" [attr.aria-label]="'Signed in as ' + a.email">
+          <span class="material-icons-round">account_circle</span>
+          <span class="gi-admin-topbar__user-info">
+            <span class="gi-admin-topbar__user-name">{{ a.fullName || a.email }}</span>
+            <span class="gi-admin-topbar__user-role">{{ a.role ?? 'ADMIN' }}</span>
+          </span>
+        </div>
+      }
+      <button type="button" class="gi-admin-topbar__signout" (click)="signOut()">
+        <span class="material-icons-round">logout</span>
+        <span>Sign out</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="gi-admin-shell">
+    <aside class="gi-admin-sidebar" aria-label="Primary navigation">
+      <nav class="gi-admin-sidebar__nav">
+        @for (item of nav; track item.path) {
+          @if (canSee(item)) {
+            <a
+              [routerLink]="item.path"
+              routerLinkActive="is-active"
+              [routerLinkActiveOptions]="{ exact: false }"
+              class="gi-admin-sidebar__link">
+              <span class="material-icons-round">{{ item.icon }}</span>
+              <span>{{ item.label }}</span>
+            </a>
+          }
+        }
+      </nav>
+    </aside>
+
+    <main class="gi-admin-main">
+      <router-outlet />
+    </main>
+  </div>
+} @else {
+  <!-- Unauthenticated screens (login, verify-mfa) fill the viewport themselves. -->
+  <router-outlet />
+}

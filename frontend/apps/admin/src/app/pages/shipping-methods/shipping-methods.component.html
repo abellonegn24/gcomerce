@@ -1,0 +1,281 @@
+<section class="gi-ship">
+  <header class="gi-ship__header">
+    <div>
+      <h1>Shipping methods</h1>
+      <p class="gi-ship__lead">
+        Rate cards the storefront offers at checkout. Cost is derived per-cart as
+        <code>baseCost + perKgRate × totalWeight</code> — the admin never types a
+        raw dollar amount for a specific order.
+      </p>
+    </div>
+    <button type="button" class="gi-btn gi-btn--gold" (click)="openCreate()">
+      <span class="material-icons-round">add</span>
+      New method
+    </button>
+  </header>
+
+  @if (successMessage(); as msg) {
+    <div class="gi-ship__banner gi-ship__banner--success" role="status">
+      <span class="material-icons-round">check_circle</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+  @if (errorMessage(); as msg) {
+    <div class="gi-ship__banner gi-ship__banner--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  <!-- Inline create form -->
+  @if (showCreate()) {
+    <form class="gi-ship__form" [formGroup]="form" (ngSubmit)="submitCreate()">
+      <h3>Create a shipping method</h3>
+
+      <div class="gi-ship__grid">
+        <label class="gi-field">
+          <span class="gi-field__label">Code <span class="gi-req">*</span></span>
+          <input type="text" formControlName="code" placeholder="INTL_STANDARD"
+                 style="text-transform: uppercase;" />
+          <small class="gi-field__hint">UPPER_SNAKE_CASE. Unique per currency.</small>
+        </label>
+
+        <label class="gi-field">
+          <span class="gi-field__label">Currency (ISO-3) <span class="gi-req">*</span></span>
+          <input type="text" formControlName="currency" maxlength="3"
+                 style="text-transform: uppercase;" />
+        </label>
+
+        <label class="gi-field gi-field--wide">
+          <span class="gi-field__label">Customer-facing name <span class="gi-req">*</span></span>
+          <input type="text" formControlName="name"
+                 placeholder="International standard air (7–14 business days)" />
+        </label>
+
+        <label class="gi-field gi-field--wide">
+          <span class="gi-field__label">Description (optional)</span>
+          <textarea formControlName="description" rows="2"
+                    placeholder="Standard air freight to major destinations, tracked door-to-door."></textarea>
+        </label>
+
+        <label class="gi-field">
+          <span class="gi-field__label">Base cost <span class="gi-req">*</span></span>
+          <input type="number" formControlName="baseCost" min="0" step="0.01" />
+        </label>
+
+        <label class="gi-field">
+          <span class="gi-field__label">Per-kg rate <span class="gi-req">*</span></span>
+          <input type="number" formControlName="perKgRate" min="0" step="0.01" />
+        </label>
+
+        <label class="gi-field">
+          <span class="gi-field__label">Min transit days</span>
+          <input type="number" formControlName="minDays" min="0" step="1" />
+        </label>
+
+        <label class="gi-field">
+          <span class="gi-field__label">Max transit days</span>
+          <input type="number" formControlName="maxDays" min="0" step="1" />
+        </label>
+
+        <label class="gi-field">
+          <span class="gi-field__label">Sort order</span>
+          <input type="number" formControlName="sortOrder" min="0" step="10" />
+          <small class="gi-field__hint">Lower shows first on the picker.</small>
+        </label>
+
+        <label class="gi-field gi-field--check">
+          <input type="checkbox" formControlName="active" />
+          <span>Active — offered to storefront customers.</span>
+        </label>
+      </div>
+
+      <div class="gi-ship__form-actions">
+        <button type="submit" class="gi-btn gi-btn--gold" [disabled]="saving() || form.invalid">
+          @if (saving()) {
+            <span class="material-icons-round gi-spin">progress_activity</span>
+            Creating…
+          } @else {
+            <span class="material-icons-round">save</span>
+            Create
+          }
+        </button>
+        <button type="button" class="gi-btn gi-btn--ghost" (click)="cancelCreate()" [disabled]="saving()">
+          Cancel
+        </button>
+      </div>
+    </form>
+  }
+
+  <!-- List -->
+  @if (loading()) {
+    <div class="gi-ship__skeleton" aria-live="polite">Loading shipping methods…</div>
+  } @else if (methods().length === 0) {
+    <div class="gi-ship__empty">
+      <span class="material-icons-round">local_shipping</span>
+      <h3>No shipping methods yet</h3>
+      <p>
+        Create your first rate card to enable the storefront picker at
+        checkout. Without one every order will bill at zero shipping.
+      </p>
+    </div>
+  } @else {
+    <div class="gi-ship__table-wrap">
+      <table class="gi-ship__table" role="table">
+        <thead>
+          <tr>
+            <th scope="col">Code / name</th>
+            <th scope="col">Currency</th>
+            <th scope="col" class="gi-ship__col-num">Base</th>
+            <th scope="col" class="gi-ship__col-num">Per kg</th>
+            <th scope="col">Transit</th>
+            <th scope="col" class="gi-ship__col-num">Sort</th>
+            <th scope="col">Status</th>
+            <th scope="col" class="gi-ship__col-actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (m of methods(); track m.id) {
+            <tr [class.is-busy]="deletingId() === m.id" [class.is-editing]="editingId() === m.id">
+              <td>
+                <div class="gi-ship__name"><code>{{ m.code }}</code> · {{ m.name }}</div>
+                @if (m.description) {
+                  <div class="gi-ship__sub">{{ m.description }}</div>
+                }
+              </td>
+              <td>{{ m.currency }}</td>
+              <td class="gi-ship__col-num">{{ m.baseCost }}</td>
+              <td class="gi-ship__col-num">{{ m.perKgRate }}</td>
+              <td>{{ transitLabel(m) }}</td>
+              <td class="gi-ship__col-num">{{ m.sortOrder }}</td>
+              <td>
+                <span class="gi-ship__pill" [class.is-active]="m.active" [class.is-inactive]="!m.active">
+                  {{ m.active ? 'ACTIVE' : 'INACTIVE' }}
+                </span>
+              </td>
+              <td class="gi-ship__col-actions">
+                @if (editingId() === m.id) {
+                  <button
+                    type="button"
+                    class="gi-btn gi-btn--ghost"
+                    [disabled]="saving()"
+                    (click)="cancelEdit()">
+                    <span class="material-icons-round">close</span>
+                    Close
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="gi-btn gi-btn--ghost"
+                    [disabled]="editingId() !== null || deletingId() !== null"
+                    (click)="openEdit(m)">
+                    <span class="material-icons-round">edit</span>
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    class="gi-btn gi-btn--danger"
+                    [disabled]="deletingId() !== null || editingId() !== null"
+                    (click)="remove(m)">
+                    <span class="material-icons-round">delete_outline</span>
+                    Delete
+                  </button>
+                }
+              </td>
+            </tr>
+
+            @if (editingId() === m.id) {
+              <tr class="gi-ship__edit-row">
+                <td colspan="8">
+                  <form class="gi-ship__form gi-ship__form--inline"
+                        [formGroup]="editForm"
+                        (ngSubmit)="submitEdit()">
+                    <div class="gi-ship__form-intro">
+                      <span class="material-icons-round">tune</span>
+                      <div>
+                        <strong>Editing <em>{{ m.name }}</em></strong>
+                        <p>
+                          Historical orders that already used this method keep the
+                          snapshot at their placement time — changes here only
+                          affect quotes from now on.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="gi-ship__grid">
+                      <label class="gi-field">
+                        <span class="gi-field__label">Code <span class="gi-req">*</span></span>
+                        <input type="text" formControlName="code" style="text-transform: uppercase;" />
+                      </label>
+
+                      <label class="gi-field">
+                        <span class="gi-field__label">Currency (ISO-3) <span class="gi-req">*</span></span>
+                        <input type="text" formControlName="currency" maxlength="3"
+                               style="text-transform: uppercase;" />
+                      </label>
+
+                      <label class="gi-field gi-field--wide">
+                        <span class="gi-field__label">Customer-facing name <span class="gi-req">*</span></span>
+                        <input type="text" formControlName="name" />
+                      </label>
+
+                      <label class="gi-field gi-field--wide">
+                        <span class="gi-field__label">Description</span>
+                        <textarea formControlName="description" rows="2"></textarea>
+                      </label>
+
+                      <label class="gi-field">
+                        <span class="gi-field__label">Base cost <span class="gi-req">*</span></span>
+                        <input type="number" formControlName="baseCost" min="0" step="0.01" />
+                      </label>
+
+                      <label class="gi-field">
+                        <span class="gi-field__label">Per-kg rate <span class="gi-req">*</span></span>
+                        <input type="number" formControlName="perKgRate" min="0" step="0.01" />
+                      </label>
+
+                      <label class="gi-field">
+                        <span class="gi-field__label">Min transit days</span>
+                        <input type="number" formControlName="minDays" min="0" step="1" />
+                      </label>
+
+                      <label class="gi-field">
+                        <span class="gi-field__label">Max transit days</span>
+                        <input type="number" formControlName="maxDays" min="0" step="1" />
+                      </label>
+
+                      <label class="gi-field">
+                        <span class="gi-field__label">Sort order</span>
+                        <input type="number" formControlName="sortOrder" min="0" step="10" />
+                      </label>
+
+                      <label class="gi-field gi-field--check">
+                        <input type="checkbox" formControlName="active" />
+                        <span>Active — offered to storefront customers.</span>
+                      </label>
+                    </div>
+
+                    <div class="gi-ship__form-actions">
+                      <button type="submit" class="gi-btn gi-btn--gold" [disabled]="saving() || editForm.invalid">
+                        @if (saving()) {
+                          <span class="material-icons-round gi-spin">progress_activity</span>
+                          Saving…
+                        } @else {
+                          <span class="material-icons-round">save</span>
+                          Save changes
+                        }
+                      </button>
+                      <button type="button" class="gi-btn gi-btn--ghost" (click)="cancelEdit()" [disabled]="saving()">
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

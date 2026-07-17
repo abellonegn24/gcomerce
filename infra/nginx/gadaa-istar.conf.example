@@ -1,0 +1,144 @@
+# -----------------------------------------------------------------------------
+# Reference reverse-proxy Nginx configuration for the Gadaa Istar platform
+# on Ethio Telecom Cloud (production origin).
+#
+# TLS termination is at the Cloudflare edge; this file assumes Full-Strict
+# mode with a Cloudflare origin cert installed at /etc/ssl/cloudflare/.
+#
+# Save as /etc/nginx/sites-available/gadaa-istar.conf on the reverse-proxy VM
+# and `ln -s` into /etc/nginx/sites-enabled/.
+# -----------------------------------------------------------------------------
+
+# Upstreams
+upstream gi_api {
+  # Two app-tier VMs behind the reverse proxy (round-robin)
+  server 10.0.1.10:8080 max_fails=3 fail_timeout=15s;
+  server 10.0.1.11:8080 max_fails=3 fail_timeout=15s;
+  keepalive 32;
+}
+
+upstream gi_storefront {
+  server 10.0.1.20:4000 max_fails=3 fail_timeout=15s;
+  server 10.0.1.21:4000 max_fails=3 fail_timeout=15s;
+  keepalive 16;
+}
+
+upstream gi_admin {
+  server 10.0.1.30:80 max_fails=3 fail_timeout=15s;
+  keepalive 8;
+}
+
+# Rate-limit zones
+limit_req_zone $binary_remote_addr zone=gi_api_zone:10m rate=20r/s;
+limit_req_zone $binary_remote_addr zone=gi_auth_zone:10m rate=5r/s;
+
+# ---------- 1) Public storefront (www.gadaaistar.com) ----------
+server {
+  listen 443 ssl http2;
+  server_name www.gadaaistar.com gadaaistar.com;
+
+  ssl_certificate     /etc/ssl/cloudflare/origin.pem;
+  ssl_certificate_key /etc/ssl/cloudflare/origin.key;
+  ssl_protocols TLSv1.2 TLSv1.3;
+
+  # Security headers
+  add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+  add_header X-Frame-Options            "DENY"                                        always;
+  add_header X-Content-Type-Options     "nosniff"                                     always;
+  add_header Referrer-Policy            "strict-origin-when-cross-origin"             always;
+  add_header Permissions-Policy         "geolocation=(), microphone=(), camera=()"    always;
+
+  # Proxy to the SSR node
+  location / {
+    proxy_pass          http://gi_storefront;
+    proxy_http_version  1.1;
+    proxy_set_header    Host              $host;
+    proxy_set_header    X-Real-IP         $remote_addr;
+    proxy_set_header    X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header    X-Forwarded-Proto https;
+    proxy_read_timeout  30s;
+  }
+}
+
+# ---------- 2) API (api.gadaaistar.com) ----------
+server {
+  listen 443 ssl http2;
+  server_name api.gadaaistar.com;
+
+  ssl_certificate     /etc/ssl/cloudflare/origin.pem;
+  ssl_certificate_key /etc/ssl/cloudflare/origin.key;
+  ssl_protocols TLSv1.2 TLSv1.3;
+
+  add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+  add_header X-Content-Type-Options    "nosniff"                                     always;
+
+  # CyberSource callback endpoint — never rate-limited
+  location = /api/storefront/v1/payments/cybersource/notify {
+    proxy_pass http://gi_api;
+    proxy_http_version 1.1;
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_read_timeout 60s;
+  }
+
+  # Auth endpoints — stricter rate limit
+  location ~ ^/api/(storefront|admin)/v1/auth/ {
+    limit_req zone=gi_auth_zone burst=10 nodelay;
+    proxy_pass http://gi_api;
+    proxy_http_version 1.1;
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto https;
+  }
+
+  # Everything else on the API
+  location / {
+    limit_req zone=gi_api_zone burst=40 nodelay;
+    proxy_pass http://gi_api;
+    proxy_http_version 1.1;
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_read_timeout 30s;
+  }
+}
+
+# ---------- 3) Admin (admin.gadaaistar.com) ----------
+server {
+  listen 443 ssl http2;
+  server_name admin.gadaaistar.com;
+
+  # Optional IP allowlist (VPN or office range)
+  # allow 203.0.113.0/24;
+  # deny  all;
+
+  ssl_certificate     /etc/ssl/cloudflare/origin.pem;
+  ssl_certificate_key /etc/ssl/cloudflare/origin.key;
+  ssl_protocols TLSv1.2 TLSv1.3;
+
+  add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+  add_header X-Frame-Options           "DENY"                                         always;
+  add_header X-Content-Type-Options    "nosniff"                                      always;
+  add_header X-Robots-Tag              "noindex, nofollow"                            always;
+  add_header Referrer-Policy           "no-referrer"                                  always;
+
+  location / {
+    proxy_pass          http://gi_admin;
+    proxy_http_version  1.1;
+    proxy_set_header    Host              $host;
+    proxy_set_header    X-Real-IP         $remote_addr;
+    proxy_set_header    X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header    X-Forwarded-Proto https;
+  }
+}
+
+# ---------- HTTP → HTTPS redirect (all hosts) ----------
+server {
+  listen 80 default_server;
+  server_name _;
+  return 301 https://$host$request_uri;
+}

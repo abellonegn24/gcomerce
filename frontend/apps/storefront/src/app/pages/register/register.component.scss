@@ -1,0 +1,63 @@
+// Reuses the login page styles via a shared partial — but for simplicity the
+// two files carry their own copy of the shared shell. If a third auth page
+// appears, extract the common bits into `_auth-shell.scss` in ui-kit.
+
+@use './../login/login.component' as *;
+
+.gi-auth__card--wide { max-width: 560px; }
+
+.gi-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+}
+
+@media (max-width: 520px) {
+  .gi-form__row { grid-template-columns: 1fr; }
+}
+
+// -----------------------------------------------------------------------------
+// B2C / B2B toggle
+// -----------------------------------------------------------------------------
+.gi-type-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.gi-type-toggle__opt {
+  display: block;
+  padding: 0.9rem 1rem;
+  border-radius: var(--gi-radius-md);
+  border: 1px solid var(--gi-border);
+  cursor: pointer;
+  transition: border-color var(--gi-transition), background var(--gi-transition),
+              box-shadow var(--gi-transition);
+
+  input { position: absolute; opacity: 0; pointer-events: none; }
+
+  &.is-active {
+    border-color: var(--gi-navy-500);
+    background: var(--gi-navy-100);
+    box-shadow: 0 0 0 3px rgba(44, 83, 145, 0.12);
+  }
+}
+
+.gi-type-toggle__label {
+  display: block;
+  font-weight: 600;
+  color: var(--gi-navy-900);
+  font-size: 0.95rem;
+  margin-bottom: 0.15rem;
+}
+
+.gi-type-toggle__hint {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--gi-text-secondary);
+}
+
+@media (max-width: 520px) {
+  .gi-type-toggle { grid-template-columns: 1fr; }
+}

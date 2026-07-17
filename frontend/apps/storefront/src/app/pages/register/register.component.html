@@ -1,0 +1,105 @@
+<section class="gi-auth">
+  <div class="gi-auth__card gi-auth__card--wide">
+    <h1>Create your account</h1>
+    <p class="gi-auth__lead">
+      Retail shopper or wholesale buyer — pick the option that fits and we'll take it from there.
+    </p>
+
+    @if (errorMessage()) {
+      <div class="gi-alert gi-alert--error" role="alert">
+        <span class="material-icons-round">error_outline</span>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="gi-form" novalidate>
+      <!-- Account type toggle -->
+      <div class="gi-type-toggle" role="radiogroup" aria-label="Account type">
+        @for (option of [
+          { value: 'B2C', label: 'Personal (retail)', hint: 'Shop retail packs; instant checkout.' },
+          { value: 'B2B', label: 'Business (wholesale)', hint: 'Tiered pricing; requires approval.' }
+        ]; track option.value) {
+          <label class="gi-type-toggle__opt" [class.is-active]="form.controls.customerType.value === option.value">
+            <input type="radio" formControlName="customerType" [value]="option.value" />
+            <span class="gi-type-toggle__label">{{ option.label }}</span>
+            <span class="gi-type-toggle__hint">{{ option.hint }}</span>
+          </label>
+        }
+      </div>
+
+      <!-- Personal fields -->
+      <div class="gi-form__row">
+        <label class="gi-field">
+          <span class="gi-field__label">First name</span>
+          <input type="text" formControlName="firstName" autocomplete="given-name" />
+        </label>
+        <label class="gi-field">
+          <span class="gi-field__label">Last name</span>
+          <input type="text" formControlName="lastName" autocomplete="family-name" />
+        </label>
+      </div>
+
+      <!-- Company (B2B only) -->
+      @if (isB2B()) {
+        <label class="gi-field">
+          <span class="gi-field__label">Company name</span>
+          <input type="text" formControlName="companyName" autocomplete="organization" />
+          @if (form.controls.companyName.touched && form.controls.companyName.invalid) {
+            <span class="gi-field__error">Company name is required for business accounts.</span>
+          }
+        </label>
+        <label class="gi-field">
+          <span class="gi-field__label">
+            Company TIN <span class="gi-field__hint">(optional; needed for VAT-compliant invoices)</span>
+          </span>
+          <input type="text" formControlName="companyTin" />
+        </label>
+      }
+
+      <!-- Contact -->
+      <label class="gi-field">
+        <span class="gi-field__label">Email</span>
+        <input type="email" formControlName="email" autocomplete="email" />
+        @if (form.controls.email.touched && form.controls.email.invalid) {
+          <span class="gi-field__error">Please enter a valid email.</span>
+        }
+      </label>
+
+      <div class="gi-form__row">
+        <label class="gi-field">
+          <span class="gi-field__label">Password</span>
+          <input type="password" formControlName="password" autocomplete="new-password" placeholder="At least 8 characters" />
+          @if (form.controls.password.touched && form.controls.password.invalid) {
+            <span class="gi-field__error">Password must be at least 8 characters.</span>
+          }
+        </label>
+        <label class="gi-field">
+          <span class="gi-field__label">Phone <span class="gi-field__hint">(optional)</span></span>
+          <input type="tel" formControlName="phone" autocomplete="tel" />
+        </label>
+      </div>
+
+      <label class="gi-field">
+        <span class="gi-field__label">Preferred currency</span>
+        <select formControlName="preferredCurrency">
+          <option value="USD">USD — US Dollar</option>
+          <option value="EUR">EUR — Euro</option>
+          <option value="GBP">GBP — British Pound</option>
+        </select>
+      </label>
+
+      <button type="submit" class="gi-btn gi-btn--primary" [disabled]="submitting()">
+        @if (submitting()) {
+          Creating account…
+        } @else {
+          Create account
+          <span class="material-icons-round">arrow_forward</span>
+        }
+      </button>
+    </form>
+
+    <div class="gi-auth__meta">
+      Already have an account? <a routerLink="/login">Sign in</a>
+    </div>
+  </div>
+</section>

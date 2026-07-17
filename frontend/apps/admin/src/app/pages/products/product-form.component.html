@@ -1,0 +1,155 @@
+<form class="gi-pform" [formGroup]="form" (ngSubmit)="submit()">
+  @if (errorMessage) {
+    <div class="gi-pform__banner gi-pform__banner--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ errorMessage }}</span>
+    </div>
+  }
+
+  <fieldset class="gi-pform__section">
+    <legend>Identity</legend>
+    <div class="gi-pform__grid">
+      <label class="gi-field">
+        <span class="gi-field__label">SKU <span class="gi-req">*</span></span>
+        <input type="text" formControlName="sku" placeholder="COFFEE-YIRG-GREEN-500G"
+               style="text-transform: uppercase;" />
+        @if (form.controls.sku.touched && form.controls.sku.invalid) {
+          <span class="gi-field__error">
+            Uppercase letters, digits, dot, dash and underscore only (max 64).
+          </span>
+        }
+        @if (mode === 'edit') {
+          <span class="gi-field__hint">SKU cannot be changed after creation.</span>
+        }
+      </label>
+
+      <label class="gi-field">
+        <span class="gi-field__label">Slug <span class="gi-req">*</span></span>
+        <input type="text" formControlName="slug" placeholder="yirgacheffe-green-500g" />
+        @if (form.controls.slug.touched && form.controls.slug.invalid) {
+          <span class="gi-field__error">
+            Lowercase kebab-case only (e.g. yirgacheffe-green-500g).
+          </span>
+        }
+      </label>
+
+      <label class="gi-field gi-field--wide">
+        <span class="gi-field__label">Name <span class="gi-req">*</span></span>
+        <input type="text" formControlName="name" placeholder="Yirgacheffe Green Coffee, 500g" />
+        @if (form.controls.name.touched && form.controls.name.invalid) {
+          <span class="gi-field__error">Name is required (max 255 characters).</span>
+        }
+      </label>
+
+      <label class="gi-field gi-field--wide">
+        <span class="gi-field__label">Short description</span>
+        <input type="text" formControlName="shortDescription"
+               placeholder="Single-origin washed green beans from Yirgacheffe" />
+        @if (form.controls.shortDescription.invalid) {
+          <span class="gi-field__error">Max 500 characters.</span>
+        }
+      </label>
+
+      <label class="gi-field gi-field--wide">
+        <span class="gi-field__label">Description</span>
+        <textarea rows="6" formControlName="description"
+                  placeholder="Long-form marketing copy shown on the storefront product page."></textarea>
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset class="gi-pform__section">
+    <legend>Classification</legend>
+    <div class="gi-pform__grid">
+      <label class="gi-field">
+        <span class="gi-field__label">Category <span class="gi-req">*</span></span>
+        <select formControlName="category">
+          @for (c of categories; track c.code) {
+            <option [value]="c.code">{{ c.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="gi-field">
+        <span class="gi-field__label">Status <span class="gi-req">*</span></span>
+        <select formControlName="status">
+          @for (s of statuses; track s.code) {
+            <option [value]="s.code">{{ s.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="gi-field">
+        <span class="gi-field__label">HS code</span>
+        <input type="text" formControlName="hsCode" placeholder="0901.11" />
+      </label>
+
+      <label class="gi-field">
+        <span class="gi-field__label">Origin country (ISO-2)</span>
+        <input type="text" formControlName="originCountry" maxlength="2"
+               style="text-transform: uppercase;" placeholder="ET" />
+        @if (form.controls.originCountry.touched && form.controls.originCountry.invalid) {
+          <span class="gi-field__error">Enter a 2-letter ISO code (e.g. ET, DE).</span>
+        }
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset class="gi-pform__section">
+    <legend>Pricing &amp; ordering</legend>
+    <div class="gi-pform__grid">
+      <label class="gi-field">
+        <span class="gi-field__label">Base currency <span class="gi-req">*</span></span>
+        <input type="text" formControlName="baseCurrency" maxlength="3"
+               style="text-transform: uppercase;" placeholder="USD" />
+      </label>
+
+      <label class="gi-field">
+        <span class="gi-field__label">Base price <span class="gi-req">*</span></span>
+        <input type="text" formControlName="basePrice" placeholder="18.5000" />
+        @if (form.controls.basePrice.touched && form.controls.basePrice.invalid) {
+          <span class="gi-field__error">Decimal number (up to 4 decimal places).</span>
+        }
+      </label>
+
+      <label class="gi-field">
+        <span class="gi-field__label">Cost price (admin-only)</span>
+        <input type="text" formControlName="costPrice" placeholder="12.0000" />
+      </label>
+
+      <label class="gi-field">
+        <span class="gi-field__label">Minimum order quantity</span>
+        <input type="text" formControlName="minOrderQuantity" placeholder="1" />
+      </label>
+
+      <label class="gi-field">
+        <span class="gi-field__label">Weight (kg)</span>
+        <input type="text" formControlName="weightKg" placeholder="0.500" />
+      </label>
+
+      <label class="gi-field gi-field--wide">
+        <span class="gi-field__label">Packaging notes</span>
+        <input type="text" formControlName="packagingNotes"
+               placeholder="Sealed foil bag with one-way degassing valve." />
+      </label>
+    </div>
+  </fieldset>
+
+  <div class="gi-pform__actions">
+    <button
+      type="submit"
+      class="gi-btn gi-btn--gold"
+      [disabled]="submitting || form.invalid">
+      @if (submitting) {
+        <span class="material-icons-round gi-spin">progress_activity</span>
+        Saving…
+      } @else {
+        <span class="material-icons-round">save</span>
+        {{ mode === 'create' ? 'Create product' : 'Save changes' }}
+      }
+    </button>
+    <button type="button" class="gi-btn gi-btn--ghost" (click)="onCancel()" [disabled]="submitting">
+      Cancel
+    </button>
+  </div>
+</form>

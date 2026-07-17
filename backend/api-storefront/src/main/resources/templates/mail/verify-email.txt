@@ -1,0 +1,13 @@
+Hi {displayName},
+
+Thanks for creating a Gadaa Istar account. Please confirm your email
+address by opening the link below. It's valid for the next {expiresMinutes}
+minutes.
+
+    {verifyLink}
+
+If you didn't sign up, you can safely ignore this message.
+
+—
+Gadaa Istar Business Group S.C.
+Addis Ababa, Ethiopia

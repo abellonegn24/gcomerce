@@ -1,0 +1,72 @@
+<section class="gi-auth">
+  <div class="gi-auth__card">
+    <h1>Welcome back</h1>
+    <p class="gi-auth__lead">Sign in to your Gadaa Istar account.</p>
+
+    @if (resetSuccess()) {
+      <div class="gi-alert gi-alert--success" role="status">
+        <span class="material-icons-round">task_alt</span>
+        <span>Your password has been reset. Sign in with your new password below.</span>
+      </div>
+    }
+    @if (passwordChanged()) {
+      <div class="gi-alert gi-alert--success" role="status">
+        <span class="material-icons-round">lock_reset</span>
+        <span>Password updated. All your devices have been signed out — please sign in again.</span>
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="gi-alert gi-alert--error" role="alert">
+        <span class="material-icons-round">error_outline</span>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="gi-form" novalidate>
+      <label class="gi-field">
+        <span class="gi-field__label">Email</span>
+        <input
+          type="email"
+          formControlName="email"
+          autocomplete="username"
+          placeholder="you@example.com"
+          [attr.aria-invalid]="form.controls.email.invalid && form.controls.email.touched" />
+        @if (form.controls.email.touched && form.controls.email.invalid) {
+          <span class="gi-field__error">Please enter a valid email.</span>
+        }
+      </label>
+
+      <label class="gi-field">
+        <span class="gi-field__label">Password</span>
+        <input
+          type="password"
+          formControlName="password"
+          autocomplete="current-password"
+          placeholder="At least 8 characters"
+          [attr.aria-invalid]="form.controls.password.invalid && form.controls.password.touched" />
+        @if (form.controls.password.touched && form.controls.password.invalid) {
+          <span class="gi-field__error">Password must be at least 8 characters.</span>
+        }
+      </label>
+
+      <button type="submit" class="gi-btn gi-btn--primary" [disabled]="submitting()">
+        @if (submitting()) {
+          Signing in…
+        } @else {
+          Sign in
+          <span class="material-icons-round">arrow_forward</span>
+        }
+      </button>
+    </form>
+
+    <div class="gi-auth__meta">
+      <a routerLink="/forgot-password">Forgot your password?</a>
+      <span class="gi-auth__sep">·</span>
+      <span>
+        New to Gadaa Istar?
+        <a routerLink="/register">Create an account</a>
+      </span>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,51 @@
+/*
+ * Root build config — applied to every subproject via `subprojects` block.
+ * Individual modules add their own Quarkus extensions in their build.gradle.
+ */
+
+plugins {
+    id 'java'
+}
+
+allprojects {
+    group = 'com.gadaaistar'
+    version = '0.1.0-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(javaVersion.toInteger())
+        }
+        withSourcesJar()
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.compilerArgs << '-parameters'
+    }
+
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+        systemProperty 'file.encoding', 'UTF-8'
+    }
+
+    // Common dependencies applied to every module
+    dependencies {
+        implementation platform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+
+        compileOnly "org.projectlombok:lombok:${lombokVersion}"
+        annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
+        testImplementation 'io.quarkus:quarkus-junit5'
+        testImplementation 'org.assertj:assertj-core:3.26.3'
+        testImplementation 'org.mockito:mockito-core:5.14.2'
+    }
+}

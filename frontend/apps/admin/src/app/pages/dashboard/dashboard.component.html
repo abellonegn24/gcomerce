@@ -1,0 +1,192 @@
+<section class="gi-dash">
+  <header class="gi-dash__header">
+    <div>
+      <h1>Welcome back{{ admin() ? ', ' + admin()!.fullName.split(' ')[0] : '' }}</h1>
+      <p class="gi-dash__lead">
+        Real-time overview of Gadaa Istar operations.
+      </p>
+    </div>
+    @if (admin(); as a) {
+      <div class="gi-dash__badge" aria-label="Your role">
+        <span class="material-icons-round">badge</span>
+        <span>{{ a.role ?? 'ADMIN' }}</span>
+      </div>
+    }
+  </header>
+
+  @if (loading()) {
+    <div class="gi-dash__loading">
+      <span class="material-icons-round gi-spin">progress_activity</span>
+      Loading dashboard…
+    </div>
+  } @else if (error(); as msg) {
+    <div class="gi-dash__error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  } @else {
+    <!-- KPI tiles -->
+    <div class="gi-dash__kpis">
+      @for (kpi of kpis(); track kpi.label) {
+        <article class="gi-kpi" [class.gi-kpi--warning]="kpi.variant === 'warning'"
+                 [class.gi-kpi--success]="kpi.variant === 'success'">
+          <span class="gi-kpi__icon material-icons-round" aria-hidden="true">
+            {{ kpi.icon }}
+          </span>
+          <div class="gi-kpi__body">
+            <p class="gi-kpi__value">{{ kpi.value }}</p>
+            <p class="gi-kpi__label">{{ kpi.label }}</p>
+            <p class="gi-kpi__hint">{{ kpi.hint }}</p>
+          </div>
+        </article>
+      }
+    </div>
+
+    @if (stats(); as s) {
+      <!-- Revenue trend + status breakdown row -->
+      <div class="gi-dash__row">
+        @if (trend(); as t) {
+          <div class="gi-dash__card gi-dash__card--trend">
+            <h2 class="gi-dash__card-title">
+              <span class="material-icons-round">trending_up</span>
+              Revenue trend
+            </h2>
+
+            <div class="gi-dash__trend-stats">
+              <div class="gi-dash__trend-stat">
+                <span class="gi-dash__trend-label">Today</span>
+                <span class="gi-dash__trend-value">{{ formatMoney(t.todayRevenue) }}</span>
+                @if (trendDeltaPct() !== null) {
+                  <span class="gi-dash__trend-delta" [class.is-up]="trendDeltaPct()! >= 0" [class.is-down]="trendDeltaPct()! < 0">
+                    {{ trendDeltaPct()! >= 0 ? '▲' : '▼' }} {{ abs(trendDeltaPct()) | number: '1.0-1' }}% vs yesterday
+                  </span>
+                }
+              </div>
+              <div class="gi-dash__trend-stat">
+                <span class="gi-dash__trend-label">This month</span>
+                <span class="gi-dash__trend-value">{{ formatMoney(t.monthRevenue) }}</span>
+                @if (monthDeltaPct() !== null) {
+                  <span class="gi-dash__trend-delta" [class.is-up]="monthDeltaPct()! >= 0" [class.is-down]="monthDeltaPct()! < 0">
+                    {{ monthDeltaPct()! >= 0 ? '▲' : '▼' }} {{ abs(monthDeltaPct()) | number: '1.0-1' }}% vs last 30d
+                  </span>
+                }
+              </div>
+            </div>
+
+            <!-- 7-day bar chart -->
+            <div class="gi-dash__chart">
+              @for (point of t.dailySeries; track point.date) {
+                <div class="gi-dash__bar-wrap">
+                  <div class="gi-dash__bar" [style.height.%]="barHeight(point)"
+                       [title]="formatDayLabel(point.date) + ': ' + formatMoney(point.revenue) + ' (' + point.orderCount + ' orders)'">
+                  </div>
+                  <span class="gi-dash__bar-label">{{ formatDayLabel(point.date) }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        @if (statusEntries().length > 0) {
+          <div class="gi-dash__card gi-dash__card--status">
+            <h2 class="gi-dash__card-title">
+              <span class="material-icons-round">pie_chart</span>
+              Order status breakdown
+            </h2>
+            <ul class="gi-dash__status-list">
+              @for (entry of statusEntries(); track entry.status) {
+                <li class="gi-dash__status-row">
+                  <span class="gi-dash__status-name gi-status-pill" [class]="'gi-status-pill--' + statusClass(entry.status)">
+                    {{ humanizeStatus(entry.status) }}
+                  </span>
+                  <span class="gi-dash__status-count">{{ entry.count }}</span>
+                  <div class="gi-dash__status-bar-track">
+                    <div class="gi-dash__status-bar-fill" [style.width.%]="entry.pct"></div>
+                  </div>
+                  <span class="gi-dash__status-pct">{{ entry.pct }}%</span>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </div>
+
+      <!-- Recent orders + low-stock row -->
+      <div class="gi-dash__row">
+        @if (recentOrders().length > 0) {
+          <div class="gi-dash__card gi-dash__card--orders">
+            <h2 class="gi-dash__card-title">
+              <span class="material-icons-round">receipt_long</span>
+              Recent orders
+            </h2>
+            <table class="gi-dash__table">
+              <thead>
+                <tr>
+                  <th>Invoice</th>
+                  <th>Customer</th>
+                  <th>Status</th>
+                  <th class="gi-dash__num">Items</th>
+                  <th class="gi-dash__num">Total</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (o of recentOrders(); track o.uuid) {
+                  <tr>
+                    <td>
+                      <a [routerLink]="['/orders', o.uuid]" class="gi-dash__link">{{ o.invoiceNumber }}</a>
+                    </td>
+                    <td>{{ o.customerName }}</td>
+                    <td>
+                      <span class="gi-status-pill" [class]="'gi-status-pill--' + statusClass(o.status)">
+                        {{ humanizeStatus(o.status) }}
+                      </span>
+                    </td>
+                    <td class="gi-dash__num">{{ o.itemCount }}</td>
+                    <td class="gi-dash__num">{{ formatMoney(o.grandTotal) }}</td>
+                    <td>{{ o.placedAt | date: 'short' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        @if (lowStockList().length > 0) {
+          <div class="gi-dash__card gi-dash__card--lowstock">
+            <h2 class="gi-dash__card-title">
+              <span class="material-icons-round">warning_amber</span>
+              Low-stock alerts
+            </h2>
+            <ul class="gi-dash__lowstock-list">
+              @for (item of lowStockList(); track item.productSku + (item.variantName ?? '')) {
+                <li class="gi-dash__lowstock-item">
+                  <div class="gi-dash__lowstock-info">
+                    <span class="gi-dash__lowstock-name">{{ item.productName }}</span>
+                    @if (item.variantName) {
+                      <span class="gi-dash__lowstock-variant">{{ item.variantName }}</span>
+                    }
+                    <span class="gi-dash__lowstock-sku">{{ item.productSku }}</span>
+                  </div>
+                  <div class="gi-dash__lowstock-qty">
+                    <span class="gi-dash__lowstock-available">{{ item.available }}</span>
+                    <span class="gi-dash__lowstock-threshold">/ {{ item.restockThreshold }}</span>
+                  </div>
+                </li>
+              }
+            </ul>
+            @if (s.lowStockItems > lowStockList().length) {
+              <p class="gi-dash__lowstock-more">
+                + {{ s.lowStockItems - lowStockList().length }} more at or below threshold
+              </p>
+            }
+          </div>
+        }
+      </div>
+
+      <p class="gi-dash__as-of">
+        Last updated {{ s.asOf | date: 'medium' }}
+      </p>
+    }
+  }
+</section>

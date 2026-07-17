@@ -1,0 +1,249 @@
+<section class="gi-product">
+  @if (loading()) {
+    <div class="gi-product__skeleton" aria-live="polite">
+      <div class="gi-product__skeleton-hero"></div>
+      <div class="gi-product__skeleton-lines">
+        <div class="gi-product__skeleton-line"></div>
+        <div class="gi-product__skeleton-line gi-product__skeleton-line--short"></div>
+      </div>
+    </div>
+  } @else if (notFound()) {
+    <div class="gi-product__notfound">
+      <span class="material-icons-round">search_off</span>
+      <h1>Product not found</h1>
+      <p>The item you're looking for isn't in our catalog. It may have been archived or renamed.</p>
+      <a routerLink="/shop" class="gi-btn-inline gi-btn-inline--gold">Back to the shop</a>
+    </div>
+  } @else if (errorMessage(); as msg) {
+    <div class="gi-product__error">
+      <span class="material-icons-round">error_outline</span>
+      <p>{{ msg }}</p>
+      <a routerLink="/shop" class="gi-btn-inline gi-btn-inline--ghost">Back to the shop</a>
+    </div>
+  } @else if (product(); as p) {
+    <!-- Breadcrumbs -->
+    <nav class="gi-product__crumbs" aria-label="Breadcrumb">
+      <a routerLink="/">Home</a>
+      <span class="material-icons-round">chevron_right</span>
+      <a routerLink="/shop">Shop</a>
+      @if (categoryMeta(); as cat) {
+        <span class="material-icons-round">chevron_right</span>
+        <a [routerLink]="['/shop', cat.slug]">{{ cat.label }}</a>
+      }
+      <span class="material-icons-round">chevron_right</span>
+      <span class="gi-product__crumbs-current">{{ p.name }}</span>
+    </nav>
+
+    <div class="gi-product__grid">
+      <!-- Media gallery -->
+      <div class="gi-product__gallery">
+        <div class="gi-product__hero-img">
+          @if (activeImage()) {
+            <img [src]="activeImage()!" [alt]="p.name" />
+          } @else {
+            <span class="material-icons-round gi-product__placeholder">image</span>
+          }
+          @if (hasSale()) {
+            <span class="gi-product__badge gi-product__badge--sale">
+              Save {{ +p.discountPercent | number: '1.0-0' }}%
+            </span>
+          }
+          @if (!effectiveInStock()) {
+            <span class="gi-product__badge gi-product__badge--oos">Out of stock</span>
+          }
+        </div>
+
+        @if (p.mediaUrls.length > 1) {
+          <div class="gi-product__thumbs" role="list">
+            @for (url of p.mediaUrls; track url) {
+              <button
+                type="button"
+                class="gi-product__thumb"
+                role="listitem"
+                [class.is-active]="activeImage() === url"
+                [attr.aria-label]="'Show image ' + $index + 1"
+                (click)="selectImage(url)">
+                <img [src]="url" [alt]="p.name + ' preview ' + ($index + 1)" />
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Details -->
+      <div class="gi-product__info">
+        @if (categoryMeta(); as cat) {
+          <p class="gi-product__cat">{{ cat.label }}</p>
+        }
+        <h1 class="gi-product__name">{{ p.name }}</h1>
+
+        @if (p.shortDescription) {
+          <p class="gi-product__short">{{ p.shortDescription }}</p>
+        }
+
+        <div class="gi-product__price">
+          @if (hasSale()) {
+            <span class="gi-product__price-strike">{{ formatPrice(p.currency, p.basePrice) }}</span>
+          }
+          <span class="gi-product__price-now">{{ formatPrice(p.currency, effectivePrice()) }}</span>
+          @if (hasSale()) {
+            <span class="gi-product__price-savings">
+              Your tier price — save {{ +p.discountPercent | number: '1.0-0' }}%
+            </span>
+          }
+        </div>
+
+        @if (hasVariants()) {
+          <div class="gi-product__variants">
+            <h3 class="gi-product__variants-title">Choose a variant</h3>
+            <div class="gi-product__variant-list" role="radiogroup" aria-label="Product variant">
+              @for (v of p.variants; track v.id) {
+                <button
+                  type="button"
+                  role="radio"
+                  [attr.aria-checked]="selectedVariantId() === v.id"
+                  class="gi-product__variant"
+                  [class.is-selected]="selectedVariantId() === v.id"
+                  [class.is-oos]="!v.inStock"
+                  [disabled]="!v.inStock"
+                  (click)="selectVariant(v.id)">
+                  <span class="gi-product__variant-name">{{ v.name }}</span>
+                  @if (v.attributes.length > 0) {
+                    <span class="gi-product__variant-attrs">
+                      @for (attr of v.attributes; track attr.key) {
+                        <span class="gi-product__variant-attr">{{ attr.key }}: {{ attr.value }}</span>
+                      }
+                    </span>
+                  }
+                  <span class="gi-product__variant-stock">
+                    @if (v.inStock) {
+                      {{ v.availableQuantity }} available
+                    } @else {
+                      Out of stock
+                    }
+                  </span>
+                  @if (v.priceOverride) {
+                    <span class="gi-product__variant-price">{{ formatPrice(p.currency, v.priceOverride) }}</span>
+                  }
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <ul class="gi-product__facts">
+          <li>
+            <span class="material-icons-round">place</span>
+            <span><strong>Origin:</strong> {{ p.originCountry === 'ET' ? 'Ethiopia' : p.originCountry }}</span>
+          </li>
+          @if (p.weightKg) {
+            <li>
+              <span class="material-icons-round">scale</span>
+              <span><strong>Unit weight:</strong> {{ p.weightKg }} kg</span>
+            </li>
+          }
+          @if (p.hsCode) {
+            <li>
+              <span class="material-icons-round">receipt_long</span>
+              <span><strong>HS code:</strong> {{ p.hsCode }}</span>
+            </li>
+          }
+          <li>
+            <span class="material-icons-round">shopping_cart</span>
+            <span><strong>Min. order:</strong> {{ p.minOrderQuantity }}</span>
+          </li>
+        </ul>
+
+        <!-- Quantity + add-to-cart -->
+        <div class="gi-product__buy">
+          <div class="gi-product__qty" role="group" aria-label="Quantity">
+            <button type="button" (click)="decrementQty()" aria-label="Decrease">
+              <span class="material-icons-round">remove</span>
+            </button>
+            <span class="gi-product__qty-value">{{ quantity() }}</span>
+            <button type="button" (click)="incrementQty()" aria-label="Increase">
+              <span class="material-icons-round">add</span>
+            </button>
+          </div>
+
+          <button
+            type="button"
+            class="gi-btn-inline gi-btn-inline--gold gi-product__cta"
+            [disabled]="!effectiveInStock() || adding()"
+            (click)="addToCart()">
+            @if (adding()) {
+              <span class="material-icons-round gi-spin">progress_activity</span>
+              <span>Adding…</span>
+            } @else if (addSuccess()) {
+              <span class="material-icons-round">check_circle</span>
+              <span>Added to cart</span>
+            } @else {
+              <span class="material-icons-round">shopping_bag</span>
+              <span>{{ effectiveInStock() ? 'Add to cart' : 'Out of stock' }}</span>
+            }
+          </button>
+          <button
+            type="button"
+            class="gi-product__wishlist-toggle"
+            [class.is-active]="inWishlist()"
+            (click)="toggleWishlist()"
+            [attr.aria-label]="inWishlist() ? 'Remove from wishlist' : 'Save to wishlist'">
+            <span class="material-icons-round">{{ inWishlist() ? 'favorite' : 'favorite_border' }}</span>
+          </button>
+        </div>
+        @if (!isAuthenticated()) {
+          <p class="gi-product__buy-note">
+            <a routerLink="/login">Sign in</a> to add this to your cart —
+            we'll bring you right back to this page.
+          </p>
+        }
+        @if (errorMessage()) {
+          <p class="gi-product__buy-note gi-product__buy-note--error" role="alert">
+            <span class="material-icons-round">error_outline</span>
+            {{ errorMessage() }}
+          </p>
+        }
+
+        <!-- Tier ladder (B2B customers only) -->
+        @if (p.tiers && p.tiers.length > 0) {
+          <div class="gi-product__tiers">
+            <h3>Wholesale price ladder</h3>
+            <p class="gi-product__tiers-note">
+              You're seeing prices for your account tier. Order more, save more.
+            </p>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Order at least</th>
+                  <th scope="col">Unit price</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (t of p.tiers; track t.minQuantity) {
+                  <tr>
+                    <td>{{ t.minQuantity }}</td>
+                    <td>{{ formatPrice(p.currency, t.unitPrice) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        @if (p.description) {
+          <section class="gi-product__desc">
+            <h3>About this product</h3>
+            <p>{{ p.description }}</p>
+          </section>
+        }
+
+        @if (p.packagingNotes) {
+          <section class="gi-product__packaging">
+            <h3>Packaging</h3>
+            <p>{{ p.packagingNotes }}</p>
+          </section>
+        }
+      </div>
+    </div>
+  }
+</section>

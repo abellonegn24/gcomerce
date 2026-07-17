@@ -1,0 +1,149 @@
+@if (loading()) {
+  <div class="gi-cms__loading">Loading pages…</div>
+} @else {
+  <div class="gi-cms">
+    @if (errorMessage()) {
+      <div class="gi-banner gi-banner--error">{{ errorMessage() }}</div>
+    }
+    @if (successMessage()) {
+      <div class="gi-banner gi-banner--success">{{ successMessage() }}</div>
+    }
+
+    <div class="gi-cms__header">
+      <h1 class="gi-cms__title">CMS Pages</h1>
+      <button type="button" class="gi-btn gi-btn--primary"
+        (click)="openCreate()" [disabled]="showCreate() || editingId() !== null">
+        + New page
+      </button>
+    </div>
+
+    @if (showCreate()) {
+      <form class="gi-cms__form" [formGroup]="form" (ngSubmit)="submitCreate()">
+        <h2 class="gi-cms__form-title">Create new page</h2>
+        <div class="gi-field">
+          <label for="c-slug">Slug</label>
+          <input id="c-slug" type="text" formControlName="slug" placeholder="about-us" />
+        </div>
+        <div class="gi-field">
+          <label for="c-title">Title</label>
+          <input id="c-title" type="text" formControlName="title" placeholder="About Us" />
+        </div>
+        <div class="gi-field">
+          <label for="c-body">Body HTML</label>
+          <textarea id="c-body" formControlName="bodyHtml" rows="10"
+            placeholder="<p>Page content in HTML…</p>"></textarea>
+        </div>
+        <div class="gi-cms__form-row">
+          <div class="gi-field">
+            <label for="c-seo-title">SEO title</label>
+            <input id="c-seo-title" type="text" formControlName="seoTitle" />
+          </div>
+          <div class="gi-field">
+            <label for="c-seo-desc">SEO description</label>
+            <input id="c-seo-desc" type="text" formControlName="seoDescription" />
+          </div>
+        </div>
+        <div class="gi-cms__form-row">
+          <div class="gi-field">
+            <label for="c-status">Status</label>
+            <select id="c-status" formControlName="status">
+              <option value="DRAFT">Draft</option>
+              <option value="PUBLISHED">Published</option>
+            </select>
+          </div>
+          <div class="gi-field">
+            <label for="c-order">Sort order</label>
+            <input id="c-order" type="number" formControlName="sortOrder" />
+          </div>
+        </div>
+        <div class="gi-cms__form-actions">
+          <button type="submit" class="gi-btn gi-btn--primary" [disabled]="saving()">
+            {{ saving() ? 'Saving…' : 'Create page' }}
+          </button>
+          <button type="button" class="gi-btn gi-btn--ghost" (click)="cancelCreate()">Cancel</button>
+        </div>
+      </form>
+    }
+
+    <table class="gi-table">
+      <thead>
+        <tr>
+          <th>Slug</th>
+          <th>Title</th>
+          <th>Status</th>
+          <th>Order</th>
+          <th>Updated</th>
+          <th class="gi-col-actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of pages(); track p.id) {
+          <tr [class.is-editing]="editingId() === p.id">
+            <td><code>{{ p.slug }}</code></td>
+            <td>{{ p.title }}</td>
+            <td><span class="gi-badge" [class]="statusBadge(p.status)">{{ p.status }}</span></td>
+            <td>{{ p.sortOrder }}</td>
+            <td>{{ p.updatedAt | date: 'short' }}</td>
+            <td class="gi-col-actions">
+              @if (editingId() !== p.id) {
+                <button type="button" class="gi-btn gi-btn--small gi-btn--ghost"
+                  (click)="openEdit(p)" [disabled]="editingId() !== null || showCreate()">
+                  Edit
+                </button>
+                <button type="button" class="gi-btn gi-btn--small gi-btn--danger-outline"
+                  (click)="remove(p)" [disabled]="deletingId() !== null">
+                  {{ deletingId() === p.id ? 'Deleting…' : 'Delete' }}
+                </button>
+              }
+            </td>
+          </tr>
+          @if (editingId() === p.id) {
+            <tr class="gi-cms__edit-row">
+              <td colspan="6">
+                <form class="gi-cms__form gi-cms__form--inline" [formGroup]="editForm" (ngSubmit)="submitEdit()">
+                  <div class="gi-field">
+                    <label>Slug</label>
+                    <input type="text" formControlName="slug" />
+                  </div>
+                  <div class="gi-field">
+                    <label>Title</label>
+                    <input type="text" formControlName="title" />
+                  </div>
+                  <div class="gi-field gi-field--full">
+                    <label>Body HTML</label>
+                    <textarea formControlName="bodyHtml" rows="10"></textarea>
+                  </div>
+                  <div class="gi-field">
+                    <label>SEO title</label>
+                    <input type="text" formControlName="seoTitle" />
+                  </div>
+                  <div class="gi-field">
+                    <label>SEO description</label>
+                    <input type="text" formControlName="seoDescription" />
+                  </div>
+                  <div class="gi-field">
+                    <label>Status</label>
+                    <select formControlName="status">
+                      <option value="DRAFT">Draft</option>
+                      <option value="PUBLISHED">Published</option>
+                    </select>
+                  </div>
+                  <div class="gi-field">
+                    <label>Sort order</label>
+                    <input type="number" formControlName="sortOrder" />
+                  </div>
+                  <div class="gi-cms__form-actions">
+                    <button type="submit" class="gi-btn gi-btn--primary" [disabled]="saving()">
+                      {{ saving() ? 'Saving…' : 'Save' }}
+                    </button>
+                    <button type="button" class="gi-btn gi-btn--ghost" (click)="cancelEdit()">Close</button>
+                  </div>
+                </form>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+}

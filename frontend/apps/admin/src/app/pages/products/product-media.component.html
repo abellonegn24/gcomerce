@@ -1,0 +1,174 @@
+<section class="gi-media">
+  @if (successMessage(); as msg) {
+    <div class="gi-media__banner gi-media__banner--success" role="status">
+      <span class="material-icons-round">check_circle</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+  @if (errorMessage(); as msg) {
+    <div class="gi-media__banner gi-media__banner--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  <div class="gi-media__grid">
+    <!-- Existing media -->
+    <section class="gi-media__list-panel">
+      <h3>Existing media</h3>
+      @if (media.length === 0) {
+        <p class="gi-media__empty">
+          No media yet. Add at least one image so this product looks great on the storefront.
+        </p>
+      } @else {
+        <ul class="gi-media__list">
+          @for (m of media; track m.id) {
+            <li class="gi-media__item" [class.is-primary]="m.isPrimary" [class.is-busy]="removingId() === m.id">
+              <div class="gi-media__thumb">
+                @if (m.mediaType === 'IMAGE') {
+                  <img [src]="m.cardThumbnailUrl || m.url" [alt]="m.altText ?? ''" loading="lazy" />
+                } @else {
+                  <span class="material-icons-round">movie</span>
+                }
+              </div>
+              <div class="gi-media__meta">
+                <div class="gi-media__url" [title]="m.url">{{ m.url }}</div>
+                @if (m.altText) { <div class="gi-media__alt">{{ m.altText }}</div> }
+                <div class="gi-media__tags">
+                  <span class="gi-media__tag">{{ m.mediaType }}</span>
+                  @if (m.isPrimary) { <span class="gi-media__tag gi-media__tag--gold">PRIMARY</span> }
+                  <span class="gi-media__tag gi-media__tag--muted">Order: {{ m.sortOrder }}</span>
+                </div>
+              </div>
+              <div class="gi-media__actions">
+                @if (!m.isPrimary) {
+                  <button
+                    type="button"
+                    class="gi-btn gi-btn--ghost"
+                    [disabled]="saving() || removingId() !== null"
+                    (click)="promoteToPrimary(m)">
+                    <span class="material-icons-round">star_outline</span>
+                    Make primary
+                  </button>
+                }
+                <button
+                  type="button"
+                  class="gi-btn gi-btn--danger"
+                  [disabled]="saving() || removingId() !== null"
+                  (click)="removeMedia(m)">
+                  <span class="material-icons-round">delete_outline</span>
+                  Remove
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- Add media -->
+    <section class="gi-media__add-panel">
+      <h3>Add media</h3>
+
+      <!-- Upload zone -->
+      <div
+        class="gi-media__drop"
+        [class.is-active]="dragActive()"
+        [class.is-uploading]="uploading()"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+        (click)="openPicker()"
+        role="button"
+        tabindex="0"
+        (keydown.enter)="openPicker()"
+        (keydown.space)="openPicker()">
+        <input
+          #filePicker
+          type="file"
+          [accept]="acceptTypes"
+          hidden
+          (change)="onFileSelected($event)" />
+
+        @if (uploading()) {
+          <div class="gi-media__drop-body">
+            <span class="material-icons-round gi-spin">progress_activity</span>
+            <div class="gi-media__drop-title">Uploading {{ uploadedFileName() }}…</div>
+            <div class="gi-media__progress">
+              <div class="gi-media__progress-bar" [style.width.%]="uploadPercent()"></div>
+            </div>
+            <div class="gi-media__drop-sub">{{ uploadPercent() }}%</div>
+          </div>
+        } @else {
+          <div class="gi-media__drop-body">
+            <span class="material-icons-round gi-media__drop-icon">cloud_upload</span>
+            <div class="gi-media__drop-title">
+              Drag &amp; drop a file here, or <u>click to browse</u>
+            </div>
+            <div class="gi-media__drop-sub">
+              JPG, PNG, WEBP, GIF · MP4, MOV, WEBM · up to 20 MB
+            </div>
+            @if (uploadedFileName() && form.controls.url.value) {
+              <div class="gi-media__drop-ok">
+                <span class="material-icons-round">check_circle</span>
+                Uploaded {{ uploadedFileName() }} — click <strong>Attach media</strong> below to save.
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="gi-media__divider"><span>or paste an existing URL</span></div>
+
+      <form class="gi-media__form" [formGroup]="form" (ngSubmit)="addMedia()">
+        <label class="gi-field">
+          <span class="gi-field__label">URL <span class="gi-req">*</span></span>
+          <input type="url" formControlName="url"
+                 placeholder="https://cdn.example.com/coffee-hero.jpg" />
+          @if (form.controls.url.touched && form.controls.url.invalid) {
+            <span class="gi-field__error">Must be an https:// URL (up to 500 chars).</span>
+          }
+        </label>
+
+        <label class="gi-field">
+          <span class="gi-field__label">Alt text</span>
+          <input type="text" formControlName="altText"
+                 placeholder="Freshly roasted Yirgacheffe beans" />
+        </label>
+
+        <div class="gi-media__grid-inline">
+          <label class="gi-field">
+            <span class="gi-field__label">Type</span>
+            <select formControlName="mediaType">
+              <option value="IMAGE">Image</option>
+              <option value="VIDEO">Video</option>
+            </select>
+          </label>
+
+          <label class="gi-field">
+            <span class="gi-field__label">Sort order</span>
+            <input type="number" formControlName="sortOrder" min="0" step="1" />
+          </label>
+        </div>
+
+        <label class="gi-field gi-field--check">
+          <input type="checkbox" formControlName="isPrimary" />
+          <span>Make this the primary image (demotes any current primary).</span>
+        </label>
+
+        <button
+          type="submit"
+          class="gi-btn gi-btn--gold"
+          [disabled]="saving() || form.invalid">
+          @if (saving()) {
+            <span class="material-icons-round gi-spin">progress_activity</span>
+            Attaching…
+          } @else {
+            <span class="material-icons-round">add_photo_alternate</span>
+            Attach media
+          }
+        </button>
+      </form>
+    </section>
+  </div>
+</section>

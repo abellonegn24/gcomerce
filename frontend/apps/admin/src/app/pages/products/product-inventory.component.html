@@ -1,0 +1,123 @@
+<section class="gi-inv">
+  @if (successMessage(); as msg) {
+    <div class="gi-inv__banner gi-inv__banner--success" role="status">
+      <span class="material-icons-round">check_circle</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+  @if (errorMessage(); as msg) {
+    <div class="gi-inv__banner gi-inv__banner--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="gi-inv__skeleton" aria-live="polite">Loading inventory…</div>
+  } @else if (inventory(); as inv) {
+    <!-- Snapshot -->
+    <section class="gi-inv__panel">
+      <h3>Current state</h3>
+      <dl class="gi-inv__facts">
+        <div>
+          <dt>On hand</dt>
+          <dd>{{ inv.quantity }}</dd>
+        </div>
+        <div>
+          <dt>Reserved by cart / order</dt>
+          <dd>{{ inv.reserved }}</dd>
+        </div>
+        <div class="gi-inv__facts-strong">
+          <dt>Available for new orders</dt>
+          <dd [class.is-low]="inv.low">
+            {{ inv.available }}
+            @if (inv.low) { <span class="gi-inv__flag">LOW STOCK</span> }
+          </dd>
+        </div>
+        <div>
+          <dt>Restock threshold</dt>
+          <dd>{{ inv.restockThreshold }}</dd>
+        </div>
+        <div>
+          <dt>Last updated</dt>
+          <dd>{{ inv.updatedAt | date: 'MMM d, y, h:mm a' }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <div class="gi-inv__grid">
+      <!-- Adjust -->
+      <section class="gi-inv__panel">
+        <h3>Adjust (signed delta)</h3>
+        <p class="gi-inv__hint">
+          Add or subtract from the on-hand quantity. Use a positive number to
+          record a restock, negative to record a loss or return.
+        </p>
+        <form class="gi-inv__form" [formGroup]="adjustForm" (ngSubmit)="submitAdjust()">
+          <label class="gi-field">
+            <span class="gi-field__label">Delta <span class="gi-req">*</span></span>
+            <input type="text" formControlName="delta" placeholder="+50 or -3" />
+            @if (adjustForm.controls.delta.touched && adjustForm.controls.delta.invalid) {
+              <span class="gi-field__error">Enter a signed number (e.g. 50, -3, 12.5).</span>
+            }
+          </label>
+
+          <label class="gi-field">
+            <span class="gi-field__label">Reason (optional)</span>
+            <input type="text" formControlName="reason"
+                   placeholder="Q2 restock from Sidama farmers' cooperative" />
+          </label>
+
+          <button
+            type="submit"
+            class="gi-btn gi-btn--gold"
+            [disabled]="saving() || adjustForm.invalid">
+            @if (saving()) {
+              <span class="material-icons-round gi-spin">progress_activity</span>
+              Applying…
+            } @else {
+              <span class="material-icons-round">tune</span>
+              Apply adjustment
+            }
+          </button>
+        </form>
+      </section>
+
+      <!-- Overwrite -->
+      <section class="gi-inv__panel">
+        <h3>Overwrite (stock take)</h3>
+        <p class="gi-inv__hint">
+          Replace the on-hand quantity outright. Use this after a full physical
+          inventory count.
+        </p>
+        <form class="gi-inv__form" [formGroup]="overwriteForm" (ngSubmit)="submitOverwrite()">
+          <label class="gi-field">
+            <span class="gi-field__label">New on-hand quantity <span class="gi-req">*</span></span>
+            <input type="text" formControlName="quantity" placeholder="128.500" />
+            @if (overwriteForm.controls.quantity.touched && overwriteForm.controls.quantity.invalid) {
+              <span class="gi-field__error">Enter a non-negative decimal (up to 3 places).</span>
+            }
+          </label>
+
+          <label class="gi-field">
+            <span class="gi-field__label">Restock threshold</span>
+            <input type="text" formControlName="restockThreshold" placeholder="20.000" />
+          </label>
+
+          <button
+            type="submit"
+            class="gi-btn gi-btn--ghost"
+            [disabled]="saving() || overwriteForm.invalid">
+            @if (saving()) {
+              <span class="material-icons-round gi-spin">progress_activity</span>
+              Applying…
+            } @else {
+              <span class="material-icons-round">edit</span>
+              Overwrite
+            }
+          </button>
+        </form>
+      </section>
+    </div>
+  }
+</section>

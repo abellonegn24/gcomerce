@@ -1,0 +1,485 @@
+<section class="gi-order">
+  <nav class="gi-order__crumbs" aria-label="Breadcrumb">
+    <a routerLink="/orders">
+      <span class="material-icons-round">arrow_back</span>
+      Back to orders
+    </a>
+  </nav>
+
+  @if (loading()) {
+    <div class="gi-order__skeleton" aria-live="polite">Loading order…</div>
+  } @else if (errorMessage() && !order()) {
+    <div class="gi-order__banner gi-order__banner--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  } @else if (order(); as o) {
+    <!-- Success / error banners -->
+    @if (successMessage(); as msg) {
+      <div class="gi-order__banner gi-order__banner--success" role="status">
+        <span class="material-icons-round">check_circle</span>
+        <span>{{ msg }}</span>
+      </div>
+    }
+    @if (errorMessage(); as msg) {
+      <div class="gi-order__banner gi-order__banner--error" role="alert">
+        <span class="material-icons-round">error_outline</span>
+        <span>{{ msg }}</span>
+      </div>
+    }
+
+    <header class="gi-order__head">
+      <div>
+        <p class="gi-order__eyebrow">Invoice</p>
+        <h1><code>{{ o.invoiceNumber }}</code></h1>
+        <p class="gi-order__sub">
+          Placed {{ o.placedAt | date: 'MMM d, y, h:mm a' }}
+          @if (o.paidAt) { • Paid {{ o.paidAt | date: 'MMM d, y, h:mm a' }} }
+          @if (o.cancelledAt) { • Cancelled {{ o.cancelledAt | date: 'MMM d, y, h:mm a' }} }
+        </p>
+      </div>
+      <span class="gi-order__pill" [class]="'is-' + statusVariant(o.status)">{{ o.status }}</span>
+    </header>
+
+    <div class="gi-order__grid">
+      <div class="gi-order__col">
+        <!-- Line items -->
+        <section class="gi-order__card">
+          <h2>Line items</h2>
+          <ul class="gi-order__lines">
+            @for (line of o.items; track line.id) {
+              <li class="gi-order__line">
+                <div class="gi-order__line-body">
+                  <div class="gi-order__line-name">{{ line.name }}</div>
+                  <div class="gi-order__line-sku">{{ line.sku }}</div>
+                  @if (line.variantName) {
+                    <div class="gi-order__line-variant">{{ line.variantName }}</div>
+                  }
+                </div>
+                <div class="gi-order__line-qty">
+                  {{ line.quantity }} × {{ formatMoney(o.currency, line.unitPrice) }}
+                </div>
+                <div class="gi-order__line-total">
+                  {{ formatMoney(o.currency, line.lineTotal) }}
+                </div>
+              </li>
+            }
+          </ul>
+
+          <dl class="gi-order__totals">
+            <div>
+              <dt>Subtotal</dt>
+              <dd>{{ formatMoney(o.currency, o.subtotal) }}</dd>
+            </div>
+            @if (asNumber(o.discountTotal) > 0) {
+              <div>
+                <dt>
+                  Discount
+                  @if (o.couponCode) {
+                    <span class="gi-order__sub">— {{ o.couponCode }}</span>
+                  }
+                </dt>
+                <dd>−{{ formatMoney(o.currency, o.discountTotal) }}</dd>
+              </div>
+            }
+            <div>
+              <dt>Tax</dt>
+              <dd>{{ formatMoney(o.currency, o.taxTotal) }}</dd>
+            </div>
+            <div>
+              <dt>
+                Shipping
+                @if (o.shippingMethodName) {
+                  <span class="gi-order__meta">— {{ o.shippingMethodName }}
+                    @if (o.shippingMethodCode) { <code>({{ o.shippingMethodCode }})</code> }
+                  </span>
+                }
+              </dt>
+              <dd>{{ formatMoney(o.currency, o.shippingTotal) }}</dd>
+            </div>
+            @if (asNumber(o.refundedTotal) > 0) {
+              <div class="gi-order__refunded">
+                <dt>Refunded</dt>
+                <dd>−{{ formatMoney(o.currency, o.refundedTotal) }}</dd>
+              </div>
+            }
+            <div class="gi-order__grand">
+              <dt>Total</dt>
+              <dd>{{ formatMoney(o.currency, o.grandTotal) }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <!-- Customer + addresses -->
+        <section class="gi-order__card">
+          <h2>Customer</h2>
+          <dl class="gi-order__facts">
+            <div>
+              <dt>Name</dt>
+              <dd>
+                {{ o.customer.firstName || o.customer.lastName
+                     ? (o.customer.firstName ?? '') + ' ' + (o.customer.lastName ?? '')
+                     : (o.customer.companyName || '—') }}
+              </dd>
+            </div>
+            <div>
+              <dt>Email</dt>
+              <dd><a [href]="'mailto:' + o.customer.email">{{ o.customer.email }}</a></dd>
+            </div>
+            @if (o.customer.companyName) {
+              <div>
+                <dt>Company</dt>
+                <dd>{{ o.customer.companyName }}</dd>
+              </div>
+            }
+            @if (o.customer.phone) {
+              <div>
+                <dt>Phone</dt>
+                <dd>{{ o.customer.phone }}</dd>
+              </div>
+            }
+          </dl>
+        </section>
+
+        <section class="gi-order__card">
+          <h2>Addresses</h2>
+          <div class="gi-order__addresses">
+            <article class="gi-order__address">
+              <p class="gi-order__address-title">Ship to</p>
+              <div class="gi-order__address-body">
+                @if (o.shipTo.fullName) { <div>{{ o.shipTo.fullName }}</div> }
+                @if (o.shipTo.company)  { <div class="muted">{{ o.shipTo.company }}</div> }
+                <div>{{ o.shipTo.streetLine1 }}</div>
+                @if (o.shipTo.streetLine2) { <div>{{ o.shipTo.streetLine2 }}</div> }
+                <div>
+                  {{ o.shipTo.city }}@if (o.shipTo.region) {, {{ o.shipTo.region }}}
+                  @if (o.shipTo.postalCode) { {{ o.shipTo.postalCode }}}
+                </div>
+                <div>{{ o.shipTo.countryCode }}</div>
+                @if (o.shipTo.phone) { <div class="muted">{{ o.shipTo.phone }}</div> }
+              </div>
+            </article>
+            <article class="gi-order__address">
+              <p class="gi-order__address-title">Bill to</p>
+              <div class="gi-order__address-body">
+                @if (o.billTo.fullName) { <div>{{ o.billTo.fullName }}</div> }
+                @if (o.billTo.company)  { <div class="muted">{{ o.billTo.company }}</div> }
+                <div>{{ o.billTo.streetLine1 }}</div>
+                @if (o.billTo.streetLine2) { <div>{{ o.billTo.streetLine2 }}</div> }
+                <div>
+                  {{ o.billTo.city }}@if (o.billTo.region) {, {{ o.billTo.region }}}
+                  @if (o.billTo.postalCode) { {{ o.billTo.postalCode }}}
+                </div>
+                <div>{{ o.billTo.countryCode }}</div>
+                @if (o.billTo.phone) { <div class="muted">{{ o.billTo.phone }}</div> }
+              </div>
+            </article>
+          </div>
+        </section>
+
+        @if (o.customerNotes || o.internalNotes) {
+          <section class="gi-order__card">
+            <h2>Notes</h2>
+            @if (o.customerNotes) {
+              <p class="gi-order__note"><strong>Customer:</strong> {{ o.customerNotes }}</p>
+            }
+            @if (o.internalNotes) {
+              <p class="gi-order__note gi-order__note--internal"><strong>Internal:</strong> {{ o.internalNotes }}</p>
+            }
+          </section>
+        }
+      </div>
+
+      <div class="gi-order__col">
+        <!-- Transition control -->
+        <section class="gi-order__card gi-order__card--sticky">
+          <h2>Move status</h2>
+          @if (isTerminal()) {
+            <p class="gi-order__hint">
+              <span class="material-icons-round">lock</span>
+              This order is in a terminal state ({{ o.status }}) — no further transitions
+              are allowed.
+            </p>
+          } @else {
+            <div class="gi-field">
+              <label class="gi-field__label" for="next-status">Target status</label>
+              <select
+                id="next-status"
+                [ngModel]="nextStatus()"
+                (ngModelChange)="nextStatus.set($event)"
+                [disabled]="transitioning()">
+                <option value="">— Choose a status —</option>
+                @for (s of allowedNext(); track s) {
+                  <option [value]="s">{{ statusLabels[s] }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="gi-field">
+              <label class="gi-field__label" for="note">
+                Note
+                @if (nextStatus() === 'CANCELLED' || nextStatus() === 'REFUNDED') {
+                  <span class="gi-req">*</span>
+                }
+              </label>
+              <textarea
+                id="note"
+                rows="3"
+                maxlength="500"
+                [ngModel]="note()"
+                (ngModelChange)="note.set($event)"
+                [disabled]="transitioning()"
+                placeholder="Add an internal note explaining this change (recorded in the audit log).">
+              </textarea>
+            </div>
+
+            <button
+              type="button"
+              class="gi-btn gi-btn--gold"
+              [disabled]="transitioning() || !nextStatus()"
+              (click)="submitTransition()">
+              @if (transitioning()) {
+                <span class="material-icons-round gi-spin">progress_activity</span>
+                Applying…
+              } @else {
+                <span class="material-icons-round">arrow_forward</span>
+                Apply transition
+              }
+            </button>
+          }
+        </section>
+
+        <!-- Status timeline -->
+        <section class="gi-order__card">
+          <h2>Status history</h2>
+          <ol class="gi-order__timeline">
+            @for (ev of o.statusHistory; track ev.occurredAt + '-' + ev.toStatus) {
+              <li>
+                <span class="gi-order__timeline-dot"></span>
+                <div class="gi-order__timeline-body">
+                  <div class="gi-order__timeline-when">
+                    {{ ev.occurredAt | date: 'MMM d, y, h:mm a' }}
+                  </div>
+                  <div class="gi-order__timeline-head">
+                    @if (ev.fromStatus) {
+                      <span class="gi-order__pill" [class]="'is-' + statusVariant(ev.fromStatus)">
+                        {{ ev.fromStatus }}
+                      </span>
+                      <span class="gi-order__timeline-arrow material-icons-round">arrow_right_alt</span>
+                    }
+                    <span class="gi-order__pill" [class]="'is-' + statusVariant(ev.toStatus)">
+                      {{ ev.toStatus }}
+                    </span>
+                    <span class="gi-order__timeline-source">via {{ ev.source }}</span>
+                  </div>
+                  @if (ev.note) { <p class="gi-order__timeline-note">{{ ev.note }}</p> }
+                </div>
+              </li>
+            }
+          </ol>
+        </section>
+
+        <!-- Payment reference -->
+        @if (o.paymentReference || o.paymentProvider || o.paymentMethod) {
+          <section class="gi-order__card">
+            <h2>Payment</h2>
+            <dl class="gi-order__facts">
+              @if (o.paymentMethod) {
+                <div>
+                  <dt>Method</dt>
+                  <dd>{{ o.paymentMethod }}</dd>
+                </div>
+              }
+              @if (o.paymentProvider) {
+                <div>
+                  <dt>Provider</dt>
+                  <dd>{{ o.paymentProvider }}</dd>
+                </div>
+              }
+              @if (o.paymentReference) {
+                <div>
+                  <dt>Reference</dt>
+                  <dd><code>{{ o.paymentReference }}</code></dd>
+                </div>
+              }
+            </dl>
+          </section>
+        }
+
+        <!-- =========================================================== -->
+        <!-- Refunds                                                     -->
+        <!-- =========================================================== -->
+        <section class="gi-order__card">
+          <header class="gi-order__card-head">
+            <h2>Refunds</h2>
+            @if (canRefund()) {
+              <button
+                type="button"
+                class="gi-btn gi-btn--danger-outline"
+                (click)="openRefundModal()">
+                <span class="material-icons-round">undo</span>
+                Issue refund
+              </button>
+            }
+          </header>
+
+          @if (asNumber(o.refundedTotal) > 0) {
+            <p class="gi-order__hint">
+              <strong>{{ formatMoney(o.currency, o.refundedTotal) }}</strong> refunded of
+              {{ formatMoney(o.currency, o.grandTotal) }} — remaining
+              <strong>{{ formatMoney(o.currency, refundableRemaining().toFixed(2)) }}</strong>.
+            </p>
+          } @else if (!canRefund()) {
+            <p class="gi-order__hint">
+              <span class="material-icons-round">info</span>
+              Refunds are unavailable for an order in status {{ o.status }}.
+            </p>
+          } @else {
+            <p class="gi-order__hint">
+              No refunds on this order yet. The full
+              {{ formatMoney(o.currency, o.grandTotal) }} is refundable.
+            </p>
+          }
+
+          @if (o.refunds && o.refunds.length > 0) {
+            <ul class="gi-refunds" role="list">
+              @for (r of o.refunds; track r.uuid) {
+                <li class="gi-refunds__row" [class.is-failed]="r.status === 'FAILED'">
+                  <div class="gi-refunds__amount">
+                    <strong>{{ formatMoney(o.currency, r.amount) }}</strong>
+                    <span class="gi-refunds__status" [class]="'is-' + r.status.toLowerCase()">
+                      {{ r.status }}
+                    </span>
+                  </div>
+                  <div class="gi-refunds__meta">
+                    <span>{{ r.createdAt | date: 'MMM d, y, h:mm a' }}</span>
+                    @if (r.gatewayProvider) {
+                      <span>· {{ r.gatewayProvider }}</span>
+                    }
+                    @if (r.gatewayReference) {
+                      <code>{{ r.gatewayReference }}</code>
+                    }
+                  </div>
+                  <p class="gi-refunds__reason">{{ r.reason }}</p>
+                  @if (r.status === 'FAILED' && (r.gatewayErrorMessage || r.gatewayErrorCode)) {
+                    <p class="gi-refunds__error">
+                      <span class="material-icons-round">error_outline</span>
+                      {{ r.gatewayErrorMessage || r.gatewayErrorCode }}
+                      @if (r.gatewayErrorCode && r.gatewayErrorMessage) {
+                        <code>({{ r.gatewayErrorCode }})</code>
+                      }
+                    </p>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </section>
+      </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- Refund modal                                                  -->
+    <!-- ============================================================= -->
+    @if (refundOpen()) {
+      <div class="gi-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="refund-title">
+        <div class="gi-modal">
+          <header class="gi-modal__head">
+            <h3 id="refund-title">Issue refund</h3>
+            <button
+              type="button"
+              class="gi-modal__close"
+              aria-label="Close"
+              (click)="closeRefundModal()"
+              [disabled]="refundSaving()">
+              <span class="material-icons-round">close</span>
+            </button>
+          </header>
+
+          <div class="gi-modal__body">
+            <p class="gi-modal__lead">
+              Refunding order <code>{{ o.invoiceNumber }}</code>. Remaining refundable balance
+              <strong>{{ formatMoney(o.currency, refundableRemaining().toFixed(2)) }}</strong>.
+            </p>
+
+            @if (refundError(); as msg) {
+              <div class="gi-order__banner gi-order__banner--error" role="alert">
+                <span class="material-icons-round">error_outline</span>
+                <span>{{ msg }}</span>
+              </div>
+            }
+
+            <div class="gi-field">
+              <label class="gi-field__label" for="refund-amount">
+                Amount ({{ o.currency }}) <span class="gi-req">*</span>
+              </label>
+              <input
+                id="refund-amount"
+                type="number"
+                min="0.01"
+                step="0.01"
+                [max]="refundableRemaining()"
+                [ngModel]="refundAmount()"
+                (ngModelChange)="refundAmount.set($event)"
+                [disabled]="refundSaving()" />
+              <small class="gi-field__hint">
+                Enter the full remaining balance for a full refund, or a smaller amount for a partial one.
+              </small>
+            </div>
+
+            <div class="gi-field">
+              <label class="gi-field__label" for="refund-reason">
+                Reason <span class="gi-req">*</span>
+              </label>
+              <textarea
+                id="refund-reason"
+                rows="3"
+                maxlength="1000"
+                [ngModel]="refundReason()"
+                (ngModelChange)="refundReason.set($event)"
+                [disabled]="refundSaving()"
+                placeholder="Damaged in transit, customer changed their mind, duplicate charge, …">
+              </textarea>
+              <small class="gi-field__hint">Recorded on the audit log and visible to any admin who opens this order.</small>
+            </div>
+
+            <label class="gi-field gi-field--check">
+              <input
+                type="checkbox"
+                [checked]="refundManual()"
+                (change)="refundManual.set($any($event.target).checked)"
+                [disabled]="refundSaving()" />
+              <span>
+                Record as <strong>manual</strong> refund — skip the gateway call.
+                Use when the customer was already refunded out-of-band (cash, wire, prior CyberSource action).
+              </span>
+            </label>
+          </div>
+
+          <footer class="gi-modal__foot">
+            <button
+              type="button"
+              class="gi-btn gi-btn--ghost"
+              (click)="closeRefundModal()"
+              [disabled]="refundSaving()">
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="gi-btn gi-btn--danger"
+              (click)="submitRefund()"
+              [disabled]="refundSaving()">
+              @if (refundSaving()) {
+                <span class="material-icons-round gi-spin">progress_activity</span>
+                Processing…
+              } @else {
+                <span class="material-icons-round">undo</span>
+                Issue refund
+              }
+            </button>
+          </footer>
+        </div>
+      </div>
+    }
+  }
+</section>

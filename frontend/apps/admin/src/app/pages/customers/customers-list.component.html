@@ -1,0 +1,155 @@
+<section class="gi-customers">
+  <header class="gi-customers__header">
+    <div>
+      <h1>Customers</h1>
+      <p class="gi-customers__lead">
+        Every registered account. Approve B2B applications, suspend or
+        reactivate accounts, and manage price-group memberships from the
+        customer detail screen.
+      </p>
+    </div>
+  </header>
+
+  <!-- Filters -->
+  <div class="gi-customers__filters">
+    <form class="gi-customers__search" (submit)="submitSearch(); $event.preventDefault()">
+      <span class="material-icons-round">search</span>
+      <input
+        type="text"
+        placeholder="Search by email, first / last name, or company…"
+        [ngModel]="q()"
+        (ngModelChange)="onSearchInput($event)"
+        [ngModelOptions]="{ standalone: true }" />
+      <button type="submit" class="gi-btn gi-btn--ghost">Search</button>
+    </form>
+
+    <label class="gi-customers__select">
+      <span>Type</span>
+      <select
+        [ngModel]="type()"
+        (ngModelChange)="onTypeChange($event)"
+        [ngModelOptions]="{ standalone: true }">
+        @for (t of typeFilters; track t.code) {
+          <option [ngValue]="t.code">{{ t.label }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="gi-customers__select">
+      <span>Status</span>
+      <select
+        [ngModel]="status()"
+        (ngModelChange)="onStatusChange($event)"
+        [ngModelOptions]="{ standalone: true }">
+        @for (s of statusFilters; track s.code) {
+          <option [ngValue]="s.code">{{ s.label }}</option>
+        }
+      </select>
+    </label>
+
+    <button type="button" class="gi-btn gi-btn--ghost" (click)="clearFilters()">
+      <span class="material-icons-round">refresh</span>
+      Reset
+    </button>
+  </div>
+
+  @if (errorMessage(); as msg) {
+    <div class="gi-customers__banner gi-customers__banner--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  <!-- Table -->
+  @if (loading()) {
+    <div class="gi-customers__skeleton" aria-live="polite">Loading customers…</div>
+  } @else if (items().length === 0) {
+    <div class="gi-customers__empty">
+      <span class="material-icons-round">groups</span>
+      <h3>No customers match those filters</h3>
+      <p>Adjust the search or reset filters to see the full roster.</p>
+    </div>
+  } @else {
+    <div class="gi-customers__table-wrap">
+      <table class="gi-customers__table" role="table">
+        <thead>
+          <tr>
+            <th scope="col">Customer</th>
+            <th scope="col">Type</th>
+            <th scope="col">Status</th>
+            <th scope="col">Group</th>
+            <th scope="col">Currency</th>
+            <th scope="col">Signed up</th>
+            <th scope="col">Last login</th>
+            <th scope="col" class="gi-customers__col-chev"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of items(); track row.id) {
+            <tr class="gi-customers__row" [routerLink]="['/customers', row.id]">
+              <td>
+                <div class="gi-customers__name">{{ row.displayName }}</div>
+                <div class="gi-customers__email">
+                  {{ row.email }}
+                  @if (!row.emailVerified) {
+                    <span class="gi-customers__flag" title="Email not verified">UNVERIFIED</span>
+                  }
+                </div>
+              </td>
+              <td>
+                <span class="gi-customers__type" [class.is-b2b]="row.customerType === 'B2B'">
+                  {{ row.customerType }}
+                </span>
+              </td>
+              <td>
+                <span class="gi-customers__pill"
+                      [class.is-ok]="statusVariant(row.status) === 'ok'"
+                      [class.is-pending]="statusVariant(row.status) === 'pending'"
+                      [class.is-warn]="statusVariant(row.status) === 'warn'"
+                      [class.is-off]="statusVariant(row.status) === 'off'"
+                      [title]="statusLabels[row.status]">
+                  {{ statusLabels[row.status] }}
+                </span>
+              </td>
+              <td>
+                @if (row.groupCode) {
+                  <code>{{ row.groupCode }}</code>
+                } @else {
+                  <span class="gi-customers__muted">—</span>
+                }
+              </td>
+              <td>{{ row.preferredCurrency }}</td>
+              <td>{{ row.createdAt | date: 'MMM d, y' }}</td>
+              <td>
+                @if (row.lastLoginAt) {
+                  {{ row.lastLoginAt | date: 'MMM d, y, h:mm a' }}
+                } @else {
+                  <span class="gi-customers__muted">Never</span>
+                }
+              </td>
+              <td class="gi-customers__col-chev">
+                <span class="material-icons-round">chevron_right</span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (pageCount() > 1) {
+      <nav class="gi-customers__pagination" aria-label="Pagination">
+        <button type="button" class="gi-btn gi-btn--ghost" [disabled]="!hasPrev()" (click)="prevPage()">
+          <span class="material-icons-round">arrow_back</span>
+          Previous
+        </button>
+        <span class="gi-customers__page-info">
+          Page {{ page() + 1 }} of {{ pageCount() }} — {{ total() }} customers
+        </span>
+        <button type="button" class="gi-btn gi-btn--ghost" [disabled]="!hasNext()" (click)="nextPage()">
+          Next
+          <span class="material-icons-round">arrow_forward</span>
+        </button>
+      </nav>
+    }
+  }
+</section>

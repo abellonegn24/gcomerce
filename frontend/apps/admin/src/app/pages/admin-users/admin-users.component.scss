@@ -1,0 +1,205 @@
+:host {
+  display: block;
+  padding: 2rem clamp(1rem, 4vw, 3rem);
+}
+
+.gi-admins__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    font-family: var(--gi-font-display);
+    color: var(--gi-navy-900);
+    margin: 0 0 0.35rem 0;
+    font-size: 1.5rem;
+  }
+}
+
+.gi-admins__lead {
+  color: var(--gi-text-secondary);
+  font-size: 0.9rem;
+  max-width: 60ch;
+  margin: 0;
+  line-height: 1.5;
+}
+
+// -----------------------------------------------------------------------------
+// Banners
+// -----------------------------------------------------------------------------
+.gi-admins__banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 0.95rem;
+  border-radius: var(--gi-radius-md);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+
+  .material-icons-round { font-size: 1.1rem; }
+
+  &--success {
+    background: rgba(46, 160, 67, 0.1);
+    border: 1px solid rgba(46, 160, 67, 0.35);
+    color: #256029;
+  }
+  &--error {
+    background: rgba(201, 51, 39, 0.08);
+    border: 1px solid rgba(201, 51, 39, 0.3);
+    color: var(--gi-red-600);
+  }
+}
+
+.gi-admins__skeleton,
+.gi-admins__empty {
+  padding: 2rem 1rem;
+  background: #fff;
+  border: 1px dashed var(--gi-border);
+  border-radius: var(--gi-radius-md);
+  text-align: center;
+  color: var(--gi-text-secondary);
+  font-size: 0.9rem;
+}
+
+// -----------------------------------------------------------------------------
+// Table
+// -----------------------------------------------------------------------------
+.gi-admins__table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid var(--gi-border);
+  border-radius: var(--gi-radius-md);
+  box-shadow: 0 1px 3px rgba(18, 41, 74, 0.05);
+}
+
+.gi-admins__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  th, td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  thead {
+    background: rgba(44, 83, 145, 0.05);
+    th {
+      font-weight: 600;
+      color: var(--gi-navy-900);
+      border-bottom: 1px solid var(--gi-border);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  }
+
+  tbody tr {
+    border-top: 1px solid var(--gi-border);
+    transition: background var(--gi-transition);
+  }
+  tbody tr:hover { background: rgba(44, 83, 145, 0.03); }
+  tbody tr.is-me { background: rgba(233, 180, 76, 0.06); }
+}
+
+.gi-admins__col-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.gi-admins__you {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: var(--gi-gold-500);
+  color: var(--gi-navy-900);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+// -----------------------------------------------------------------------------
+// Pills
+// -----------------------------------------------------------------------------
+.gi-admins__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: rgba(44, 83, 145, 0.08);
+  color: var(--gi-navy-900);
+
+  .material-icons-round { font-size: 0.9rem; }
+
+  &--role {
+    background: rgba(44, 83, 145, 0.12);
+    color: var(--gi-navy-700);
+    text-transform: uppercase;
+  }
+
+  &--ok {
+    background: rgba(46, 160, 67, 0.14);
+    color: #256029;
+  }
+  &--warn {
+    background: rgba(201, 51, 39, 0.12);
+    color: var(--gi-red-600);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Buttons
+// -----------------------------------------------------------------------------
+.gi-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--gi-radius-sm);
+  font-weight: 600;
+  font-size: 0.83rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background var(--gi-transition), color var(--gi-transition),
+              border-color var(--gi-transition), transform var(--gi-transition);
+
+  .material-icons-round { font-size: 1rem; }
+
+  &--ghost {
+    background: transparent;
+    color: var(--gi-navy-700);
+    border-color: var(--gi-border);
+  }
+  &--ghost:hover:not(:disabled) {
+    background: rgba(44, 83, 145, 0.06);
+    color: var(--gi-navy-900);
+  }
+
+  &--danger {
+    background: rgba(201, 51, 39, 0.08);
+    color: var(--gi-red-600);
+    border-color: rgba(201, 51, 39, 0.3);
+  }
+  &--danger:hover:not(:disabled) {
+    background: var(--gi-red-600);
+    color: #fff;
+    border-color: var(--gi-red-600);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

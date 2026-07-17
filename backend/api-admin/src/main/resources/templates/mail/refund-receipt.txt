@@ -1,0 +1,16 @@
+Hi {displayName},
+
+A refund of {currency} {refundAmount} has been issued for your order {invoiceNumber}.
+
+Reason: {reason}
+
+The refund will appear on your original payment method within 5-10 business days.
+
+You can view your order details here:
+{orderLink}
+
+If you have any questions, contact us at support@gadaaistar.com.
+
+--
+Gadaa Istar Business Group S.C. · Addis Ababa, Ethiopia
+This is an automated message — please do not reply.

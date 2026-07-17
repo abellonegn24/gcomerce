@@ -1,0 +1,23 @@
+Gadaa Istar Admin — Coupon Usage Report ({period})
+
+SUMMARY
+-------
+Total redemptions:  {totalRedemptions}
+Total discount:     {totalDiscount}
+Active coupons:     {activeCoupons}
+
+TOP COUPONS BY REDEMPTIONS
+{#for c in topCoupons}
+  Code:           {c.code}
+  Discount:       {c.discount}
+  Redemptions:    {c.redeemedCount}
+  Discount given: {c.totalDiscount}
+{/for}
+
+Manage coupons: {adminLink}
+
+This is an automated report covering the last {reportDays} days.
+
+--
+Gadaa Istar Business Group S.C. · Addis Ababa, Ethiopia
+This is an automated message — please do not reply.

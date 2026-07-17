@@ -1,0 +1,51 @@
+<div class="gi-notif" (click)="toggle()">
+  <button type="button" class="gi-notif__btn" aria-label="Notifications">
+    <span class="material-icons-round">notifications</span>
+    @if (data(); as d) {
+      @if (d.total > 0) {
+        <span class="gi-notif__badge">{{ d.total > 99 ? '99+' : d.total }}</span>
+      }
+    }
+  </button>
+
+  @if (open()) {
+    <div class="gi-notif__dropdown" (click)="$event.stopPropagation()">
+      <div class="gi-notif__header">
+        <span>Notifications</span>
+        <button type="button" class="gi-notif__close" (click)="close()">
+          <span class="material-icons-round">close</span>
+        </button>
+      </div>
+
+      @if (data(); as d) {
+        <div class="gi-notif__list">
+          <a routerLink="/orders" class="gi-notif__item" (click)="close()">
+            <span class="material-icons-round gi-notif__icon gi-notif__icon--orders">shopping_bag</span>
+            <div class="gi-notif__content">
+              <span class="gi-notif__label">Open orders</span>
+              <span class="gi-notif__count">{{ d.newOrders }}</span>
+            </div>
+          </a>
+
+          <a routerLink="/products" class="gi-notif__item" (click)="close()">
+            <span class="material-icons-round gi-notif__icon gi-notif__icon--stock">inventory_2</span>
+            <div class="gi-notif__content">
+              <span class="gi-notif__label">Low stock items</span>
+              <span class="gi-notif__count">{{ d.lowStockItems }}</span>
+            </div>
+          </a>
+
+          <a routerLink="/customers" class="gi-notif__item" (click)="close()">
+            <span class="material-icons-round gi-notif__icon gi-notif__icon--b2b">group</span>
+            <div class="gi-notif__content">
+              <span class="gi-notif__label">Pending B2B approvals</span>
+              <span class="gi-notif__count">{{ d.pendingB2bApprovals }}</span>
+            </div>
+          </a>
+        </div>
+      } @else {
+        <div class="gi-notif__empty">Loading…</div>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,77 @@
+<section class="gi-return">
+  @if (loading()) {
+    <div class="gi-return__loading">
+      <span class="material-icons-round gi-spin">progress_activity</span>
+      Loading order status…
+    </div>
+  }
+
+  @if (errorMessage(); as msg) {
+    <div class="gi-alert gi-alert--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  @if (order(); as o) {
+    <div class="gi-return__card"
+         [class.is-pending]="o.status === 'PENDING_PAYMENT'"
+         [class.is-cancelled]="o.status === 'CANCELLED'">
+
+      @if (o.status === 'PENDING_PAYMENT') {
+        <span class="material-icons-round gi-return__icon gi-return__icon--warn">pause_circle</span>
+        <h1>Payment paused</h1>
+        <p>
+          Your order <strong>{{ o.invoiceNumber }}</strong> is still open and
+          nothing was charged. You can finish paying now or cancel the order.
+        </p>
+      } @else {
+        <span class="material-icons-round gi-return__icon gi-return__icon--warn">block</span>
+        <h1>Order cancelled</h1>
+        <p>
+          Order <strong>{{ o.invoiceNumber }}</strong> has been cancelled and
+          reserved stock has been released.
+        </p>
+      }
+
+      <dl class="gi-return__summary">
+        <div>
+          <dt>Order</dt>
+          <dd>{{ o.invoiceNumber }}</dd>
+        </div>
+        <div>
+          <dt>Status</dt>
+          <dd>{{ o.status }}</dd>
+        </div>
+        <div>
+          <dt>Total</dt>
+          <dd>{{ formatMoney(o.currency, o.grandTotal) }}</dd>
+        </div>
+      </dl>
+
+      <div class="gi-return__actions">
+        @if (o.status === 'PENDING_PAYMENT') {
+          <button type="button" class="gi-btn-inline gi-btn-inline--gold"
+                  (click)="retryPayment()">
+            <span class="material-icons-round">refresh</span>
+            Retry payment
+          </button>
+          <button type="button" class="gi-btn-inline gi-btn-inline--ghost"
+                  (click)="cancelOrder()"
+                  [disabled]="cancelling()">
+            @if (cancelling()) { Cancelling… }
+            @else {
+              <span class="material-icons-round">close</span>
+              Cancel this order
+            }
+          </button>
+        } @else {
+          <a routerLink="/shop" class="gi-btn-inline gi-btn-inline--gold">Keep shopping</a>
+          <a [routerLink]="['/account/orders', o.uuid]" class="gi-btn-inline gi-btn-inline--ghost">
+            View order
+          </a>
+        }
+      </div>
+    </div>
+  }
+</section>

@@ -1,0 +1,232 @@
+// =============================================================================
+// Admin Login page — full-screen split with brand-themed background
+// =============================================================================
+
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.gi-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(233, 180, 76, 0.18), transparent 55%),
+    radial-gradient(circle at 80% 70%, rgba(201, 51, 39, 0.15), transparent 55%),
+    linear-gradient(135deg, var(--gi-navy-900) 0%, var(--gi-navy-700) 100%);
+}
+
+.gi-login__panel {
+  background: #fff;
+  border-radius: var(--gi-radius-lg);
+  box-shadow: var(--gi-shadow-lg);
+  padding: 2.5rem 2.25rem;
+  width: 100%;
+  max-width: 420px;
+}
+
+// -----------------------------------------------------------------------------
+// Brand mark
+// -----------------------------------------------------------------------------
+.gi-login__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 1.75rem;
+}
+
+.gi-login__mark {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--gi-navy-700);
+  border: 2px solid var(--gi-navy-500);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gi-red-500);
+  font-weight: 700;
+  font-size: 1.35rem;
+}
+
+.gi-login__arrow { transform: rotate(-15deg); }
+
+.gi-login__star {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  color: var(--gi-gold-500);
+  font-size: 0.9rem;
+}
+
+.gi-login__wordmark {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.gi-login__name {
+  font-family: var(--gi-font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.06em;
+  color: var(--gi-navy-900);
+}
+
+.gi-login__sub {
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  color: var(--gi-red-600);
+  text-transform: uppercase;
+}
+
+// -----------------------------------------------------------------------------
+// Title / lead
+// -----------------------------------------------------------------------------
+.gi-login h1 {
+  font-family: var(--gi-font-display);
+  color: var(--gi-navy-900);
+  margin: 0 0 0.35rem 0;
+  font-size: 1.75rem;
+}
+
+.gi-login__lead {
+  color: var(--gi-text-secondary);
+  font-size: 0.95rem;
+  margin: 0 0 1.5rem 0;
+}
+
+// -----------------------------------------------------------------------------
+// Form
+// -----------------------------------------------------------------------------
+.gi-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.gi-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.gi-field__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gi-navy-900);
+}
+
+.gi-field__hint {
+  font-weight: 400;
+  color: var(--gi-text-secondary);
+}
+
+.gi-field input {
+  border: 1px solid var(--gi-border);
+  border-radius: var(--gi-radius-md);
+  padding: 0.7rem 0.9rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color var(--gi-transition), box-shadow var(--gi-transition);
+  background: #fff;
+  color: var(--gi-navy-900);
+}
+
+.gi-field input:focus {
+  outline: none;
+  border-color: var(--gi-navy-500);
+  box-shadow: 0 0 0 3px rgba(44, 83, 145, 0.15);
+}
+
+.gi-field input[aria-invalid='true'] {
+  border-color: var(--gi-red-600);
+  box-shadow: 0 0 0 3px rgba(201, 51, 39, 0.12);
+}
+
+.gi-field__error {
+  font-size: 0.8rem;
+  color: var(--gi-red-600);
+}
+
+// -----------------------------------------------------------------------------
+// Form-level error banner
+// -----------------------------------------------------------------------------
+.gi-form__error {
+  background: rgba(201, 51, 39, 0.08);
+  border: 1px solid rgba(201, 51, 39, 0.3);
+  color: var(--gi-red-600);
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--gi-radius-md);
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+// -----------------------------------------------------------------------------
+// Info hint (e.g. "You'll be asked for a 6-digit code next")
+// -----------------------------------------------------------------------------
+.gi-login__hint {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: rgba(44, 83, 145, 0.06);
+  border: 1px solid rgba(44, 83, 145, 0.15);
+  color: var(--gi-navy-700);
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--gi-radius-md);
+  font-size: 0.83rem;
+  margin: 0.25rem 0 0.5rem 0;
+
+  .material-icons-round {
+    font-size: 1.1rem;
+    color: var(--gi-navy-500);
+  }
+}
+
+.gi-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.25rem;
+  border-radius: var(--gi-radius-md);
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform var(--gi-transition), background var(--gi-transition);
+
+  .material-icons-round { font-size: 1.1rem; }
+
+  &--primary {
+    background: var(--gi-navy-700);
+    color: #fff;
+    margin-top: 0.5rem;
+  }
+  &--primary:hover:not(:disabled) {
+    background: var(--gi-navy-500);
+    transform: translateY(-1px);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.gi-login__forgot {
+  align-self: center;
+  font-size: 0.85rem;
+  color: var(--gi-navy-500);
+  margin-top: 0.5rem;
+}
+
+.gi-login__footer {
+  margin: 1.75rem 0 0 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--gi-text-secondary);
+}

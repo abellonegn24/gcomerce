@@ -1,0 +1,757 @@
+:host { display: block; }
+
+.gi-order {
+  padding: 1.5rem 2rem 3rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  color: var(--gi-navy-900);
+
+  @media (max-width: 720px) { padding: 1rem; }
+}
+
+// -----------------------------------------------------------------------------
+// Breadcrumb
+// -----------------------------------------------------------------------------
+.gi-order__crumbs {
+  margin-bottom: 1rem;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--gi-navy-700);
+    text-decoration: none;
+    font-size: 0.9rem;
+
+    &:hover { color: var(--gi-navy-900); text-decoration: underline; }
+    .material-icons-round { font-size: 1rem; }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Banners / skeleton
+// -----------------------------------------------------------------------------
+.gi-order__banner {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--gi-radius-md);
+  margin-bottom: 1rem;
+
+  .material-icons-round { font-size: 1.1rem; }
+
+  &--success {
+    background: rgba(46, 160, 67, 0.12);
+    border: 1px solid rgba(46, 160, 67, 0.35);
+    color: #256029;
+  }
+  &--error {
+    background: rgba(201, 51, 39, 0.08);
+    border: 1px solid rgba(201, 51, 39, 0.3);
+    color: var(--gi-red-600);
+  }
+}
+
+.gi-order__skeleton {
+  padding: 2rem;
+  text-align: center;
+  color: var(--gi-text-secondary);
+  background: #fff;
+  border: 1px dashed var(--gi-border);
+  border-radius: var(--gi-radius-md);
+}
+
+.gi-spin { animation: gi-spin 1s linear infinite; display: inline-block; }
+@keyframes gi-spin { to { transform: rotate(360deg); } }
+
+// -----------------------------------------------------------------------------
+// Header
+// -----------------------------------------------------------------------------
+.gi-order__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--gi-border);
+  margin-bottom: 1.5rem;
+
+  h1 { margin: 0; font-family: var(--gi-font-display); font-size: 1.6rem; }
+
+  code {
+    font-family: var(--gi-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    font-size: 1.4rem;
+    color: var(--gi-navy-900);
+  }
+}
+
+.gi-order__eyebrow {
+  color: var(--gi-gold-700);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0 0 0.25rem 0;
+  font-weight: 700;
+}
+
+.gi-order__sub {
+  color: var(--gi-text-secondary);
+  font-size: 0.88rem;
+  margin: 0.35rem 0 0 0;
+}
+
+// -----------------------------------------------------------------------------
+// Grid
+// -----------------------------------------------------------------------------
+.gi-order__grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  align-items: start;
+
+  @media (max-width: 1000px) { grid-template-columns: 1fr; }
+}
+
+.gi-order__col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.gi-order__card {
+  background: #fff;
+  border: 1px solid var(--gi-border);
+  border-radius: var(--gi-radius-md);
+  padding: 1.25rem 1.4rem;
+
+  h2 { margin: 0 0 0.9rem 0; font-size: 1.05rem; font-family: var(--gi-font-display); }
+
+  &--sticky {
+    @media (min-width: 1001px) {
+      position: sticky;
+      top: 1.5rem;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Line items + totals
+// -----------------------------------------------------------------------------
+.gi-order__lines {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--gi-border);
+}
+
+.gi-order__line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  align-items: center;
+}
+
+.gi-order__line-body { min-width: 0; }
+
+.gi-order__line-name {
+  font-weight: 600;
+  color: var(--gi-navy-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gi-order__line-sku {
+  font-family: var(--gi-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.72rem;
+  color: var(--gi-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.gi-order__line-variant {
+  font-size: 0.75rem;
+  color: var(--gi-gold-700, #8a6d1f);
+  font-weight: 500;
+}
+
+.gi-order__line-qty {
+  color: var(--gi-text-secondary);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.gi-order__line-total {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.gi-order__totals {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+
+  > div {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: 1rem;
+  }
+  dt, dd { margin: 0; }
+  dt { color: var(--gi-text-secondary); font-size: 0.85rem; }
+  dd { font-weight: 600; font-variant-numeric: tabular-nums; }
+}
+
+// Small inline annotation next to a totals row's label (e.g. the chosen
+// shipping method's name + code after "Shipping").
+.gi-order__meta {
+  color: var(--gi-text-secondary);
+  font-weight: 400;
+  font-size: 0.8rem;
+  margin-left: 0.25rem;
+
+  code {
+    font-family: var(--gi-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    background: rgba(44, 83, 145, 0.06);
+    padding: 0.05rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.72rem;
+  }
+}
+
+// The refunded line lives in the totals dl too — same layout as the other
+// rows, but the amount is negative and coloured to draw the eye.
+.gi-order__refunded {
+  dd { color: #a63a3a; }
+}
+
+.gi-order__card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 0.6rem;
+
+  h2 { margin: 0; }
+}
+
+// -----------------------------------------------------------------------------
+// Refund history list
+// -----------------------------------------------------------------------------
+.gi-refunds {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.gi-refunds__row {
+  border: 1px solid var(--gi-border);
+  border-radius: var(--gi-radius-sm);
+  padding: 0.7rem 0.85rem;
+  background: #fff;
+
+  &.is-failed {
+    border-color: rgba(194, 62, 62, 0.35);
+    background: rgba(194, 62, 62, 0.04);
+  }
+}
+
+.gi-refunds__amount {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+
+  strong { font-size: 1rem; color: var(--gi-navy-900); font-variant-numeric: tabular-nums; }
+}
+
+.gi-refunds__status {
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+
+  &.is-succeeded { background: rgba(34, 149, 89, 0.15); color: #145633; }
+  &.is-failed    { background: rgba(194, 62, 62, 0.15); color: #7d1e1e; }
+  &.is-pending   { background: rgba(233, 180, 76, 0.2);  color: #6b4c0f; }
+}
+
+.gi-refunds__meta {
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  color: var(--gi-text-secondary);
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  align-items: center;
+
+  code {
+    font-family: var(--gi-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    background: rgba(44, 83, 145, 0.06);
+    padding: 0.05rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    color: var(--gi-navy-900);
+  }
+}
+
+.gi-refunds__reason {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  color: var(--gi-navy-900);
+  line-height: 1.4;
+}
+
+.gi-refunds__error {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  color: #7d1e1e;
+  display: flex;
+  gap: 0.35rem;
+  align-items: flex-start;
+  line-height: 1.4;
+
+  .material-icons-round { font-size: 1rem; margin-top: 0.05rem; }
+
+  code {
+    font-family: var(--gi-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    background: rgba(194, 62, 62, 0.1);
+    padding: 0.05rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    margin-left: 0.3rem;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Modal (used by the refund flow; kept scoped to this component for now — if
+// another admin page needs a modal we should promote it into ui-kit).
+// -----------------------------------------------------------------------------
+.gi-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 25, 40, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1000;
+  animation: gi-modal-fade 0.15s ease-out;
+}
+
+@keyframes gi-modal-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.gi-modal {
+  width: min(560px, 100%);
+  background: #fff;
+  border-radius: var(--gi-radius-md);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.gi-modal__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--gi-border);
+
+  h3 {
+    margin: 0;
+    font-family: var(--gi-font-display);
+    color: var(--gi-navy-900);
+    font-size: 1.05rem;
+  }
+}
+
+.gi-modal__close {
+  background: transparent;
+  border: none;
+  padding: 0.25rem;
+  color: var(--gi-text-secondary);
+  cursor: pointer;
+  border-radius: var(--gi-radius-sm);
+
+  &:hover:not(:disabled) { color: var(--gi-navy-900); background: rgba(0, 0, 0, 0.04); }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+.gi-modal__body {
+  padding: 1rem 1.25rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.gi-modal__lead {
+  margin: 0;
+  color: var(--gi-text-secondary);
+  font-size: 0.9rem;
+
+  code {
+    font-family: var(--gi-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    background: rgba(44, 83, 145, 0.06);
+    padding: 0.05rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: var(--gi-navy-900);
+  }
+
+  strong { color: var(--gi-navy-900); font-variant-numeric: tabular-nums; }
+}
+
+.gi-modal__foot {
+  padding: 0.85rem 1.25rem;
+  border-top: 1px solid var(--gi-border);
+  display: flex;
+  gap: 0.55rem;
+  justify-content: flex-end;
+  background: rgba(44, 83, 145, 0.02);
+}
+
+.gi-order__grand {
+  padding-top: 0.55rem;
+  margin-top: 0.25rem;
+  border-top: 1px dashed var(--gi-border);
+
+  dt { color: var(--gi-navy-900) !important; font-size: 0.9rem !important; font-weight: 700; }
+  dd { font-size: 1.05rem; }
+}
+
+// -----------------------------------------------------------------------------
+// Facts / customer
+// -----------------------------------------------------------------------------
+.gi-order__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1.25rem;
+  margin: 0;
+
+  @media (max-width: 560px) { grid-template-columns: 1fr; }
+
+  dt {
+    color: var(--gi-text-secondary);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 0 0 0.15rem 0;
+    font-weight: 700;
+  }
+  dd {
+    color: var(--gi-navy-900);
+    font-size: 0.92rem;
+    margin: 0;
+    word-break: break-word;
+  }
+
+  a { color: var(--gi-navy-700); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  code {
+    font-family: var(--gi-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    background: rgba(44, 83, 145, 0.06);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Addresses
+// -----------------------------------------------------------------------------
+.gi-order__addresses {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+
+  @media (max-width: 560px) { grid-template-columns: 1fr; }
+}
+
+.gi-order__address {
+  padding: 0.85rem;
+  border: 1px solid var(--gi-border);
+  border-radius: var(--gi-radius-sm);
+  background: rgba(44, 83, 145, 0.02);
+}
+
+.gi-order__address-title {
+  color: var(--gi-text-secondary);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.gi-order__address-body {
+  font-size: 0.87rem;
+  line-height: 1.5;
+
+  .muted { color: var(--gi-text-secondary); }
+}
+
+// -----------------------------------------------------------------------------
+// Notes
+// -----------------------------------------------------------------------------
+.gi-order__note {
+  margin: 0.4rem 0;
+  padding: 0.65rem 0.85rem;
+  background: rgba(233, 180, 76, 0.08);
+  border-left: 3px solid var(--gi-gold-600);
+  border-radius: var(--gi-radius-sm);
+  color: var(--gi-navy-900);
+  font-size: 0.9rem;
+  line-height: 1.5;
+
+  strong { color: var(--gi-navy-900); }
+
+  &--internal {
+    background: rgba(44, 83, 145, 0.06);
+    border-left-color: var(--gi-navy-700);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Status transition
+// -----------------------------------------------------------------------------
+.gi-order__hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  color: var(--gi-text-secondary);
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+
+  .material-icons-round { font-size: 1rem; color: var(--gi-gold-700); flex-shrink: 0; margin-top: 0.15rem; }
+}
+
+.gi-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+
+  // Checkbox variant — inline label + control instead of stacked.
+  &--check {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0.55rem;
+    font-size: 0.85rem;
+    color: var(--gi-navy-900);
+    line-height: 1.4;
+
+    input[type="checkbox"] {
+      margin-top: 0.2rem;
+      flex-shrink: 0;
+      accent-color: #b13232;
+    }
+  }
+}
+
+.gi-field__label {
+  color: var(--gi-text-secondary);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.gi-field__hint {
+  color: var(--gi-text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.gi-field input[type="number"],
+.gi-field input[type="text"],
+.gi-field select,
+.gi-field textarea {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--gi-border);
+  border-radius: var(--gi-radius-sm);
+  background: #fff;
+  color: var(--gi-navy-900);
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+
+  &:focus {
+    outline: none;
+    border-color: var(--gi-navy-700);
+    box-shadow: 0 0 0 2px rgba(44, 83, 145, 0.15);
+  }
+
+  &:disabled { background: #f7f7f7; color: var(--gi-text-secondary); cursor: not-allowed; }
+}
+
+.gi-req { color: var(--gi-red-600); margin-left: 0.15rem; }
+
+.gi-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.65rem 1rem;
+  border-radius: var(--gi-radius-sm);
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  width: 100%;
+
+  &--gold {
+    background: var(--gi-gold-500);
+    color: var(--gi-navy-900);
+    border-color: var(--gi-gold-500);
+  }
+  &--gold:hover:not(:disabled) { background: var(--gi-gold-400); border-color: var(--gi-gold-400); }
+
+  // Neutral secondary — used for Cancel + pager controls.
+  &--ghost {
+    background: transparent;
+    color: var(--gi-navy-900);
+    border-color: var(--gi-border);
+    width: auto;
+  }
+  &--ghost:hover:not(:disabled) { background: rgba(0, 0, 0, 0.04); }
+
+  // Destructive primary — for the refund submit CTA.
+  &--danger {
+    background: #b13232;
+    color: #fff;
+    border-color: #b13232;
+    width: auto;
+  }
+  &--danger:hover:not(:disabled) { background: #9a2a2a; border-color: #9a2a2a; }
+
+  // Destructive secondary — the "Issue refund" trigger on the card head. Outlined
+  // so it doesn't compete with the primary transition button in the sidebar.
+  &--danger-outline {
+    background: transparent;
+    color: #b13232;
+    border-color: rgba(177, 50, 50, 0.4);
+    width: auto;
+  }
+  &--danger-outline:hover:not(:disabled) {
+    background: rgba(177, 50, 50, 0.08);
+    border-color: #b13232;
+  }
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .material-icons-round { font-size: 1.05rem; }
+}
+
+// -----------------------------------------------------------------------------
+// Timeline
+// -----------------------------------------------------------------------------
+.gi-order__timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    background: var(--gi-border);
+  }
+
+  li {
+    display: grid;
+    grid-template-columns: 16px 1fr;
+    gap: 0.55rem;
+    padding-left: 0;
+    position: relative;
+  }
+}
+
+.gi-order__timeline-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--gi-gold-500);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--gi-gold-600);
+  margin-top: 4px;
+  z-index: 1;
+}
+
+.gi-order__timeline-body { min-width: 0; }
+
+.gi-order__timeline-when {
+  color: var(--gi-text-secondary);
+  font-size: 0.78rem;
+}
+
+.gi-order__timeline-head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-top: 0.15rem;
+}
+
+.gi-order__timeline-arrow { color: var(--gi-text-secondary); font-size: 1rem; }
+
+.gi-order__timeline-source {
+  color: var(--gi-text-secondary);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.gi-order__timeline-note {
+  color: var(--gi-navy-900);
+  font-size: 0.85rem;
+  margin: 0.35rem 0 0 0;
+  padding: 0.35rem 0.6rem;
+  background: rgba(44, 83, 145, 0.04);
+  border-radius: var(--gi-radius-sm);
+}
+
+// -----------------------------------------------------------------------------
+// Status pill (shared with list)
+// -----------------------------------------------------------------------------
+.gi-order__pill {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: rgba(44, 83, 145, 0.08);
+  color: var(--gi-navy-900);
+
+  &.is-ok       { background: rgba(46, 160, 67, 0.14);  color: #256029; }
+  &.is-done     { background: rgba(44, 83, 145, 0.12);  color: var(--gi-navy-900); }
+  &.is-pending  { background: rgba(233, 180, 76, 0.22); color: #7a5b12; }
+  &.is-cancelled { background: rgba(201, 51, 39, 0.10); color: var(--gi-red-600); }
+  &.is-draft    { background: rgba(120, 120, 120, 0.12); color: #4a4a4a; }
+}

@@ -1,0 +1,189 @@
+:host { display: block; }
+
+.gi-pedit {
+  padding: 1.5rem 2rem 3rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  color: var(--gi-navy-900);
+
+  @media (max-width: 720px) { padding: 1rem; }
+}
+
+.gi-pedit__crumbs {
+  margin-bottom: 1rem;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--gi-navy-700);
+    text-decoration: none;
+    font-size: 0.9rem;
+
+    &:hover { color: var(--gi-navy-900); text-decoration: underline; }
+    .material-icons-round { font-size: 1rem; }
+  }
+}
+
+.gi-pedit__banner {
+  display: flex; align-items: center; gap: 0.55rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--gi-radius-md);
+  margin-bottom: 1rem;
+
+  .material-icons-round { font-size: 1.1rem; }
+
+  &--success {
+    background: rgba(46, 160, 67, 0.12);
+    border: 1px solid rgba(46, 160, 67, 0.35);
+    color: #256029;
+  }
+  &--error {
+    background: rgba(201, 51, 39, 0.08);
+    border: 1px solid rgba(201, 51, 39, 0.3);
+    color: var(--gi-red-600);
+  }
+}
+
+.gi-pedit__skeleton {
+  padding: 2rem;
+  text-align: center;
+  color: var(--gi-text-secondary);
+  background: #fff;
+  border: 1px dashed var(--gi-border);
+  border-radius: var(--gi-radius-md);
+}
+
+.gi-pedit__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--gi-border);
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+
+  h1 { margin: 0; font-family: var(--gi-font-display); font-size: 1.5rem; color: var(--gi-navy-900); }
+}
+
+.gi-pedit__eyebrow {
+  color: var(--gi-gold-700);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0 0 0.25rem 0;
+  font-weight: 700;
+}
+
+.gi-pedit__sub {
+  color: var(--gi-text-secondary);
+  font-size: 0.85rem;
+  margin: 0.35rem 0 0 0;
+
+  code {
+    font-family: var(--gi-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    background: rgba(44, 83, 145, 0.06);
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.85em;
+    color: var(--gi-navy-900);
+  }
+}
+
+.gi-pedit__head-actions {
+  display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+}
+
+.gi-pedit__status {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: rgba(44, 83, 145, 0.08);
+  color: var(--gi-navy-900);
+
+  &.is-active   { background: rgba(46, 160, 67, 0.14); color: #256029; }
+  &.is-draft    { background: rgba(233, 180, 76, 0.22); color: #7a5b12; }
+  &.is-archived { background: rgba(120, 120, 120, 0.14); color: #4a4a4a; }
+}
+
+// -----------------------------------------------------------------------------
+// Tab strip
+// -----------------------------------------------------------------------------
+.gi-pedit__tabs {
+  display: flex;
+  gap: 0.35rem;
+  border-bottom: 1px solid var(--gi-border);
+  padding-bottom: 0;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+}
+
+.gi-pedit__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1.1rem;
+  border: none;
+  background: transparent;
+  color: var(--gi-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+  // <a routerLink> would inherit the browser's default underline otherwise.
+  text-decoration: none;
+
+  &:hover { color: var(--gi-navy-900); }
+
+  &.is-active {
+    color: var(--gi-navy-900);
+    border-bottom-color: var(--gi-gold-500);
+  }
+
+  .material-icons-round { font-size: 1.05rem; }
+}
+
+// -----------------------------------------------------------------------------
+// Panel
+// -----------------------------------------------------------------------------
+.gi-pedit__panel {
+  padding-top: 0.5rem;
+}
+
+// -----------------------------------------------------------------------------
+// Buttons
+// -----------------------------------------------------------------------------
+.gi-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: var(--gi-radius-sm);
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+
+  &--danger {
+    background: transparent;
+    color: var(--gi-red-600);
+    border-color: rgba(201, 51, 39, 0.3);
+  }
+  &--danger:hover:not(:disabled) { background: rgba(201, 51, 39, 0.08); border-color: var(--gi-red-600); }
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .material-icons-round { font-size: 1rem; }
+}
+
+.gi-spin { animation: gi-spin 1s linear infinite; display: inline-block; }
+@keyframes gi-spin { to { transform: rotate(360deg); } }

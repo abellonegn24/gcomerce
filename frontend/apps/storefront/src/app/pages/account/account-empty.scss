@@ -1,0 +1,65 @@
+// Shared styles for the "coming in Phase 3" placeholder tabs
+// (/account/addresses, /account/orders).
+
+:host { display: block; }
+
+.gi-empty {
+  background: #fff;
+  border: 1px dashed var(--gi-border);
+  border-radius: var(--gi-radius-md);
+  padding: 3rem 2rem;
+  text-align: center;
+
+  .material-icons-round {
+    font-size: 3rem;
+    color: rgba(44, 83, 145, 0.35);
+  }
+
+  h2 {
+    font-family: var(--gi-font-display);
+    color: var(--gi-navy-900);
+    margin: 0.75rem 0 0.5rem 0;
+    font-size: 1.35rem;
+  }
+
+  p {
+    color: var(--gi-text-secondary);
+    max-width: 44ch;
+    margin: 0 auto 1.25rem;
+    line-height: 1.55;
+  }
+}
+
+.gi-empty__coming {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(233, 180, 76, 0.2);
+  color: #7a5b12;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+// Shared inline buttons
+.gi-btn-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 1rem;
+  border-radius: var(--gi-radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-family: inherit;
+
+  &--gold {
+    background: var(--gi-gold-500);
+    color: var(--gi-navy-900);
+  }
+  &--gold:hover { background: var(--gi-gold-400); }
+  .material-icons-round { font-size: 1rem; color: inherit; }
+}

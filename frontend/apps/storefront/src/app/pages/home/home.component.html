@@ -1,0 +1,109 @@
+<!-- CMS Hero Banners -->
+@if (banners().length > 0) {
+  <section class="gi-hero-banners" aria-label="Featured banners">
+    @for (b of banners(); track b.id) {
+      <div class="gi-hero-banner">
+        @if (b.linkUrl) {
+          <a [href]="b.linkUrl" class="gi-hero-banner__link">
+            <img [src]="b.imageUrl" [alt]="b.altText || b.title || ''"
+              class="gi-hero-banner__img" loading="eager" />
+            @if (b.title) {
+              <span class="gi-hero-banner__title">{{ b.title }}</span>
+            }
+          </a>
+        } @else {
+          <img [src]="b.imageUrl" [alt]="b.altText || b.title || ''"
+            class="gi-hero-banner__img" loading="eager" />
+          @if (b.title) {
+            <span class="gi-hero-banner__title">{{ b.title }}</span>
+          }
+        }
+      </div>
+    }
+  </section>
+}
+
+<!-- Hero -->
+<section class="gi-hero" aria-labelledby="gi-hero-title">
+  <div class="gi-hero__inner">
+    <div class="gi-hero__copy">
+      <span class="gi-eyebrow">Direct from origin · Ethiopia</span>
+      <h1 id="gi-hero-title">
+        Ethiopian coffee, honey &amp; spices —<br />
+        <span class="gi-hero__accent">for the world.</span>
+      </h1>
+      <p class="gi-hero__lead">
+        Gadaa Istar Business Group S.C. connects specialty roasters, distributors and discerning
+        buyers with authentic, traceable Ethiopian goods — from single-origin green coffee
+        to hand-blended berbere.
+      </p>
+      <div class="gi-hero__ctas">
+        <a routerLink="/shop/raw-coffee" class="gi-btn gi-btn--primary">
+          Shop coffee
+          <span class="material-icons-round">arrow_forward</span>
+        </a>
+        <a routerLink="/wholesale" class="gi-btn gi-btn--ghost">
+          Wholesale &amp; export inquiries
+        </a>
+      </div>
+      <div class="gi-hero__trust">
+        <span class="gi-chip">Organic-ready</span>
+        <span class="gi-chip">Fairtrade-friendly</span>
+        <span class="gi-chip">PCI DSS secure checkout</span>
+        <span class="gi-chip">Multi-currency (USD · EUR · GBP)</span>
+      </div>
+    </div>
+    <div class="gi-hero__art" aria-hidden="true">
+      <div class="gi-hero__ring">
+        <span class="gi-hero__star">★</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Categories -->
+<section class="gi-categories" aria-labelledby="gi-cats-title">
+  <div class="gi-container">
+    <h2 id="gi-cats-title" class="gi-section-title">Shop by category</h2>
+    <p class="gi-section-lead">Four product lines, one commitment: authenticity you can trace.</p>
+
+    <div class="gi-cat-grid">
+      @for (tile of tiles; track tile.slug) {
+        <a [routerLink]="['/shop', tile.slug]" class="gi-cat-card">
+          <span class="gi-cat-card__icon material-icons-round">{{ tile.icon }}</span>
+          <h3 class="gi-cat-card__title">{{ tile.label }}</h3>
+          <p class="gi-cat-card__desc">{{ tile.description }}</p>
+          <span class="gi-cat-card__cta">
+            Browse <span class="material-icons-round">arrow_forward</span>
+          </span>
+        </a>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Trust section -->
+<section class="gi-trust">
+  <div class="gi-container gi-trust__grid">
+    <div class="gi-trust__item">
+      <span class="material-icons-round">verified</span>
+      <h4>PCI DSS SAQ-A</h4>
+      <p>Payments processed by CyberSource — card data never touches our servers.</p>
+    </div>
+    <div class="gi-trust__item">
+      <span class="material-icons-round">public</span>
+      <h4>Global shipping</h4>
+      <p>Retail parcels via DHL &amp; FedEx; bulk shipments via freight forwarders with Incoterms.</p>
+    </div>
+    <div class="gi-trust__item">
+      <span class="material-icons-round">receipt_long</span>
+      <h4>Compliant invoicing</h4>
+      <p>VAT-compliant tax invoices per Ethiopian Ministry of Revenue rules; zero-rated for exports.</p>
+    </div>
+    <div class="gi-trust__item">
+      <span class="material-icons-round">groups</span>
+      <h4>B2B or B2C</h4>
+      <p>Wholesale accounts with tiered pricing &amp; MOQ, or retail checkout — one platform.</p>
+    </div>
+  </div>
+</section>

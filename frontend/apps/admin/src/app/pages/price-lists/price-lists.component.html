@@ -1,0 +1,238 @@
+<section class="gi-plists">
+  <header class="gi-plists__header">
+    <div>
+      <h1>Price lists</h1>
+      <p class="gi-plists__lead">
+        Each price list is bound to a customer group and currency, and holds
+        many (product × min-quantity → price) entries. Per-product tiers are
+        managed from the product editor's <em>Pricing</em> tab.
+      </p>
+    </div>
+    <button type="button" class="gi-btn gi-btn--gold" (click)="openCreate()">
+      <span class="material-icons-round">add</span>
+      New price list
+    </button>
+  </header>
+
+  @if (successMessage(); as msg) {
+    <div class="gi-plists__banner gi-plists__banner--success" role="status">
+      <span class="material-icons-round">check_circle</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+  @if (errorMessage(); as msg) {
+    <div class="gi-plists__banner gi-plists__banner--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  <!-- Inline create form -->
+  @if (showCreate()) {
+    <form class="gi-plists__form" [formGroup]="form" (ngSubmit)="submitCreate()">
+      <h3>Create a price list</h3>
+
+      <div class="gi-plists__grid">
+        <label class="gi-field">
+          <span class="gi-field__label">Customer group <span class="gi-req">*</span></span>
+          <select formControlName="customerGroupId">
+            <option [ngValue]="null">— Choose —</option>
+            @for (g of customerGroups(); track g.id) {
+              <option [ngValue]="g.id">{{ g.name }} ({{ g.code }})</option>
+            }
+          </select>
+        </label>
+
+        <label class="gi-field">
+          <span class="gi-field__label">Currency (ISO-3) <span class="gi-req">*</span></span>
+          <input type="text" formControlName="currency" maxlength="3"
+                 style="text-transform: uppercase;" placeholder="USD" />
+        </label>
+
+        <label class="gi-field gi-field--wide">
+          <span class="gi-field__label">Name <span class="gi-req">*</span></span>
+          <input type="text" formControlName="name" placeholder="Wholesale — Tier 1 (USD)" />
+        </label>
+
+        <label class="gi-field">
+          <span class="gi-field__label">Effective from</span>
+          <input type="date" formControlName="effectiveFrom" />
+        </label>
+
+        <label class="gi-field">
+          <span class="gi-field__label">Effective to</span>
+          <input type="date" formControlName="effectiveTo" />
+        </label>
+
+        <label class="gi-field gi-field--check">
+          <input type="checkbox" formControlName="active" />
+          <span>Active — customers in this group receive these prices.</span>
+        </label>
+      </div>
+
+      <div class="gi-plists__form-actions">
+        <button type="submit" class="gi-btn gi-btn--gold" [disabled]="saving() || form.invalid">
+          @if (saving()) {
+            <span class="material-icons-round gi-spin">progress_activity</span>
+            Creating…
+          } @else {
+            <span class="material-icons-round">save</span>
+            Create
+          }
+        </button>
+        <button type="button" class="gi-btn gi-btn--ghost" (click)="cancelCreate()" [disabled]="saving()">
+          Cancel
+        </button>
+      </div>
+    </form>
+  }
+
+  <!-- List -->
+  @if (loading()) {
+    <div class="gi-plists__skeleton" aria-live="polite">Loading price lists…</div>
+  } @else if (lists().length === 0) {
+    <div class="gi-plists__empty">
+      <span class="material-icons-round">sell</span>
+      <h3>No price lists yet</h3>
+      <p>
+        Create your first price list to enable tiered wholesale pricing.
+        Retail customers already get the product base price without a list.
+      </p>
+    </div>
+  } @else {
+    <div class="gi-plists__table-wrap">
+      <table class="gi-plists__table" role="table">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Customer group</th>
+            <th scope="col">Currency</th>
+            <th scope="col" class="gi-plists__col-num">Entries</th>
+            <th scope="col">Effective</th>
+            <th scope="col">Status</th>
+            <th scope="col" class="gi-plists__col-actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (list of lists(); track list.id) {
+            <tr [class.is-busy]="deletingId() === list.id" [class.is-editing]="editingId() === list.id">
+              <td>
+                <div class="gi-plists__name">{{ list.name }}</div>
+                <div class="gi-plists__sub">Created {{ list.createdAt | date: 'MMM d, y' }}</div>
+              </td>
+              <td><code>{{ list.customerGroupCode }}</code></td>
+              <td>{{ list.currency }}</td>
+              <td class="gi-plists__col-num">{{ list.entryCount }}</td>
+              <td>
+                <div class="gi-plists__eff">
+                  <span>{{ list.effectiveFrom ? (list.effectiveFrom | date: 'MMM d, y') : 'Any' }}</span>
+                  <span class="material-icons-round">arrow_right_alt</span>
+                  <span>{{ list.effectiveTo ? (list.effectiveTo | date: 'MMM d, y') : 'Any' }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="gi-plists__pill" [class.is-active]="list.active" [class.is-inactive]="!list.active">
+                  {{ list.active ? 'ACTIVE' : 'INACTIVE' }}
+                </span>
+              </td>
+              <td class="gi-plists__col-actions">
+                @if (editingId() === list.id) {
+                  <button
+                    type="button"
+                    class="gi-btn gi-btn--ghost"
+                    [disabled]="saving()"
+                    (click)="cancelEdit()">
+                    <span class="material-icons-round">close</span>
+                    Close
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="gi-btn gi-btn--ghost"
+                    [disabled]="editingId() !== null || deletingId() !== null"
+                    (click)="openEdit(list)">
+                    <span class="material-icons-round">edit</span>
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    class="gi-btn gi-btn--danger"
+                    [disabled]="deletingId() !== null || editingId() !== null"
+                    (click)="remove(list)">
+                    <span class="material-icons-round">delete_outline</span>
+                    Delete
+                  </button>
+                }
+              </td>
+            </tr>
+
+            <!-- Inline edit form: appears immediately below the row being edited. -->
+            @if (editingId() === list.id) {
+              <tr class="gi-plists__edit-row">
+                <td colspan="7">
+                  <form class="gi-plists__form gi-plists__form--inline"
+                        [formGroup]="editForm"
+                        (ngSubmit)="submitEdit()">
+                    <div class="gi-plists__form-intro">
+                      <span class="material-icons-round">tune</span>
+                      <div>
+                        <strong>Editing <em>{{ list.name }}</em></strong>
+                        <p>
+                          Bound to <code>{{ list.customerGroupCode }}</code> — the customer group cannot be
+                          changed. If you need a different tier, delete and recreate.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="gi-plists__grid">
+                      <label class="gi-field gi-field--wide">
+                        <span class="gi-field__label">Name <span class="gi-req">*</span></span>
+                        <input type="text" formControlName="name" />
+                      </label>
+
+                      <label class="gi-field">
+                        <span class="gi-field__label">Currency (ISO-3) <span class="gi-req">*</span></span>
+                        <input type="text" formControlName="currency" maxlength="3"
+                               style="text-transform: uppercase;" />
+                      </label>
+
+                      <label class="gi-field">
+                        <span class="gi-field__label">Effective from</span>
+                        <input type="date" formControlName="effectiveFrom" />
+                      </label>
+
+                      <label class="gi-field">
+                        <span class="gi-field__label">Effective to</span>
+                        <input type="date" formControlName="effectiveTo" />
+                      </label>
+
+                      <label class="gi-field gi-field--check">
+                        <input type="checkbox" formControlName="active" />
+                        <span>Active — customers in this group receive these prices.</span>
+                      </label>
+                    </div>
+
+                    <div class="gi-plists__form-actions">
+                      <button type="submit" class="gi-btn gi-btn--gold" [disabled]="saving() || editForm.invalid">
+                        @if (saving()) {
+                          <span class="material-icons-round gi-spin">progress_activity</span>
+                          Saving…
+                        } @else {
+                          <span class="material-icons-round">save</span>
+                          Save changes
+                        }
+                      </button>
+                      <button type="button" class="gi-btn gi-btn--ghost" (click)="cancelEdit()" [disabled]="saving()">
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

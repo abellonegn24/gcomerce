@@ -1,0 +1,12 @@
+Hi {displayName},
+
+Your order {invoiceNumber} has been cancelled because payment was not completed in time.
+
+Any reserved inventory has been released. You can place a new order anytime by visiting our store:
+{storeLink}
+
+If you believe this was a mistake, contact us at support@gadaaistar.com.
+
+--
+Gadaa Istar Business Group S.C. · Addis Ababa, Ethiopia
+This is an automated message — please do not reply.

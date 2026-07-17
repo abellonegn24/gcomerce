@@ -1,0 +1,312 @@
+// Layout mirrors /shipping-methods and /price-lists so the three admin CRUD
+// pages read as siblings — same header pattern, banner colours, table +
+// inline-edit-row structure. Any tweak here should probably be echoed on
+// shipping-methods.component.scss and price-lists.component.scss; long-term
+// we should extract a shared "gi-crud-table" partial.
+
+// -----------------------------------------------------------------------------
+// Header
+// -----------------------------------------------------------------------------
+.gi-cg {
+  padding: 1.75rem clamp(1rem, 3vw, 2.25rem);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.gi-cg__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    font-family: var(--gi-font-display);
+    color: var(--gi-navy-900);
+    margin: 0;
+    font-size: 1.5rem;
+  }
+}
+
+.gi-cg__lead {
+  color: var(--gi-text-secondary);
+  font-size: 0.9rem;
+  max-width: 60ch;
+  margin: 0.35rem 0 0 0;
+  line-height: 1.55;
+
+  code {
+    background: rgba(44, 83, 145, 0.06);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.82rem;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Banners
+// -----------------------------------------------------------------------------
+.gi-cg__banner {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: var(--gi-radius-sm);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+
+  &--success {
+    background: rgba(34, 149, 89, 0.1);
+    color: #145633;
+    border: 1px solid rgba(34, 149, 89, 0.3);
+  }
+  &--error {
+    background: rgba(194, 62, 62, 0.1);
+    color: #7d1e1e;
+    border: 1px solid rgba(194, 62, 62, 0.3);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Create form
+// -----------------------------------------------------------------------------
+.gi-cg__form {
+  background: #fff;
+  border: 1px solid var(--gi-border);
+  border-radius: var(--gi-radius-md);
+  padding: 1.25rem 1.4rem;
+  margin-bottom: 1.25rem;
+
+  h3 {
+    font-family: var(--gi-font-display);
+    color: var(--gi-navy-900);
+    margin: 0 0 0.85rem 0;
+    font-size: 1rem;
+  }
+}
+
+.gi-cg__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem 1rem;
+
+  @media (max-width: 900px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (max-width: 640px) { grid-template-columns: 1fr; }
+}
+
+.gi-cg__form-actions {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--gi-border);
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.gi-cg__form--inline {
+  margin: 0;
+  border: 1px solid rgba(44, 83, 145, 0.25);
+  background: rgba(233, 180, 76, 0.05);
+  border-radius: var(--gi-radius-sm);
+}
+
+.gi-cg__form-intro {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px dashed var(--gi-border);
+
+  > .material-icons-round {
+    color: var(--gi-gold-600);
+    margin-top: 0.15rem;
+  }
+
+  strong {
+    font-family: var(--gi-font-display);
+    color: var(--gi-navy-900);
+    font-size: 0.95rem;
+
+    em { color: var(--gi-gold-700); font-style: normal; }
+  }
+
+  p {
+    margin: 0.25rem 0 0 0;
+    color: var(--gi-text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Field primitives — shared with /shipping-methods and /price-lists but
+// re-declared per-page so a rename never leaves an orphan reference.
+// -----------------------------------------------------------------------------
+.gi-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  &--wide { grid-column: 1 / -1; }
+  &--check {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.9rem;
+    color: var(--gi-navy-900);
+
+    input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--gi-gold-600); }
+  }
+
+  input, select, textarea {
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--gi-border);
+    border-radius: var(--gi-radius-sm);
+    background: #fff;
+    color: var(--gi-navy-900);
+    font-family: inherit;
+    font-size: 0.9rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--gi-navy-700);
+      box-shadow: 0 0 0 2px rgba(44, 83, 145, 0.15);
+    }
+  }
+
+  textarea { resize: vertical; min-height: 60px; }
+}
+
+.gi-field__label {
+  color: var(--gi-text-secondary);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.gi-field__hint {
+  color: var(--gi-text-secondary);
+  font-size: 0.72rem;
+  font-style: italic;
+}
+
+.gi-req { color: var(--gi-red-600); }
+
+// -----------------------------------------------------------------------------
+// List
+// -----------------------------------------------------------------------------
+.gi-cg__skeleton {
+  padding: 2rem;
+  text-align: center;
+  color: var(--gi-text-secondary);
+  background: #fff;
+  border: 1px dashed var(--gi-border);
+  border-radius: var(--gi-radius-md);
+}
+
+.gi-cg__empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  background: #fff;
+  border: 1px dashed var(--gi-border);
+  border-radius: var(--gi-radius-md);
+
+  .material-icons-round { font-size: 3rem; color: rgba(44, 83, 145, 0.35); }
+  h3 { margin: 0.6rem 0 0.3rem; color: var(--gi-navy-900); }
+  p  { margin: 0 auto; max-width: 40ch; color: var(--gi-text-secondary); font-size: 0.9rem; }
+}
+
+.gi-cg__table-wrap {
+  background: #fff;
+  border: 1px solid var(--gi-border);
+  border-radius: var(--gi-radius-md);
+  overflow: hidden;
+}
+
+.gi-cg__table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th, td {
+    padding: 0.85rem 1rem;
+    text-align: left;
+    font-size: 0.9rem;
+  }
+  thead {
+    background: rgba(44, 83, 145, 0.04);
+    th {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--gi-text-secondary);
+      font-weight: 600;
+    }
+  }
+  tbody td {
+    border-bottom: 1px solid var(--gi-border);
+    vertical-align: middle;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+
+  tbody tr.is-busy {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  tbody tr.is-editing {
+    background: rgba(233, 180, 76, 0.06);
+    td { border-bottom: none; }
+  }
+
+  tbody tr.gi-cg__edit-row td {
+    padding: 0.75rem 1rem 1rem;
+    background: rgba(233, 180, 76, 0.03);
+  }
+
+  code {
+    font-family: var(--gi-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    background: rgba(44, 83, 145, 0.06);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+}
+
+.gi-cg__col-num     { text-align: right; font-variant-numeric: tabular-nums; }
+.gi-cg__col-actions {
+  text-align: right;
+  width: 200px;
+  white-space: nowrap;
+
+  .gi-btn + .gi-btn { margin-left: 0.35rem; }
+}
+
+.gi-cg__name { font-weight: 600; color: var(--gi-navy-900); }
+.gi-cg__sub  {
+  color: var(--gi-text-secondary);
+  font-size: 0.78rem;
+  margin-top: 0.15rem;
+  max-width: 60ch;
+}
+
+.gi-cg__pill {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  border-radius: 999px;
+  font-weight: 600;
+
+  &.is-active {
+    background: rgba(34, 149, 89, 0.12);
+    color: #145633;
+  }
+  &.is-inactive {
+    background: rgba(120, 120, 120, 0.15);
+    color: #4c4c4c;
+  }
+}

@@ -1,0 +1,108 @@
+<section class="gi-quotes">
+  <header class="gi-quotes__header">
+    <div>
+      <h1>Quotes</h1>
+      <p class="gi-quotes__lead">
+        B2B quote requests submitted by customers. Review, adjust pricing, send
+        to the customer, and convert accepted quotes to orders.
+      </p>
+    </div>
+  </header>
+
+  <div class="gi-quotes__filters">
+    <div class="gi-quotes__status">
+      <label for="status-filter">Status</label>
+      <select
+        id="status-filter"
+        [ngModel]="status()"
+        (ngModelChange)="applyStatus($event)"
+        name="status">
+        @for (s of statuses; track s.code) {
+          <option [ngValue]="s.code">{{ s.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (errorMessage(); as msg) {
+    <div class="gi-quotes__banner" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+      <button type="button" class="gi-btn gi-btn--ghost" (click)="load()">Retry</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="gi-quotes__skeleton" aria-live="polite">Loading quotes…</div>
+  } @else if (items().length === 0) {
+    <div class="gi-quotes__empty">
+      <span class="material-icons-round">request_quote</span>
+      <h3>No quotes match your filters</h3>
+      <p>Quote requests from B2B customers will appear here.</p>
+    </div>
+  } @else {
+    <div class="gi-quotes__table-wrap">
+      <table class="gi-quotes__table" role="table">
+        <thead>
+          <tr>
+            <th scope="col">Quote</th>
+            <th scope="col">Customer</th>
+            <th scope="col" class="gi-quotes__col-num">Items</th>
+            <th scope="col">Status</th>
+            <th scope="col" class="gi-quotes__col-num">Total</th>
+            <th scope="col">Created</th>
+            <th scope="col" class="gi-quotes__col-actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of items(); track row.uuid) {
+            <tr [routerLink]="['/quotes', row.uuid]" class="gi-quotes__row">
+              <td>
+                <code>#{{ row.id }}</code>
+              </td>
+              <td>
+                <div class="gi-quotes__customer">
+                  <span class="gi-quotes__customer-name">
+                    {{ row.customerName || row.customerEmail }}
+                  </span>
+                  @if (row.customerName) {
+                    <span class="gi-quotes__customer-email">{{ row.customerEmail }}</span>
+                  }
+                </div>
+              </td>
+              <td class="gi-quotes__col-num">{{ row.itemCount }}</td>
+              <td>
+                <span class="gi-quotes__pill" [class]="'is-' + statusVariant(row.status)">
+                  {{ row.status }}
+                </span>
+              </td>
+              <td class="gi-quotes__col-num">
+                {{ formatMoney(row.currency, row.grandTotal) }}
+              </td>
+              <td>{{ row.createdAt | date: 'MMM d, y, h:mm a' }}</td>
+              <td class="gi-quotes__col-actions">
+                <span class="material-icons-round">chevron_right</span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (pageCount() > 1) {
+      <nav class="gi-quotes__pager" aria-label="Pagination">
+        <button type="button" class="gi-btn gi-btn--ghost" [disabled]="!hasPrev()" (click)="prevPage()">
+          <span class="material-icons-round">arrow_back</span>
+          Previous
+        </button>
+        <span class="gi-quotes__pager-pos">
+          Page {{ page() + 1 }} of {{ pageCount() }} — {{ total() }} quotes
+        </span>
+        <button type="button" class="gi-btn gi-btn--ghost" [disabled]="!hasNext()" (click)="nextPage()">
+          Next
+          <span class="material-icons-round">arrow_forward</span>
+        </button>
+      </nav>
+    }
+  }
+</section>

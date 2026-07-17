@@ -1,0 +1,45 @@
+<section class="gi-auth">
+  <div class="gi-auth__panel">
+    <span class="gi-auth__icon material-icons-round" aria-hidden="true">mark_email_unread</span>
+    <h1>Check your inbox</h1>
+    <p class="gi-auth__lead">
+      We've sent a confirmation link
+      @if (email()) {
+        to <strong>{{ email() }}</strong>.
+      } @else {
+        to your email address.
+      }
+      Click it to activate your account. The link expires in 60 minutes.
+    </p>
+
+    @if (resentAt(); as at) {
+      <div class="gi-auth__ack" role="status">
+        A fresh message was queued at {{ at | date: 'shortTime' }}. Check your inbox
+        (and spam folder just in case).
+      </div>
+    }
+    @if (errorMessage(); as msg) {
+      <div class="gi-auth__error" role="alert">{{ msg }}</div>
+    }
+
+    <div class="gi-auth__actions">
+      <button
+        type="button"
+        class="gi-btn gi-btn--primary"
+        (click)="resend()"
+        [disabled]="resending() || !email()">
+        @if (resending()) {
+          <span>Sending…</span>
+        } @else {
+          <span class="material-icons-round">send</span>
+          <span>Resend the email</span>
+        }
+      </button>
+      <a routerLink="/" class="gi-btn gi-btn--ghost">Back to home</a>
+    </div>
+
+    <p class="gi-auth__hint">
+      Wrong address? <a routerLink="/account">Update your profile</a> after signing in.
+    </p>
+  </div>
+</section>

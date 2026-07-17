@@ -1,0 +1,171 @@
+@if (loading()) {
+  <div class="gi-cms__loading">Loading banners…</div>
+} @else {
+  <div class="gi-cms">
+    @if (errorMessage()) {
+      <div class="gi-banner gi-banner--error">{{ errorMessage() }}</div>
+    }
+    @if (successMessage()) {
+      <div class="gi-banner gi-banner--success">{{ successMessage() }}</div>
+    }
+
+    <div class="gi-cms__header">
+      <h1 class="gi-cms__title">CMS Banners</h1>
+      <button type="button" class="gi-btn gi-btn--primary"
+        (click)="openCreate()" [disabled]="showCreate() || editingId() !== null">
+        + New banner
+      </button>
+    </div>
+
+    @if (showCreate()) {
+      <form class="gi-cms__form" [formGroup]="form" (ngSubmit)="submitCreate()">
+        <h2 class="gi-cms__form-title">Create new banner</h2>
+        <div class="gi-cms__form-row">
+          <div class="gi-field">
+            <label for="b-placement">Placement</label>
+            <input id="b-placement" type="text" formControlName="placement" placeholder="HOMEPAGE_HERO" />
+          </div>
+          <div class="gi-field">
+            <label for="b-title">Title</label>
+            <input id="b-title" type="text" formControlName="title" />
+          </div>
+        </div>
+        <div class="gi-field">
+          <label for="b-image">Image URL</label>
+          <input id="b-image" type="text" formControlName="imageUrl" placeholder="https://…" />
+        </div>
+        <div class="gi-cms__form-row">
+          <div class="gi-field">
+            <label for="b-alt">Alt text</label>
+            <input id="b-alt" type="text" formControlName="altText" />
+          </div>
+          <div class="gi-field">
+            <label for="b-link">Link URL</label>
+            <input id="b-link" type="text" formControlName="linkUrl" />
+          </div>
+        </div>
+        <div class="gi-cms__form-row">
+          <div class="gi-field">
+            <label for="b-from">Active from</label>
+            <input id="b-from" type="datetime-local" formControlName="activeFrom" />
+          </div>
+          <div class="gi-field">
+            <label for="b-to">Active to</label>
+            <input id="b-to" type="datetime-local" formControlName="activeTo" />
+          </div>
+        </div>
+        <div class="gi-cms__form-row">
+          <div class="gi-field">
+            <label for="b-order">Sort order</label>
+            <input id="b-order" type="number" formControlName="sortOrder" />
+          </div>
+          <div class="gi-field gi-field--check">
+            <label>
+              <input type="checkbox" formControlName="active" /> Active
+            </label>
+          </div>
+        </div>
+        <div class="gi-cms__form-actions">
+          <button type="submit" class="gi-btn gi-btn--primary" [disabled]="saving()">
+            {{ saving() ? 'Saving…' : 'Create banner' }}
+          </button>
+          <button type="button" class="gi-btn gi-btn--ghost" (click)="cancelCreate()">Cancel</button>
+        </div>
+      </form>
+    }
+
+    <table class="gi-table">
+      <thead>
+        <tr>
+          <th>Placement</th>
+          <th>Title</th>
+          <th>Image</th>
+          <th>Active</th>
+          <th>Order</th>
+          <th class="gi-col-actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (b of banners(); track b.id) {
+          <tr [class.is-editing]="editingId() === b.id">
+            <td><code>{{ b.placement }}</code></td>
+            <td>{{ b.title || '—' }}</td>
+            <td>
+              @if (b.imageUrl) {
+                <img [src]="b.imageUrl" [alt]="b.altText || ''"
+                  style="width: 60px; height: 30px; object-fit: cover; border-radius: 4px;" />
+              }
+            </td>
+            <td>
+              <span class="gi-badge" [class]="b.active ? 'gi-badge--ok' : 'gi-badge--warn'">
+                {{ b.active ? 'Active' : 'Off' }}
+              </span>
+            </td>
+            <td>{{ b.sortOrder }}</td>
+            <td class="gi-col-actions">
+              @if (editingId() !== b.id) {
+                <button type="button" class="gi-btn gi-btn--small gi-btn--ghost"
+                  (click)="openEdit(b)" [disabled]="editingId() !== null || showCreate()">
+                  Edit
+                </button>
+                <button type="button" class="gi-btn gi-btn--small gi-btn--danger-outline"
+                  (click)="remove(b)" [disabled]="deletingId() !== null">
+                  {{ deletingId() === b.id ? 'Deleting…' : 'Delete' }}
+                </button>
+              }
+            </td>
+          </tr>
+          @if (editingId() === b.id) {
+            <tr class="gi-cms__edit-row">
+              <td colspan="6">
+                <form class="gi-cms__form gi-cms__form--inline" [formGroup]="editForm" (ngSubmit)="submitEdit()">
+                  <div class="gi-field">
+                    <label>Placement</label>
+                    <input type="text" formControlName="placement" />
+                  </div>
+                  <div class="gi-field">
+                    <label>Title</label>
+                    <input type="text" formControlName="title" />
+                  </div>
+                  <div class="gi-field gi-field--full">
+                    <label>Image URL</label>
+                    <input type="text" formControlName="imageUrl" />
+                  </div>
+                  <div class="gi-field">
+                    <label>Alt text</label>
+                    <input type="text" formControlName="altText" />
+                  </div>
+                  <div class="gi-field">
+                    <label>Link URL</label>
+                    <input type="text" formControlName="linkUrl" />
+                  </div>
+                  <div class="gi-field">
+                    <label>Active from</label>
+                    <input type="datetime-local" formControlName="activeFrom" />
+                  </div>
+                  <div class="gi-field">
+                    <label>Active to</label>
+                    <input type="datetime-local" formControlName="activeTo" />
+                  </div>
+                  <div class="gi-field">
+                    <label>Sort order</label>
+                    <input type="number" formControlName="sortOrder" />
+                  </div>
+                  <div class="gi-field gi-field--check">
+                    <label><input type="checkbox" formControlName="active" /> Active</label>
+                  </div>
+                  <div class="gi-cms__form-actions">
+                    <button type="submit" class="gi-btn gi-btn--primary" [disabled]="saving()">
+                      {{ saving() ? 'Saving…' : 'Save' }}
+                    </button>
+                    <button type="button" class="gi-btn gi-btn--ghost" (click)="cancelEdit()">Close</button>
+                  </div>
+                </form>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+}

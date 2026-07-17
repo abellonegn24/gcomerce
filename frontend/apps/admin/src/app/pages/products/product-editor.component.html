@@ -1,0 +1,82 @@
+<section class="gi-pedit">
+  <nav class="gi-pedit__crumbs" aria-label="Breadcrumb">
+    <a routerLink="/products">
+      <span class="material-icons-round">arrow_back</span>
+      Back to products
+    </a>
+  </nav>
+
+  @if (state.loading()) {
+    <div class="gi-pedit__skeleton" aria-live="polite">Loading product…</div>
+  } @else if (state.errorMessage() && !state.product()) {
+    <div class="gi-pedit__banner gi-pedit__banner--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ state.errorMessage() }}</span>
+    </div>
+  } @else if (state.product(); as p) {
+    @if (state.successMessage(); as msg) {
+      <div class="gi-pedit__banner gi-pedit__banner--success" role="status">
+        <span class="material-icons-round">check_circle</span>
+        <span>{{ msg }}</span>
+      </div>
+    }
+    @if (state.errorMessage(); as msg) {
+      <div class="gi-pedit__banner gi-pedit__banner--error" role="alert">
+        <span class="material-icons-round">error_outline</span>
+        <span>{{ msg }}</span>
+      </div>
+    }
+
+    <header class="gi-pedit__head">
+      <div>
+        <p class="gi-pedit__eyebrow">Product</p>
+        <h1>{{ p.name }}</h1>
+        <p class="gi-pedit__sub">
+          <code>{{ p.sku }}</code> · <code>/products/{{ p.slug }}</code> · Updated {{ p.updatedAt | date: 'MMM d, y' }}
+        </p>
+      </div>
+      <div class="gi-pedit__head-actions">
+        <span
+          class="gi-pedit__status"
+          [class.is-active]="p.status === 'ACTIVE'"
+          [class.is-draft]="p.status === 'DRAFT'"
+          [class.is-archived]="p.status === 'ARCHIVED'">
+          {{ p.status }}
+        </span>
+        @if (p.status !== 'ARCHIVED') {
+          <button
+            type="button"
+            class="gi-btn gi-btn--danger"
+            [disabled]="state.archiving()"
+            (click)="archive()">
+            @if (state.archiving()) {
+              <span class="material-icons-round gi-spin">progress_activity</span>
+              Archiving…
+            } @else {
+              <span class="material-icons-round">archive</span>
+              Archive
+            }
+          </button>
+        }
+      </div>
+    </header>
+
+    <div class="gi-pedit__tabs" role="tablist">
+      @for (t of tabs; track t.id) {
+        <a
+          role="tab"
+          class="gi-pedit__tab"
+          [routerLink]="['./', t.id]"
+          routerLinkActive="is-active"
+          (click)="clearBanners()">
+          <span class="material-icons-round">{{ t.icon }}</span>
+          <span>{{ t.label }}</span>
+        </a>
+      }
+    </div>
+
+    <div class="gi-pedit__panel">
+      <router-outlet />
+    </div>
+  }
+</section>

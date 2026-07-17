@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Refund receipt for order {invoiceNumber}</title>
+  </head>
+  <body style="margin:0;padding:0;background:#faf6f0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#12294A;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td align="center" style="padding:32px 16px;">
+
+          <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;box-shadow:0 6px 24px rgba(18,41,74,0.08);overflow:hidden;">
+            <tr>
+              <td style="background:linear-gradient(135deg,#12294A 0%,#1B3A6B 100%);color:#ffffff;padding:28px 32px;">
+                <div style="letter-spacing:0.08em;font-size:12px;color:#E9B44C;text-transform:uppercase;">Gadaa Istar</div>
+                <h1 style="margin:8px 0 0 0;font-size:22px;font-weight:600;">Refund receipt</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:28px 32px;font-size:15px;line-height:1.55;">
+                <p style="margin:0 0 14px 0;">Hi {displayName},</p>
+                <p style="margin:0 0 14px 0;">
+                  A refund of <strong>{currency} {refundAmount}</strong> has been
+                  issued for your order <strong>{invoiceNumber}</strong>.
+                </p>
+                <p style="margin:0 0 14px 0;">
+                  <strong>Reason:</strong> {reason}
+                </p>
+                <p style="margin:0 0 14px 0;">
+                  The refund will appear on your original payment method within
+                  5–10 business days.
+                </p>
+
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0;">
+                  <tr>
+                    <td align="center" bgcolor="#1B3A6B" style="border-radius:6px;">
+                      <a href="{orderLink}"
+                         style="display:inline-block;padding:12px 22px;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;">
+                         View your order
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="margin:22px 0 0 0;font-size:13px;color:#5a6a80;">
+                  If you have any questions, contact us at support@gadaaistar.com.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="background:#3B2A20;color:#faf6f0;padding:18px 32px;font-size:11px;line-height:1.55;">
+                Gadaa Istar Business Group S.C. · Addis Ababa, Ethiopia<br/>
+                This is an automated message — please do not reply.
+              </td>
+            </tr>
+          </table>
+
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

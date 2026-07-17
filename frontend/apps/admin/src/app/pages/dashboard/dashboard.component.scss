@@ -1,0 +1,475 @@
+:host {
+  display: block;
+  padding: 2rem clamp(1rem, 4vw, 3rem);
+}
+
+.gi-dash__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+
+  h1 {
+    font-family: var(--gi-font-display);
+    color: var(--gi-navy-900);
+    margin: 0 0 0.4rem 0;
+    font-size: 1.6rem;
+  }
+}
+
+.gi-dash__lead {
+  color: var(--gi-text-secondary);
+  font-size: 0.95rem;
+  max-width: 60ch;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.gi-dash__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(233, 180, 76, 0.15);
+  border: 1px solid rgba(233, 180, 76, 0.35);
+  color: var(--gi-navy-900);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+
+  .material-icons-round { font-size: 1rem; color: var(--gi-gold-500); }
+}
+
+.gi-dash__kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.gi-kpi {
+  display: flex;
+  gap: 0.9rem;
+  padding: 1.1rem 1.15rem;
+  background: #fff;
+  border: 1px solid var(--gi-border);
+  border-radius: var(--gi-radius-md);
+  box-shadow: 0 1px 3px rgba(18, 41, 74, 0.05);
+}
+
+.gi-kpi__icon {
+  font-size: 1.6rem;
+  color: var(--gi-navy-500);
+  background: rgba(44, 83, 145, 0.08);
+  padding: 0.55rem;
+  border-radius: var(--gi-radius-sm);
+  align-self: flex-start;
+}
+
+.gi-kpi__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.gi-kpi__value {
+  font-family: var(--gi-font-display);
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: var(--gi-navy-900);
+  margin: 0;
+  line-height: 1;
+}
+
+.gi-kpi__label {
+  font-size: 0.9rem;
+  color: var(--gi-navy-900);
+  font-weight: 600;
+  margin: 0.3rem 0 0 0;
+}
+
+.gi-kpi__hint {
+  font-size: 0.75rem;
+  color: var(--gi-text-secondary);
+  margin: 0;
+}
+
+.gi-kpi--warning {
+  border-color: rgba(233, 180, 76, 0.4);
+  background: rgba(233, 180, 76, 0.04);
+
+  .gi-kpi__icon {
+    color: #b8860b;
+    background: rgba(233, 180, 76, 0.15);
+  }
+}
+
+.gi-kpi--success {
+  border-color: rgba(34, 139, 34, 0.25);
+
+  .gi-kpi__icon {
+    color: #2a8c2a;
+    background: rgba(34, 139, 34, 0.08);
+  }
+}
+
+.gi-dash__loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--gi-text-secondary);
+  padding: 2rem 0;
+  font-size: 0.95rem;
+
+  .material-icons-round { font-size: 1.2rem; }
+}
+
+.gi-dash__error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.15rem;
+  border-radius: var(--gi-radius-md);
+  background: rgba(220, 53, 69, 0.06);
+  border: 1px solid rgba(220, 53, 69, 0.25);
+  color: #c0392b;
+  font-size: 0.9rem;
+
+  .material-icons-round { font-size: 1.2rem; }
+}
+
+.gi-dash__as-of {
+  color: var(--gi-text-secondary);
+  font-size: 0.78rem;
+  margin: 0;
+}
+
+// ---------------------------------------------------------------------------
+// Dashboard cards (revenue trend, status breakdown, recent orders, low-stock)
+// ---------------------------------------------------------------------------
+
+.gi-dash__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gi-dash__card {
+  background: #fff;
+  border: 1px solid var(--gi-border);
+  border-radius: var(--gi-radius-md);
+  box-shadow: 0 1px 3px rgba(18, 41, 74, 0.05);
+  padding: 1.25rem;
+}
+
+.gi-dash__card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gi-navy-900);
+  margin: 0 0 1rem 0;
+
+  .material-icons-round {
+    font-size: 1.2rem;
+    color: var(--gi-navy-500);
+  }
+}
+
+// Revenue trend ----------------------------------------------------------
+
+.gi-dash__trend-stats {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.gi-dash__trend-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.gi-dash__trend-label {
+  font-size: 0.75rem;
+  color: var(--gi-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.gi-dash__trend-value {
+  font-family: var(--gi-font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gi-navy-900);
+  line-height: 1;
+}
+
+.gi-dash__trend-delta {
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  &.is-up   { color: #2a8c2a; }
+  &.is-down { color: #c0392b; }
+}
+
+.gi-dash__chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  height: 120px;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--gi-border);
+}
+
+.gi-dash__bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.gi-dash__bar {
+  width: 100%;
+  max-width: 40px;
+  background: linear-gradient(180deg, var(--gi-gold-500, #c5a14a), var(--gi-gold-400, #e9b44c));
+  border-radius: 3px 3px 0 0;
+  min-height: 2px;
+  transition: height 0.3s ease;
+  cursor: default;
+}
+
+.gi-dash__bar-label {
+  font-size: 0.7rem;
+  color: var(--gi-text-secondary);
+  text-transform: uppercase;
+}
+
+// Status breakdown -------------------------------------------------------
+
+.gi-dash__status-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.gi-dash__status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.gi-dash__status-name {
+  min-width: 110px;
+  font-size: 0.78rem;
+}
+
+.gi-dash__status-count {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--gi-navy-900);
+  min-width: 2rem;
+  text-align: right;
+}
+
+.gi-dash__status-bar-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(18, 41, 74, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.gi-dash__status-bar-fill {
+  height: 100%;
+  background: var(--gi-navy-500, #2c5391);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.gi-dash__status-pct {
+  font-size: 0.75rem;
+  color: var(--gi-text-secondary);
+  min-width: 2.5rem;
+  text-align: right;
+}
+
+// Status pills (shared) --------------------------------------------------
+
+.gi-status-pill {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+
+  &.gi-status-pill--pending-payment {
+    background: rgba(233, 180, 76, 0.15);
+    color: #8a6508;
+  }
+  &.gi-status-pill--paid {
+    background: rgba(34, 139, 34, 0.12);
+    color: #1a6b1a;
+  }
+  &.gi-status-pill--fulfilling {
+    background: rgba(44, 83, 145, 0.12);
+    color: var(--gi-navy-700, #1c3a6b);
+  }
+  &.gi-status-pill--shipped {
+    background: rgba(44, 83, 145, 0.18);
+    color: var(--gi-navy-700, #1c3a6b);
+  }
+  &.gi-status-pill--delivered {
+    background: rgba(34, 139, 34, 0.18);
+    color: #1a6b1a;
+  }
+  &.gi-status-pill--cancelled {
+    background: rgba(220, 53, 69, 0.1);
+    color: #c0392b;
+  }
+  &.gi-status-pill--refunded,
+  &.gi-status-pill--partially-refunded {
+    background: rgba(220, 53, 69, 0.08);
+    color: #a52a2a;
+  }
+}
+
+// Recent orders table ----------------------------------------------------
+
+.gi-dash__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+
+  th {
+    text-align: left;
+    font-weight: 600;
+    color: var(--gi-text-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.4rem 0.5rem;
+    border-bottom: 1px solid var(--gi-border);
+  }
+
+  td {
+    padding: 0.5rem;
+    border-bottom: 1px solid rgba(18, 41, 74, 0.06);
+    color: var(--gi-navy-900);
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.gi-dash__num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.gi-dash__link {
+  color: var(--gi-navy-600, #2c5391);
+  text-decoration: none;
+  font-weight: 600;
+
+  &:hover {
+    text-decoration: underline;
+    color: var(--gi-gold-500, #c5a14a);
+  }
+}
+
+// Low-stock alerts -------------------------------------------------------
+
+.gi-dash__lowstock-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.gi-dash__lowstock-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.6rem;
+  background: rgba(233, 180, 76, 0.04);
+  border: 1px solid rgba(233, 180, 76, 0.15);
+  border-radius: var(--gi-radius-sm, 0.375rem);
+}
+
+.gi-dash__lowstock-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.gi-dash__lowstock-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--gi-navy-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gi-dash__lowstock-variant {
+  font-size: 0.75rem;
+  color: var(--gi-text-secondary);
+}
+
+.gi-dash__lowstock-sku {
+  font-size: 0.72rem;
+  color: var(--gi-text-secondary);
+  font-family: monospace;
+}
+
+.gi-dash__lowstock-qty {
+  display: flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  flex-shrink: 0;
+}
+
+.gi-dash__lowstock-available {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #b8860b;
+  font-variant-numeric: tabular-nums;
+}
+
+.gi-dash__lowstock-threshold {
+  font-size: 0.75rem;
+  color: var(--gi-text-secondary);
+}
+
+.gi-dash__lowstock-more {
+  margin: 0.6rem 0 0 0;
+  font-size: 0.78rem;
+  color: var(--gi-text-secondary);
+  text-align: center;
+}

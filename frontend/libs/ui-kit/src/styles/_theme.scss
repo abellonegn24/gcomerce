@@ -1,0 +1,147 @@
+// =============================================================================
+// Gadaa Istar Angular Material Theme
+//
+// Applies the Gadaa Istar brand palette to Angular Material's M3 tokens.
+// Import once from each app's `styles.scss`.
+// =============================================================================
+
+@use '@angular/material' as mat;
+@use 'sass:map';
+@use 'tokens' as tokens;
+
+// Angular Material M3 palette format: a flat map of numbered tones (0..100)
+// PLUS nested sub-maps for secondary, neutral, neutral-variant, and error.
+// The validator checks that keys match the built-in $red-palette structure.
+
+$gi-secondary-palette: (
+  0: #000000,
+  10: #6F1710,
+  20: #A9291F,
+  25: #B82B23,
+  30: #C93327,
+  35: #D03A2E,
+  40: #D63A2F,
+  50: #E45E4E,
+  60: #EE8A7E,
+  70: #F5B8B0,
+  80: #FBE4E1,
+  90: #FDF2F0,
+  95: #FDF6F5,
+  98: #FEF9F8,
+  99: #FEFCFB,
+  100: #FFFFFF,
+);
+
+$gi-neutral-palette: (
+  0: #000000, 10: #1A1A1A, 20: #2E2E2E, 25: #383838, 30: #444444,
+  35: #4F4F4F, 40: #5C5C5C, 50: #757575, 60: #8F8F8F, 70: #ABABAB,
+  80: #C7C7C7, 90: #E3E3E3, 95: #F1F1F1, 98: #F9F9F9, 99: #FCFCFC, 100: #FFFFFF
+);
+
+$gi-neutral-variant-palette: (
+  0: #000000, 10: #1A1B22, 20: #2F303A, 25: #3A3B46, 30: #454652,
+  35: #51525E, 40: #5D5F6A, 50: #767783, 60: #90919D, 70: #ABACB8,
+  80: #C6C7D3, 90: #E2E3EF, 95: #F1F1FD, 98: #F9F9FF, 99: #FCFCFF, 100: #FFFFFF
+);
+
+$gi-error-palette: (
+  0: #000000, 10: #410002, 20: #690005, 25: #7E0007, 30: #93000A,
+  35: #A80710, 40: #BA1A1A, 50: #DE3730, 60: #FF5449, 70: #FF897D,
+  80: #FFB4AB, 90: #FFDAD6, 95: #FFEDEA, 98: #FFF8F7, 99: #FFFBFF, 100: #FFFFFF
+);
+
+// The primary palette must contain numbered tones AND nested sub-maps for
+// secondary, neutral, neutral-variant, and error (M3 validator requirement).
+$gi-primary-palette: (
+  0: #000000,
+  10: #12294A,
+  20: #16305A,
+  25: #193262,
+  30: #1B3A6B,
+  35: #23467E,
+  40: #2C5391,
+  50: #6684B2,
+  60: #9AB0D0,
+  70: #C9D6EA,
+  80: #E4EBF5,
+  90: #F1F5FA,
+  95: #F5F8FC,
+  98: #F9FBFD,
+  99: #FCFDFE,
+  100: #FFFFFF,
+  secondary: $gi-secondary-palette,
+  neutral: $gi-neutral-palette,
+  neutral-variant: $gi-neutral-variant-palette,
+  error: $gi-error-palette,
+);
+
+// The tertiary palette has the same structure requirement.
+$gi-tertiary-palette: (
+  0: #000000,
+  10: #7A5B1F,
+  20: #B98A2F,
+  25: #D19F3D,
+  30: #E9B44C,
+  35: #EBB957,
+  40: #EDBF63,
+  50: #F4CE7A,
+  60: #F7DB8F,
+  70: #FBEBBE,
+  80: #FDF7E6,
+  90: #FDF9EF,
+  95: #FEFCF6,
+  98: #FEFDF8,
+  99: #FFFEFB,
+  100: #FFFFFF,
+  secondary: $gi-secondary-palette,
+  neutral: $gi-neutral-palette,
+  neutral-variant: $gi-neutral-variant-palette,
+  error: $gi-error-palette,
+);
+
+// Define the app theme using Angular Material's M3 API.
+$gi-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: $gi-primary-palette,
+    tertiary: $gi-tertiary-palette,
+  ),
+  typography: (
+    plain-family: 'Inter, Segoe UI, system-ui, sans-serif',
+    brand-family: 'Playfair Display, Georgia, serif',
+  ),
+  density: (
+    scale: 0,
+  ),
+));
+
+// Emit theme once — apps include this file exactly one time.
+:root {
+  @include mat.all-component-themes($gi-theme);
+}
+
+// Global surface styling that Material tokens don't cover directly.
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: var(--gi-font-body);
+  color: var(--gi-text-primary);
+  background: var(--gi-bg-page);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--gi-font-display);
+  color: var(--gi-navy-900);
+  margin: 0 0 0.5em 0;
+  line-height: 1.2;
+}
+
+a {
+  color: var(--gi-brand);
+  text-decoration: none;
+  transition: color var(--gi-transition);
+}
+a:hover { color: var(--gi-brand-hover); }

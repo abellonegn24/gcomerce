@@ -1,0 +1,155 @@
+// =============================================================================
+// Storefront auth pages — shared layout (login / register)
+// =============================================================================
+
+:host {
+  display: block;
+  padding: 3rem 1rem 5rem;
+  background: var(--gi-bg-page);
+  min-height: calc(100vh - 200px);
+}
+
+.gi-auth {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.gi-auth__card {
+  background: var(--gi-bg-surface);
+  border: 1px solid var(--gi-border);
+  border-radius: var(--gi-radius-lg);
+  box-shadow: var(--gi-shadow-md);
+  padding: 2.5rem 2.25rem;
+  width: 100%;
+  max-width: 440px;
+
+  h1 {
+    font-family: var(--gi-font-display);
+    font-size: 1.75rem;
+    color: var(--gi-navy-900);
+    margin: 0 0 0.35rem 0;
+  }
+}
+
+.gi-auth__lead {
+  color: var(--gi-text-secondary);
+  margin: 0 0 1.5rem 0;
+  font-size: 0.95rem;
+}
+
+.gi-alert {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.75rem 1rem;
+  border-radius: var(--gi-radius-md);
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+
+  .material-icons-round { font-size: 1.15rem; flex-shrink: 0; margin-top: 0.05rem; }
+
+  &--error {
+    background: var(--gi-red-100);
+    color: var(--gi-red-600);
+    border: 1px solid rgba(201, 51, 39, 0.2);
+  }
+
+  &--success {
+    background: rgba(46, 160, 67, 0.10);
+    color: #256029;
+    border: 1px solid rgba(46, 160, 67, 0.35);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Form primitives (mirrors admin-login styling for consistency)
+// -----------------------------------------------------------------------------
+.gi-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.gi-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.gi-field__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gi-navy-900);
+}
+
+.gi-field input,
+.gi-field select {
+  border: 1px solid var(--gi-border);
+  border-radius: var(--gi-radius-md);
+  padding: 0.7rem 0.9rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color var(--gi-transition), box-shadow var(--gi-transition);
+  background: #fff;
+  color: var(--gi-navy-900);
+}
+
+.gi-field input:focus,
+.gi-field select:focus {
+  outline: none;
+  border-color: var(--gi-navy-500);
+  box-shadow: 0 0 0 3px rgba(44, 83, 145, 0.15);
+}
+
+.gi-field input[aria-invalid='true'] {
+  border-color: var(--gi-red-600);
+  box-shadow: 0 0 0 3px rgba(201, 51, 39, 0.12);
+}
+
+.gi-field__error {
+  font-size: 0.8rem;
+  color: var(--gi-red-600);
+}
+
+.gi-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.25rem;
+  border-radius: var(--gi-radius-md);
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform var(--gi-transition), background var(--gi-transition);
+
+  .material-icons-round { font-size: 1.1rem; }
+
+  &--primary {
+    background: var(--gi-cta);
+    color: #fff;
+    margin-top: 0.35rem;
+  }
+  &--primary:hover:not(:disabled) {
+    background: var(--gi-cta-hover);
+    transform: translateY(-1px);
+  }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+.gi-auth__meta {
+  margin-top: 1.75rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--gi-text-secondary);
+
+  a { color: var(--gi-navy-500); font-weight: 500; }
+  a:hover { color: var(--gi-navy-700); }
+}
+
+.gi-auth__sep {
+  margin: 0 0.6rem;
+  color: var(--gi-border);
+}

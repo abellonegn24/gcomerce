@@ -1,0 +1,255 @@
+<section class="gi-quote">
+  <nav class="gi-quote__crumbs" aria-label="Breadcrumb">
+    <a routerLink="/quotes">
+      <span class="material-icons-round">arrow_back</span>
+      Back to quotes
+    </a>
+  </nav>
+
+  @if (loading()) {
+    <div class="gi-quote__skeleton" aria-live="polite">Loading quote…</div>
+  } @else if (errorMessage() && !quote()) {
+    <div class="gi-quote__banner gi-quote__banner--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  } @else if (quote(); as q) {
+    @if (successMessage(); as msg) {
+      <div class="gi-quote__banner gi-quote__banner--success" role="status">
+        <span class="material-icons-round">check_circle</span>
+        <span>{{ msg }}</span>
+      </div>
+    }
+    @if (errorMessage(); as msg) {
+      <div class="gi-quote__banner gi-quote__banner--error" role="alert">
+        <span class="material-icons-round">error_outline</span>
+        <span>{{ msg }}</span>
+      </div>
+    }
+
+    <header class="gi-quote__head">
+      <div>
+        <p class="gi-quote__eyebrow">Quote</p>
+        <h1><code>#{{ q.id }}</code></h1>
+        <p class="gi-quote__sub">
+          Created {{ q.createdAt | date: 'MMM d, y, h:mm a' }}
+          @if (q.validUntil) { · valid until {{ q.validUntil | date: 'MMM d, y' }} }
+        </p>
+      </div>
+      <span class="gi-quote__pill" [class]="'is-' + statusVariant(q.status)">{{ q.status }}</span>
+    </header>
+
+    <div class="gi-quote__grid">
+      <div class="gi-quote__col">
+        <!-- Line items -->
+        <section class="gi-quote__card">
+          <h2>Line items</h2>
+          <ul class="gi-quote__lines">
+            @for (line of q.items; track line.id) {
+              <li class="gi-quote__line">
+                <div class="gi-quote__line-body">
+                  <div class="gi-quote__line-name">{{ line.name }}</div>
+                  <div class="gi-quote__line-sku">SKU {{ line.variantSku || line.sku }}</div>
+                  @if (line.variantName) {
+                    <div class="gi-quote__line-variant">{{ line.variantName }}</div>
+                  }
+                </div>
+                <div class="gi-quote__line-qty">{{ line.quantity }} ×</div>
+                <div class="gi-quote__line-price">
+                  @if (editingLineId() === line.id) {
+                    <input type="number" step="0.01" min="0" class="gi-quote__price-input"
+                           [ngModel]="editPrice()"
+                           (ngModelChange)="editPrice.set($event)"
+                           name="price-{{ line.id }}" />
+                  } @else {
+                    {{ formatMoney(q.currency, line.proposedUnitPrice) }}
+                  }
+                </div>
+                <div class="gi-quote__line-total">{{ formatMoney(q.currency, line.lineTotal) }}</div>
+                <div class="gi-quote__line-actions">
+                  @if (editingLineId() === line.id) {
+                    <button type="button" class="gi-btn gi-btn--primary gi-btn--sm"
+                            (click)="saveLine(line)">Save</button>
+                    <button type="button" class="gi-btn gi-btn--ghost gi-btn--sm"
+                            (click)="cancelEditLine()">Cancel</button>
+                  } @else if (canEdit()) {
+                    <button type="button" class="gi-btn gi-btn--ghost gi-btn--sm"
+                            (click)="beginEditLine(line)">
+                      <span class="material-icons-round">edit</span>
+                    </button>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
+
+          <dl class="gi-quote__totals">
+            <div>
+              <dt>Subtotal</dt>
+              <dd>{{ formatMoney(q.currency, q.subtotal) }}</dd>
+            </div>
+            <div>
+              <dt>Tax</dt>
+              <dd>{{ formatMoney(q.currency, q.taxTotal) }}</dd>
+            </div>
+            <div>
+              <dt>Shipping</dt>
+              <dd>{{ formatMoney(q.currency, q.shippingTotal) }}</dd>
+            </div>
+            <div class="gi-quote__grand">
+              <dt>Total</dt>
+              <dd>{{ formatMoney(q.currency, q.grandTotal) }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <!-- Customer -->
+        <section class="gi-quote__card">
+          <h2>Customer</h2>
+          <dl class="gi-quote__facts">
+            <div>
+              <dt>Name</dt>
+              <dd>{{ q.customerName || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Email</dt>
+              <dd><a [href]="'mailto:' + q.customerEmail">{{ q.customerEmail }}</a></dd>
+            </div>
+          </dl>
+        </section>
+
+        @if (q.customerNotes || q.adminNotes) {
+          <section class="gi-quote__card">
+            <h2>Notes</h2>
+            @if (q.customerNotes) {
+              <p class="gi-quote__note"><strong>Customer:</strong> {{ q.customerNotes }}</p>
+            }
+            @if (q.adminNotes) {
+              <p class="gi-quote__note gi-quote__note--admin"><strong>Admin:</strong> {{ q.adminNotes }}</p>
+            }
+          </section>
+        }
+      </div>
+
+      <!-- Action panel -->
+      <aside class="gi-quote__col gi-quote__col--side">
+        @if (canReview()) {
+          <section class="gi-quote__card gi-quote__actions">
+            <h2>Review</h2>
+            <p class="gi-quote__hint">Start reviewing this quote to edit line item pricing.</p>
+            <button type="button" class="gi-btn gi-btn--primary"
+                    (click)="startReview()" [disabled]="actionLoading()">
+              <span class="material-icons-round">visibility</span>
+              Start review
+            </button>
+          </section>
+        }
+
+        @if (canSend()) {
+          <section class="gi-quote__card gi-quote__actions">
+            <h2>Send quote</h2>
+            <p class="gi-quote__hint">Set shipping/tax totals and send to the customer for acceptance.</p>
+            <label class="gi-field">
+              <span>Shipping total ({{ q.currency }})</span>
+              <input type="number" step="0.01" min="0"
+                     [ngModel]="sendShipping()"
+                     (ngModelChange)="sendShipping.set($event)"
+                     name="send-shipping" />
+            </label>
+            <label class="gi-field">
+              <span>Tax total ({{ q.currency }})</span>
+              <input type="number" step="0.01" min="0"
+                     [ngModel]="sendTax()"
+                     (ngModelChange)="sendTax.set($event)"
+                     name="send-tax" />
+            </label>
+            <label class="gi-field">
+              <span>Valid for (days)</span>
+              <input type="number" min="1" max="365"
+                     [ngModel]="sendValidDays()"
+                     (ngModelChange)="sendValidDays.set($event)"
+                     name="send-valid-days" />
+            </label>
+            <label class="gi-field">
+              <span>Notes to customer</span>
+              <textarea rows="3"
+                        [ngModel]="sendAdminNotes()"
+                        (ngModelChange)="sendAdminNotes.set($event)"
+                        name="send-notes"></textarea>
+            </label>
+            <button type="button" class="gi-btn gi-btn--primary"
+                    (click)="sendQuote()" [disabled]="actionLoading()">
+              <span class="material-icons-round">send</span>
+              {{ actionLoading() ? 'Sending…' : 'Send to customer' }}
+            </button>
+          </section>
+        }
+
+        @if (canReject()) {
+          <section class="gi-quote__card gi-quote__actions">
+            <h2>Reject</h2>
+            <label class="gi-field">
+              <span>Reason (sent to customer)</span>
+              <textarea rows="2"
+                        [ngModel]="rejectNotes()"
+                        (ngModelChange)="rejectNotes.set($event)"
+                        name="reject-notes"></textarea>
+            </label>
+            <button type="button" class="gi-btn gi-btn--danger-outline"
+                    (click)="rejectQuote()" [disabled]="actionLoading()">
+              <span class="material-icons-round">block</span>
+              {{ actionLoading() ? 'Rejecting…' : 'Reject quote' }}
+            </button>
+          </section>
+        }
+
+        @if (canConvert()) {
+          <section class="gi-quote__card gi-quote__actions">
+            <h2>Convert to order</h2>
+            <p class="gi-quote__hint">The customer has accepted this quote. Convert it to a placed order.</p>
+            <label class="gi-field">
+              <span>Shipping address ID</span>
+              <input type="number" min="1"
+                     [ngModel]="convertAddressId()"
+                     (ngModelChange)="convertAddressId.set($event)"
+                     name="convert-addr" placeholder="Customer address ID" />
+            </label>
+            <label class="gi-field">
+              <span>Shipping method ID (optional)</span>
+              <input type="number" min="1"
+                     [ngModel]="convertShippingMethodId()"
+                     (ngModelChange)="convertShippingMethodId.set($event)"
+                     name="convert-ship" placeholder="Leave blank for pickup" />
+            </label>
+            <button type="button" class="gi-btn gi-btn--primary"
+                    (click)="convertQuote()" [disabled]="actionLoading()">
+              <span class="material-icons-round">shopping_cart_checkout</span>
+              {{ actionLoading() ? 'Converting…' : 'Convert to order' }}
+            </button>
+          </section>
+        }
+
+        @if (q.status === 'SENT') {
+          <section class="gi-quote__card gi-quote__actions">
+            <h2>Awaiting response</h2>
+            <p class="gi-quote__hint">Quote has been sent. Waiting for the customer to accept or decline.</p>
+          </section>
+        }
+
+        @if (q.status === 'CONVERTED') {
+          <section class="gi-quote__card gi-quote__actions">
+            <h2>Converted</h2>
+            <p class="gi-quote__hint">This quote has been converted to an order.</p>
+          </section>
+        }
+
+        @if (q.status === 'REJECTED' || q.status === 'EXPIRED') {
+          <section class="gi-quote__card gi-quote__actions">
+            <h2>Closed</h2>
+            <p class="gi-quote__hint">This quote is no longer active ({{ q.status | lowercase }}).</p>
+          </section>
+        }
+      </aside>
+    </div>
+  }
+</section>

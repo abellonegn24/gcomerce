@@ -1,0 +1,207 @@
+@if (customer(); as c) {
+  <div class="gi-profile">
+    <header class="gi-profile__head">
+      <div class="gi-profile__avatar" aria-hidden="true">
+        <span class="material-icons-round">person</span>
+      </div>
+      <div>
+        <h2>{{ c.firstName }} {{ c.lastName }}</h2>
+        <p class="gi-profile__sub">{{ c.email }}</p>
+        <span class="gi-profile__tag" [class.is-b2b]="isB2b()">
+          {{ isB2b() ? 'Business account' : 'Retail account' }}
+        </span>
+      </div>
+    </header>
+
+    @if (successMessage(); as msg) {
+      <div class="gi-profile__banner gi-profile__banner--success" role="status">
+        <span class="material-icons-round">check_circle</span>
+        <span>{{ msg }}</span>
+      </div>
+    }
+    @if (errorMessage(); as msg) {
+      <div class="gi-profile__banner gi-profile__banner--error" role="alert">
+        <span class="material-icons-round">error_outline</span>
+        <span>{{ msg }}</span>
+      </div>
+    }
+
+    <!-- ================================================================ -->
+    <!-- View mode                                                        -->
+    <!-- ================================================================ -->
+    @if (mode() === 'view') {
+      <dl class="gi-profile__grid">
+        <div>
+          <dt>Email</dt>
+          <dd>
+            {{ c.email }}
+            @if (c.status === 'ACTIVE') {
+              <span class="gi-profile__pill gi-profile__pill--ok">
+                <span class="material-icons-round">verified</span>
+                Verified
+              </span>
+            } @else if (c.status === 'PENDING_VERIFICATION') {
+              <span class="gi-profile__pill gi-profile__pill--warn">
+                <span class="material-icons-round">mail_outline</span>
+                Pending verification
+              </span>
+            } @else {
+              <span class="gi-profile__pill">{{ c.status }}</span>
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>First name</dt>
+          <dd>{{ c.firstName || '—' }}</dd>
+        </div>
+        <div>
+          <dt>Last name</dt>
+          <dd>{{ c.lastName || '—' }}</dd>
+        </div>
+        <div>
+          <dt>Phone</dt>
+          <dd>{{ c.phone || '—' }}</dd>
+        </div>
+        @if (isB2b()) {
+          <div>
+            <dt>Company</dt>
+            <dd>{{ c.companyName || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Tax ID</dt>
+            <dd>{{ c.companyTin || '—' }}</dd>
+          </div>
+        }
+        @if (c.preferredCurrency) {
+          <div>
+            <dt>Preferred currency</dt>
+            <dd>{{ c.preferredCurrency }}</dd>
+          </div>
+        }
+      </dl>
+
+      <div class="gi-profile__cta">
+        <button type="button" class="gi-btn-inline gi-btn-inline--ghost" (click)="startEdit()">
+          <span class="material-icons-round">edit</span>
+          Edit profile
+        </button>
+        <button type="button" class="gi-btn-inline gi-btn-inline--ghost" (click)="startPasswordChange()">
+          <span class="material-icons-round">lock</span>
+          Change password
+        </button>
+      </div>
+    }
+
+    <!-- ================================================================ -->
+    <!-- Edit mode                                                        -->
+    <!-- ================================================================ -->
+    @if (mode() === 'edit') {
+      <form [formGroup]="editForm" (ngSubmit)="saveProfile()" class="gi-form" novalidate>
+        <div class="gi-form__grid">
+          <label class="gi-field">
+            <span class="gi-field__label">First name</span>
+            <input type="text" formControlName="firstName" autocomplete="given-name" />
+          </label>
+          <label class="gi-field">
+            <span class="gi-field__label">Last name</span>
+            <input type="text" formControlName="lastName" autocomplete="family-name" />
+          </label>
+          <label class="gi-field">
+            <span class="gi-field__label">Phone</span>
+            <input type="tel" formControlName="phone" autocomplete="tel" />
+          </label>
+          <label class="gi-field">
+            <span class="gi-field__label">Preferred currency</span>
+            <select formControlName="preferredCurrency">
+              <option value="USD">USD — US Dollar</option>
+              <option value="EUR">EUR — Euro</option>
+              <option value="GBP">GBP — British Pound</option>
+            </select>
+          </label>
+          @if (isB2b()) {
+            <label class="gi-field gi-field--wide">
+              <span class="gi-field__label">Company name</span>
+              <input type="text" formControlName="companyName" autocomplete="organization" />
+            </label>
+            <label class="gi-field">
+              <span class="gi-field__label">Tax ID (TIN)</span>
+              <input type="text" formControlName="companyTin" />
+            </label>
+            <label class="gi-field">
+              <span class="gi-field__label">VAT number</span>
+              <input type="text" formControlName="companyVatNumber" />
+            </label>
+          }
+        </div>
+
+        <p class="gi-form__hint">
+          Leave a field blank to keep its current value — no field can be
+          cleared via this form.
+        </p>
+
+        <div class="gi-form__actions">
+          <button type="submit" class="gi-btn-inline gi-btn-inline--gold" [disabled]="submitting()">
+            @if (submitting()) { <span>Saving…</span> }
+            @else {
+              <span class="material-icons-round">check</span>
+              <span>Save changes</span>
+            }
+          </button>
+          <button type="button" class="gi-btn-inline gi-btn-inline--ghost" (click)="cancel()" [disabled]="submitting()">
+            Cancel
+          </button>
+        </div>
+      </form>
+    }
+
+    <!-- ================================================================ -->
+    <!-- Change-password mode                                             -->
+    <!-- ================================================================ -->
+    @if (mode() === 'password') {
+      <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="gi-form" novalidate>
+        <label class="gi-field">
+          <span class="gi-field__label">Current password</span>
+          <input type="password" formControlName="currentPassword" autocomplete="current-password" />
+        </label>
+        <label class="gi-field">
+          <span class="gi-field__label">New password</span>
+          <input type="password" formControlName="newPassword" autocomplete="new-password" />
+          @if (passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.errors?.['minlength']) {
+            <span class="gi-field__error">Use at least 8 characters.</span>
+          }
+        </label>
+        <label class="gi-field">
+          <span class="gi-field__label">Confirm new password</span>
+          <input type="password" formControlName="confirmPassword" autocomplete="new-password" />
+          @if (
+            passwordForm.controls.confirmPassword.touched
+            && passwordForm.hasError('mismatch')
+          ) {
+            <span class="gi-field__error">Passwords do not match.</span>
+          }
+        </label>
+
+        <p class="gi-form__hint">
+          Changing your password signs you out of every device. You'll return
+          to the sign-in page after we save the change.
+        </p>
+
+        <div class="gi-form__actions">
+          <button type="submit" class="gi-btn-inline gi-btn-inline--gold"
+                  [disabled]="submitting() || passwordForm.invalid || passwordForm.hasError('mismatch')">
+            @if (submitting()) { <span>Updating…</span> }
+            @else {
+              <span class="material-icons-round">lock_reset</span>
+              <span>Update password</span>
+            }
+          </button>
+          <button type="button" class="gi-btn-inline gi-btn-inline--ghost" (click)="cancel()" [disabled]="submitting()">
+            Cancel
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+} @else {
+  <p class="gi-profile__loading">Loading your profile…</p>
+}

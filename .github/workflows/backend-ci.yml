@@ -1,0 +1,150 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Match backend/gradle.properties -> javaVersion.
+  JAVA_VERSION: "21"
+  # Test DB — brought up as a service container below.
+  POSTGRES_DB: GCOMERCE_test
+  POSTGRES_USER: gadaa
+  POSTGRES_PASSWORD: gadaa_ci_pw
+
+jobs:
+  build:
+    name: Build & test (Java ${{ matrix.java }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: true
+      matrix:
+        java: ["21"]
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U ${{ env.POSTGRES_USER }} -d ${{ env.POSTGRES_DB }}"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=15
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('backend/**/*.gradle*', 'backend/**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Build & test
+        env:
+          # Match src/main/resources/application.properties %test overrides.
+          QUARKUS_DATASOURCE_URL: jdbc:postgresql://127.0.0.1:5432/${{ env.POSTGRES_DB }}
+          QUARKUS_DATASOURCE_USERNAME: ${{ env.POSTGRES_USER }}
+          QUARKUS_DATASOURCE_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          # Silence "please set a secret" checks in CI with well-known dummies.
+          GADAA_JWT_STOREFRONT_SECRET: ci-storefront-secret-32-chars-minimum-length-abcdefg
+          GADAA_JWT_ADMIN_SECRET: ci-admin-secret-32-chars-minimum-length-abcdefghijklm
+        run: ./gradlew --no-daemon --stacktrace build
+
+      - name: Publish test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: |
+            backend/**/build/reports/tests/
+            backend/**/build/test-results/
+          retention-days: 7
+
+  # -----------------------------------------------------------------------------
+  # Verifies Flyway migrations apply cleanly on an empty database, catching V*
+  # ordering / DDL regressions before they hit dev.
+  # -----------------------------------------------------------------------------
+  flyway-validate:
+    name: Flyway migration validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U ${{ env.POSTGRES_USER }} -d ${{ env.POSTGRES_DB }}"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('backend/**/*.gradle*', 'backend/**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Flyway migrate + validate
+        working-directory: backend
+        env:
+          QUARKUS_DATASOURCE_URL: jdbc:postgresql://127.0.0.1:5432/${{ env.POSTGRES_DB }}
+          QUARKUS_DATASOURCE_USERNAME: ${{ env.POSTGRES_USER }}
+          QUARKUS_DATASOURCE_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+        run: |
+          ./gradlew --no-daemon :persistence:flywayMigrate
+          ./gradlew --no-daemon :persistence:flywayValidate

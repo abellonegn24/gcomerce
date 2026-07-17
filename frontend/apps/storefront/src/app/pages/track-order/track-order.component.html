@@ -1,0 +1,181 @@
+<section class="gi-track">
+  <header class="gi-track__hero">
+    <div class="gi-track__hero-inner">
+      <p class="gi-track__eyebrow">Order tracking</p>
+      <h1>Track your order</h1>
+      <p class="gi-track__lead">
+        Enter your order reference and the email you used at checkout to see the current status.
+      </p>
+    </div>
+  </header>
+
+  <div class="gi-track__form-card">
+    <form (ngSubmit)="submit()" class="gi-track__form">
+      <div class="gi-track__field">
+        <label for="track-uuid">Order reference</label>
+        <input
+          id="track-uuid"
+          type="text"
+          placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
+          [ngModel]="uuid()"
+          (ngModelChange)="uuid.set($event)"
+          name="uuid"
+          autocomplete="off"
+          required />
+      </div>
+
+      <div class="gi-track__field">
+        <label for="track-email">Email address</label>
+        <input
+          id="track-email"
+          type="email"
+          placeholder="you@example.com"
+          [ngModel]="email()"
+          (ngModelChange)="email.set($event)"
+          name="email"
+          autocomplete="email"
+          required />
+      </div>
+
+      <button type="submit" class="gi-track__submit" [disabled]="!canSubmit()">
+        @if (loading()) {
+          <span class="material-icons-round gi-track__spinner">hourglass_top</span>
+          Looking up…
+        } @else {
+          <span class="material-icons-round">search</span>
+          Track order
+        }
+      </button>
+    </form>
+
+    @if (errorMessage()) {
+      <div class="gi-track__banner gi-track__banner--error" role="alert">
+        <span class="material-icons-round">error_outline</span>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    @if (notFound()) {
+      <div class="gi-track__banner gi-track__banner--notfound" role="alert">
+        <span class="material-icons-round">search_off</span>
+        <div>
+          <strong>No matching order found.</strong>
+          <p>Check that the order reference and email are correct. If you placed the order as a guest, use the email you entered at checkout.</p>
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (result(); as r) {
+    <div class="gi-track__result">
+      <!-- Status banner -->
+      <div class="gi-track__status-banner" [class]="statusClass(r.status)">
+        <div class="gi-track__status-info">
+          <span class="gi-track__status-label">Current status</span>
+          <span class="gi-track__status-value">{{ statusLabel(r.status) }}</span>
+        </div>
+        <div class="gi-track__status-meta">
+          <div>
+            <span class="gi-track__meta-label">Invoice</span>
+            <span class="gi-track__meta-value">{{ r.invoiceNumber }}</span>
+          </div>
+          <div>
+            <span class="gi-track__meta-label">Placed</span>
+            <span class="gi-track__meta-value">{{ r.placedAt | date: 'medium' }}</span>
+          </div>
+          @if (r.paidAt) {
+            <div>
+              <span class="gi-track__meta-label">Paid</span>
+              <span class="gi-track__meta-value">{{ r.paidAt | date: 'medium' }}</span>
+            </div>
+          }
+          @if (r.shippingMethodName) {
+            <div>
+              <span class="gi-track__meta-label">Shipping</span>
+              <span class="gi-track__meta-value">{{ r.shippingMethodName }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Line items -->
+      <section class="gi-track__card">
+        <h2>Items ({{ r.itemCount }})</h2>
+        <table class="gi-track__table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th class="gi-track__num">Qty</th>
+              <th class="gi-track__num">Unit price</th>
+              <th class="gi-track__num">Line total</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of r.items; track line.id) {
+              <tr>
+                <td>
+                  <div class="gi-track__product">
+                    @if (line.primaryImageUrl) {
+                      <img [src]="line.primaryImageUrl" [alt]="line.name" class="gi-track__thumb" loading="lazy" />
+                    }
+                    <div>
+                      <div class="gi-track__product-name">{{ line.name }}</div>
+                      <div class="gi-track__product-sku">{{ line.sku }}</div>
+                      @if (line.variantName) {
+                        <div class="gi-track__product-variant">{{ line.variantName }}</div>
+                      }
+                    </div>
+                  </div>
+                </td>
+                <td class="gi-track__num">{{ line.quantity }}</td>
+                <td class="gi-track__num">{{ formatMoney(r.currency, line.unitPrice) }}</td>
+                <td class="gi-track__num">{{ formatMoney(r.currency, line.lineTotal) }}</td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3" class="gi-track__num gi-track__total-label">Grand total</td>
+              <td class="gi-track__num gi-track__total-value">{{ formatMoney(r.currency, r.grandTotal) }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </section>
+
+      <!-- Status timeline -->
+      <section class="gi-track__card">
+        <h2>Status history</h2>
+        <ol class="gi-track__timeline">
+          @for (event of r.statusHistory; track event.occurredAt) {
+            <li>
+              <span class="gi-track__dot"></span>
+              <div>
+                <strong>{{ statusLabel(event.toStatus) }}</strong>
+                @if (event.source) {
+                  <span class="gi-track__source">via {{ event.source | lowercase }}</span>
+                }
+                <span class="gi-track__when">{{ event.occurredAt | date: 'medium' }}</span>
+                @if (event.note) {
+                  <p class="gi-track__note">{{ event.note }}</p>
+                }
+              </div>
+            </li>
+          }
+        </ol>
+      </section>
+
+      @if (isAuthenticated()) {
+        <div class="gi-track__actions">
+          <a routerLink="/account/orders" class="gi-btn-inline gi-btn-inline--ghost">
+            <span class="material-icons-round">arrow_back</span>
+            Back to order history
+          </a>
+        </div>
+      } @else {
+        <div class="gi-track__actions">
+          <a routerLink="/login" class="gi-btn-inline gi-btn-inline--ghost">Sign in to view all orders</a>
+        </div>
+      }
+    </div>
+  }
+</section>

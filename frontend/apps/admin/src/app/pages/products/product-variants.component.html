@@ -1,0 +1,279 @@
+@if (loading()) {
+  <div class="gi-pvars__skeleton" aria-live="polite">Loading variants…</div>
+} @else {
+  @if (errorMessage(); as msg) {
+    <div class="gi-pvars__banner gi-pvars__banner--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+  @if (successMessage(); as msg) {
+    <div class="gi-pvars__banner gi-pvars__banner--success" role="status">
+      <span class="material-icons-round">check_circle</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  @if (!showForm()) {
+    <div class="gi-pvars__toolbar">
+      <h2 class="gi-pvars__title">Variants</h2>
+      <button type="button" class="gi-btn gi-btn--primary" (click)="openCreate()">
+        <span class="material-icons-round">add</span>
+        New variant
+      </button>
+    </div>
+
+    @if (!hasVariants()) {
+      <div class="gi-pvars__empty">
+        <span class="material-icons-round">category</span>
+        <p>No variants yet. Products without variants use the product-level inventory.</p>
+        <button type="button" class="gi-btn gi-btn--primary" (click)="openCreate()">
+          <span class="material-icons-round">add</span>
+          Create first variant
+        </button>
+      </div>
+    } @else {
+      <table class="gi-pvars__table">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Name</th>
+            <th>Attributes</th>
+            <th>Price override</th>
+            <th>Weight override</th>
+            <th>Stock</th>
+            <th>Active</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (v of variants(); track v.id) {
+            <tr>
+              <td><code>{{ v.sku }}</code></td>
+              <td>{{ v.name }}</td>
+              <td class="gi-pvars__attrs">
+                @if (v.attributes.length > 0) {
+                  {{ formatAttrs(v.attributes) }}
+                } @else {
+                  <span class="gi-pvars__muted">—</span>
+                }
+              </td>
+              <td>
+                @if (v.priceOverride) {
+                  {{ v.priceOverride }}
+                } @else {
+                  <span class="gi-pvars__muted">default</span>
+                }
+              </td>
+              <td>
+                @if (v.weightKgOverride) {
+                  {{ v.weightKgOverride }} kg
+                } @else {
+                  <span class="gi-pvars__muted">default</span>
+                }
+              </td>
+              <td>
+                @if (inventoryMap().get(v.id); as inv) {
+                  <span [class.gi-pvars__low]="inv.low">
+                    {{ inv.available }} / {{ inv.quantity }}
+                    @if (inv.low) { <span class="material-icons-round gi-pvars__low-icon">warning</span> }
+                  </span>
+                } @else {
+                  <span class="gi-pvars__muted">—</span>
+                }
+              </td>
+              <td>
+                <span class="gi-pvars__pill" [class.is-active]="v.active" [class.is-inactive]="!v.active">
+                  {{ v.active ? 'Active' : 'Hidden' }}
+                </span>
+              </td>
+              <td class="gi-pvars__actions">
+                <button type="button" class="gi-btn gi-btn--sm" (click)="openInventory(v, 'adjust')" title="Adjust stock">
+                  <span class="material-icons-round">trending_up</span>
+                </button>
+                <button type="button" class="gi-btn gi-btn--sm" (click)="openInventory(v, 'set')" title="Set stock">
+                  <span class="material-icons-round">edit</span>
+                </button>
+                <button type="button" class="gi-btn gi-btn--sm" (click)="openEdit(v)" title="Edit variant">
+                  <span class="material-icons-round">edit_note</span>
+                </button>
+                <button type="button" class="gi-btn gi-btn--sm gi-btn--danger" (click)="deleteVariant(v)" title="Delete variant">
+                  <span class="material-icons-round">delete</span>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <p class="gi-pvars__legend">
+        <span class="gi-pvars__muted">Stock column shows available / total.</span>
+      </p>
+    }
+  }
+
+  @if (showForm()) {
+    <div class="gi-pvars__form-card">
+      <h2 class="gi-pvars__title">{{ editingId() ? 'Edit variant' : 'New variant' }}</h2>
+      <form [formGroup]="form" (ngSubmit)="submitForm()" class="gi-pvars__form">
+        <div class="gi-pvars__row">
+          <div class="gi-field">
+            <label for="v-sku">SKU *</label>
+            <input id="v-sku" type="text" formControlName="sku" maxlength="64" placeholder="e.g. YIRG-500G-MEDIUM" />
+            @if (form.controls.sku.touched && form.controls.sku.invalid) {
+              <p class="gi-field__error">
+                @if (form.controls.sku.errors?.['required']) { SKU is required. }
+                @if (form.controls.sku.errors?.['pattern']) { Uppercase letters, digits, dot, dash, underscore only. }
+              </p>
+            }
+          </div>
+          <div class="gi-field">
+            <label for="v-name">Name *</label>
+            <input id="v-name" type="text" formControlName="name" maxlength="255" placeholder="e.g. 500g Medium Roast" />
+            @if (form.controls.name.touched && form.controls.name.invalid) {
+              <p class="gi-field__error">
+                @if (form.controls.name.errors?.['required']) { Name is required. }
+              </p>
+            }
+          </div>
+        </div>
+
+        <div class="gi-pvars__row">
+          <div class="gi-field">
+            <label for="v-price">Price override</label>
+            <input id="v-price" type="text" formControlName="priceOverride" placeholder="Leave blank = use product base price" />
+            @if (form.controls.priceOverride.touched && form.controls.priceOverride.invalid) {
+              <p class="gi-field__error">Enter a valid decimal amount.</p>
+            }
+          </div>
+          <div class="gi-field">
+            <label for="v-weight">Weight override (kg)</label>
+            <input id="v-weight" type="text" formControlName="weightKgOverride" placeholder="Leave blank = use product weight" />
+            @if (form.controls.weightKgOverride.touched && form.controls.weightKgOverride.invalid) {
+              <p class="gi-field__error">Enter a valid weight in kg.</p>
+            }
+          </div>
+          <div class="gi-field">
+            <label for="v-sort">Sort order</label>
+            <input id="v-sort" type="number" formControlName="sortOrder" />
+          </div>
+          <div class="gi-field gi-field--check">
+            <label>
+              <input type="checkbox" formControlName="active" />
+              Active (visible on storefront)
+            </label>
+          </div>
+        </div>
+
+        <div class="gi-pvars__attrs-section">
+          <div class="gi-pvars__attrs-head">
+            <h3>Attributes</h3>
+            <button type="button" class="gi-btn gi-btn--sm" (click)="addAttrRow()">
+              <span class="material-icons-round">add</span>
+              Add attribute
+            </button>
+          </div>
+          @for (row of attrRows(); track $index; let i = $index) {
+            <div class="gi-pvars__attr-row">
+              <input type="text" placeholder="Key (e.g. weight)" [value]="row.key"
+                (input)="updateAttrKey(i, $any($event.target).value)" />
+              <input type="text" placeholder="Value (e.g. 500g)" [value]="row.value"
+                (input)="updateAttrValue(i, $any($event.target).value)" />
+              <button type="button" class="gi-btn gi-btn--sm gi-btn--danger" (click)="removeAttrRow(i)">
+                <span class="material-icons-round">close</span>
+              </button>
+            </div>
+          }
+          @if (attrRows().length === 0) {
+            <p class="gi-pvars__muted">No attributes. Add key/value pairs like "weight: 500g" or "grind: medium".</p>
+          }
+        </div>
+
+        <div class="gi-pvars__form-actions">
+          <button type="button" class="gi-btn gi-btn--ghost" (click)="cancelForm()">Cancel</button>
+          <button type="submit" class="gi-btn gi-btn--primary" [disabled]="saving()">
+            @if (saving()) {
+              <span class="material-icons-round gi-spin">progress_activity</span>
+              Saving…
+            } @else {
+              <span class="material-icons-round">save</span>
+              {{ editingId() ? 'Save changes' : 'Create variant' }}
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  @if (showInvModal(); as _) {
+    <div class="gi-modal-backdrop" (click)="closeInventory()">
+      <div class="gi-modal" (click)="$event.stopPropagation()">
+        @if (invVariant(); as v) {
+          <div class="gi-modal__head">
+            <h3>{{ invMode() === 'adjust' ? 'Adjust stock' : 'Set stock' }} — {{ v.name }}</h3>
+            <button type="button" class="gi-modal__close" (click)="closeInventory()">
+              <span class="material-icons-round">close</span>
+            </button>
+          </div>
+
+          @if (inventoryMap().get(v.id); as inv) {
+            <div class="gi-modal__current">
+              <p><strong>Current:</strong> {{ inv.quantity }} on-hand · {{ inv.reserved }} reserved · {{ inv.available }} available</p>
+            </div>
+          }
+
+          @if (invMode() === 'adjust') {
+            <form [formGroup]="adjustForm" (ngSubmit)="submitInventory()" class="gi-modal__form">
+              <div class="gi-field">
+                <label for="inv-delta">Delta (signed) *</label>
+                <input id="inv-delta" type="text" formControlName="delta" placeholder="e.g. +50 or -3" />
+                @if (adjustForm.controls.delta.touched && adjustForm.controls.delta.invalid) {
+                  <p class="gi-field__error">Enter a signed decimal (e.g. +50, -3).</p>
+                }
+              </div>
+              <div class="gi-field">
+                <label for="inv-reason">Reason</label>
+                <input id="inv-reason" type="text" formControlName="reason" maxlength="200" placeholder="Restock, return, correction…" />
+              </div>
+              <div class="gi-modal__actions">
+                <button type="button" class="gi-btn gi-btn--ghost" (click)="closeInventory()">Cancel</button>
+                <button type="submit" class="gi-btn gi-btn--primary" [disabled]="saving()">
+                  @if (saving()) {
+                    <span class="material-icons-round gi-spin">progress_activity</span>
+                    Applying…
+                  } @else {
+                    Apply adjustment
+                  }
+                </button>
+              </div>
+            </form>
+          } @else {
+            <form [formGroup]="overwriteForm" (ngSubmit)="submitInventory()" class="gi-modal__form">
+              <div class="gi-field">
+                <label for="inv-qty">On-hand quantity *</label>
+                <input id="inv-qty" type="text" formControlName="quantity" />
+                @if (overwriteForm.controls.quantity.touched && overwriteForm.controls.quantity.invalid) {
+                  <p class="gi-field__error">Enter a non-negative decimal.</p>
+                }
+              </div>
+              <div class="gi-field">
+                <label for="inv-thresh">Restock threshold</label>
+                <input id="inv-thresh" type="text" formControlName="restockThreshold" placeholder="Low-stock alert threshold" />
+              </div>
+              <div class="gi-modal__actions">
+                <button type="button" class="gi-btn gi-btn--ghost" (click)="closeInventory()">Cancel</button>
+                <button type="submit" class="gi-btn gi-btn--primary" [disabled]="saving()">
+                  @if (saving()) {
+                    <span class="material-icons-round gi-spin">progress_activity</span>
+                    Saving…
+                  } @else {
+                    Overwrite stock
+                  }
+                </button>
+              </div>
+            </form>
+          }
+        }
+      </div>
+    </div>
+  }
+}

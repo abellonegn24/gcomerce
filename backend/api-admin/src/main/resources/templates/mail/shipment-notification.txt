@@ -1,0 +1,11 @@
+Hi {displayName},
+
+Your order {invoiceNumber} has been shipped via {carrier}.
+{#if trackingNumber}Your tracking number is: {trackingNumber}{/if}
+
+You can track your order status here:
+{orderLink}
+
+If you have any questions, just reply to this email or contact our support team.
+
+— Gadaa Istar Business Group S.C.

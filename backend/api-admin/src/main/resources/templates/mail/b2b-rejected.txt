@@ -1,0 +1,14 @@
+Hi {displayName},
+
+Thank you for your interest in a wholesale (B2B) account with Gadaa Istar.
+After reviewing your application, we are unable to approve it at this time.
+{#if reason}
+Reason: {reason}
+{/if}
+
+If you believe this was made in error, or if you'd like to submit additional
+documentation, please contact our team by replying to this email.
+
+You can still browse our catalog and shop as a retail (B2C) customer.
+
+— Gadaa Istar Business Group S.C.

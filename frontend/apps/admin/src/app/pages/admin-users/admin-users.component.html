@@ -1,0 +1,109 @@
+<section class="gi-admins">
+  <header class="gi-admins__header">
+    <div>
+      <h1>Admin users</h1>
+      <p class="gi-admins__lead">
+        Every account with back-office access. SUPERADMINs can wipe another
+        admin's MFA to force re-enrollment.
+      </p>
+    </div>
+    <button type="button" class="gi-btn gi-btn--ghost" (click)="refresh()" [disabled]="loading()">
+      <span class="material-icons-round">refresh</span>
+      Refresh
+    </button>
+  </header>
+
+  @if (banner(); as msg) {
+    <div class="gi-admins__banner gi-admins__banner--success" role="status">
+      <span class="material-icons-round">verified</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+  @if (errorMessage(); as msg) {
+    <div class="gi-admins__banner gi-admins__banner--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="gi-admins__skeleton" aria-live="polite">Loading admin users…</div>
+  } @else if (items().length === 0) {
+    <div class="gi-admins__empty">No admin users found.</div>
+  } @else {
+    <div class="gi-admins__table-wrap">
+      <table class="gi-admins__table" role="table">
+        <thead>
+          <tr>
+            <th scope="col">Email</th>
+            <th scope="col">Full name</th>
+            <th scope="col">Role</th>
+            <th scope="col">Status</th>
+            <th scope="col">MFA</th>
+            <th scope="col">Last sign-in</th>
+            <th scope="col" class="gi-admins__col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of items(); track row.id) {
+            <tr [class.is-me]="row.id === currentAdminId()">
+              <td>
+                {{ row.email }}
+                @if (row.id === currentAdminId()) {
+                  <span class="gi-admins__you">you</span>
+                }
+              </td>
+              <td>{{ row.fullName }}</td>
+              <td>
+                <span class="gi-admins__pill gi-admins__pill--role">
+                  {{ row.role ?? 'ADMIN' }}
+                </span>
+              </td>
+              <td>
+                <span
+                  class="gi-admins__pill"
+                  [class.gi-admins__pill--ok]="row.status === 'ACTIVE'"
+                  [class.gi-admins__pill--warn]="row.status !== 'ACTIVE'">
+                  {{ row.status }}
+                </span>
+              </td>
+              <td>
+                @if (row.mfaEnrolled) {
+                  <span class="gi-admins__pill gi-admins__pill--ok">
+                    <span class="material-icons-round">verified_user</span>
+                    Enrolled
+                  </span>
+                } @else {
+                  <span class="gi-admins__pill gi-admins__pill--warn">
+                    <span class="material-icons-round">no_encryption</span>
+                    Pending
+                  </span>
+                }
+              </td>
+              <td>
+                {{ row.lastLoginAt ? (row.lastLoginAt | date: 'MMM d, y, h:mm a') : '—' }}
+              </td>
+              <td class="gi-admins__col-actions">
+                <button
+                  type="button"
+                  class="gi-btn gi-btn--danger"
+                  [disabled]="!canResetPeer(row) || resettingId() === row.id"
+                  [attr.title]="!isSuperadmin()
+                    ? 'Only SUPERADMIN can reset MFA'
+                    : (row.id === currentAdminId() ? 'Cannot reset your own MFA' : '')"
+                  (click)="resetMfa(row)">
+                  @if (resettingId() === row.id) {
+                    <span>Resetting…</span>
+                  } @else {
+                    <span class="material-icons-round">lock_reset</span>
+                    <span>Reset MFA</span>
+                  }
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

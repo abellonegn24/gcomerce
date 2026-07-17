@@ -1,0 +1,70 @@
+<section class="gi-quotes">
+  <header class="gi-quotes__head">
+    <h2>Your quotes</h2>
+    @if (total() > 0) {
+      <span class="gi-quotes__count">{{ total() }} quote{{ total() === 1 ? '' : 's' }}</span>
+    }
+  </header>
+
+  @if (errorMessage(); as msg) {
+    <div class="gi-alert gi-alert--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  @if (loading() && quotes().length === 0) {
+    <p class="gi-quotes__loading">
+      <span class="material-icons-round gi-spin">progress_activity</span>
+      Loading your quotes…
+    </p>
+  }
+
+  @if (isEmpty()) {
+    <div class="gi-empty">
+      <span class="material-icons-round">request_quote</span>
+      <h3>No quotes yet</h3>
+      <p>Add items to your cart and request a quote for bulk pricing.</p>
+      <a routerLink="/shop" class="gi-btn-inline gi-btn-inline--gold">
+        <span class="material-icons-round">explore</span>
+        Browse the catalog
+      </a>
+    </div>
+  }
+
+  @if (quotes().length > 0) {
+    <ul class="gi-quotes__list" role="list">
+      @for (q of quotes(); track q.uuid) {
+        <li>
+          <a class="gi-quotes__row" [routerLink]="['/account/quotes', q.uuid]">
+            <div class="gi-quotes__row-main">
+              <span class="gi-quotes__id">Quote #{{ q.id }}</span>
+              <span class="gi-quotes__meta">
+                {{ q.createdAt | date:'mediumDate' }} · {{ q.itemCount }} item{{ q.itemCount === 1 ? '' : 's' }}
+                @if (q.validUntil) {
+                  · valid until {{ q.validUntil | date:'mediumDate' }}
+                }
+              </span>
+            </div>
+            <div class="gi-quotes__row-side">
+              <span class="gi-quotes__status" [ngClass]="statusClass(q.status)">
+                {{ statusLabel(q.status) }}
+              </span>
+              <strong>{{ formatMoney(q.currency, q.grandTotal) }}</strong>
+              <span class="material-icons-round gi-quotes__chevron">chevron_right</span>
+            </div>
+          </a>
+        </li>
+      }
+    </ul>
+
+    @if (hasMore()) {
+      <button type="button" class="gi-btn-inline gi-btn-inline--ghost gi-quotes__more"
+              [disabled]="loading()"
+              (click)="loadNextPage()">
+        @if (loading()) { Loading… }
+        @else { Load more }
+      </button>
+    }
+  }
+</section>

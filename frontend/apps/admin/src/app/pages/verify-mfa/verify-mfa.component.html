@@ -1,0 +1,98 @@
+<section class="gi-mfa">
+  <div class="gi-mfa__panel" role="dialog" aria-labelledby="gi-mfa-title">
+    <div class="gi-mfa__brand">
+      <span class="gi-mfa__mark" aria-hidden="true">
+        <span class="gi-mfa__arrow">↗</span>
+        <span class="gi-mfa__star">★</span>
+      </span>
+      <div class="gi-mfa__wordmark">
+        <span class="gi-mfa__name">GADAA ISTAR</span>
+        <span class="gi-mfa__sub">Two-factor sign-in</span>
+      </div>
+    </div>
+
+    @if (isEnrollment()) {
+      <h1 id="gi-mfa-title">Set up two-factor authentication</h1>
+      <p class="gi-mfa__lead">
+        This is your first sign-in as <strong>{{ email() }}</strong>. Scan the QR
+        code below with an authenticator app (Google Authenticator, Authy,
+        1Password, …), then enter the 6-digit code to finish.
+      </p>
+
+      @if (setup(); as s) {
+        <div class="gi-mfa__enroll">
+          @if (qrData(); as data) {
+            <div class="gi-mfa__qr">
+              <qrcode
+                [qrdata]="data"
+                [width]="220"
+                [margin]="1"
+                [errorCorrectionLevel]="'M'"
+                [colorDark]="'#12294a'"
+                [colorLight]="'#ffffff'"
+                [elementType]="'svg'"
+                [ariaLabel]="'Scan this QR code with your authenticator app'"></qrcode>
+            </div>
+          }
+          <div class="gi-mfa__enroll-side">
+            <p class="gi-mfa__enroll-title">Or enter the code manually:</p>
+            <code class="gi-mfa__secret" aria-label="Base32 TOTP secret">{{ s.secretBase32 }}</code>
+            <p class="gi-mfa__enroll-hint">
+              Issuer: <strong>{{ s.issuer }}</strong><br />
+              Account: <strong>{{ email() }}</strong><br />
+              Algorithm: <strong>SHA-1 · 6 digits · 30-second window</strong>
+            </p>
+          </div>
+        </div>
+      }
+    } @else {
+      <h1 id="gi-mfa-title">Enter your 6-digit code</h1>
+      <p class="gi-mfa__lead">
+        Signed in as <strong>{{ email() }}</strong>. Open your authenticator
+        app and enter the current code to continue.
+      </p>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="gi-form" novalidate>
+      @if (errorMessage(); as msg) {
+        <div class="gi-form__error" role="alert">{{ msg }}</div>
+      }
+
+      <label class="gi-field">
+        <span class="gi-field__label">Authentication code</span>
+        <input
+          type="text"
+          inputmode="numeric"
+          formControlName="code"
+          autocomplete="one-time-code"
+          maxlength="6"
+          placeholder="123456"
+          class="gi-field__code"
+          [attr.aria-invalid]="form.controls.code.invalid && form.controls.code.touched" />
+        @if (form.controls.code.touched && form.controls.code.invalid) {
+          <span class="gi-field__error">Enter the 6-digit code from your authenticator.</span>
+        }
+      </label>
+
+      <button
+        type="submit"
+        class="gi-btn gi-btn--primary"
+        [disabled]="form.invalid || submitting()">
+        @if (submitting()) {
+          <span>Verifying…</span>
+        } @else {
+          <span>{{ isEnrollment() ? 'Finish setup' : 'Verify & sign in' }}</span>
+          <span class="material-icons-round">arrow_forward</span>
+        }
+      </button>
+
+      <button type="button" class="gi-mfa__cancel" (click)="cancel()">
+        Cancel and sign in again
+      </button>
+    </form>
+
+    <p class="gi-mfa__footer">
+      © {{ year }} Gadaa Istar Business Group S.C. · Authorized personnel only.
+    </p>
+  </div>
+</section>

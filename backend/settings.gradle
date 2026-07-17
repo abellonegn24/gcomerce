@@ -1,0 +1,33 @@
+/*
+ * Gadaa Istar E-Commerce — Backend (Quarkus multi-module Gradle project)
+ *
+ * Root project settings. Additional modules (catalog, customer, order, payment,
+ * shipping, notification, api-admin, workers) are added as they are built out.
+ */
+
+pluginManagement {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    plugins {
+        id 'io.quarkus' version "${quarkusPluginVersion}"
+    }
+}
+
+rootProject.name = 'gadaa-istar-backend'
+
+include 'common'
+include 'persistence'
+include 'web-common'
+include 'api-storefront'
+include 'api-admin'
+
+// Future modules (uncomment as scaffolded):
+// include 'catalog'
+// include 'customer'
+// include 'order'
+// include 'payment'
+// include 'shipping'
+// include 'notification'
+// include 'workers'

@@ -1,0 +1,42 @@
+/*
+ * api-storefront — the public + customer-facing REST API.
+ * This is the Quarkus runtime module (produces the bootable JAR).
+ */
+
+plugins {
+    id 'io.quarkus'
+}
+
+description = 'Public and customer-facing REST API (Quarkus runtime)'
+
+dependencies {
+    implementation project(':common')
+    implementation project(':persistence')
+    implementation project(':web-common')
+
+    implementation 'io.quarkus:quarkus-resteasy-reactive'
+    implementation 'io.quarkus:quarkus-resteasy-reactive-jackson'
+    implementation 'io.quarkus:quarkus-smallrye-openapi'
+    implementation 'io.quarkus:quarkus-smallrye-health'
+    implementation 'io.quarkus:quarkus-micrometer-registry-prometheus'
+    implementation 'io.quarkus:quarkus-mailer'
+    implementation 'io.quarkus:quarkus-scheduler'
+    implementation 'io.quarkus:quarkus-cache'
+    implementation 'io.quarkus:quarkus-rest-client-reactive-jackson'
+    implementation 'io.quarkus:quarkus-config-yaml'
+    // Redis-backed rate limiter + distributed lease for the abandoned-order
+    // sweeper (Phase 4d.6). Runtime selection between in-memory and Redis
+    // via `gadaa.ratelimit.backend` / `gadaa.leases.backend`; the client
+    // bean is always registered but only used when opted in.
+    implementation 'io.quarkus:quarkus-redis-client'
+
+    implementation "at.favre.lib:bcrypt:${bcryptVersion}"
+    implementation 'commons-codec:commons-codec:1.17.1'
+
+    testImplementation 'io.quarkus:quarkus-junit5'
+    testImplementation 'io.rest-assured:rest-assured'
+    testImplementation 'org.testcontainers:postgresql:1.20.3'
+    testImplementation 'org.testcontainers:junit-jupiter:1.20.3'
+    testImplementation 'org.mockito:mockito-core:5.14.2'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.14.2'
+}

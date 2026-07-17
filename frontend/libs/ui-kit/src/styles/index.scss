@@ -1,0 +1,9 @@
+// Gadaa Istar UI Kit — public style entrypoint.
+// Import once from each app's `styles.scss`:
+//
+//   @use '@gadaa/ui-kit/styles/index' as gi;
+//
+// (Sass includePaths is configured in angular.json so the short path works.)
+
+@forward 'tokens';
+@forward 'theme';

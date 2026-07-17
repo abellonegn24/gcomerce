@@ -1,0 +1,256 @@
+<section class="gi-coupons">
+  <header class="gi-coupons__head">
+    <div>
+      <p class="gi-eyebrow">Promotions</p>
+      <h1>Coupons &amp; discount codes</h1>
+    </div>
+    <button type="button" class="gi-btn-inline gi-btn-inline--gold"
+            (click)="toggleCreate()" [disabled]="editingId() !== null">
+      <span class="material-icons-round">{{ showCreate() ? 'close' : 'add' }}</span>
+      {{ showCreate() ? 'Cancel' : 'New coupon' }}
+    </button>
+  </header>
+
+  @if (errorMessage(); as msg) {
+    <div class="gi-alert gi-alert--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+      <button type="button" class="gi-alert__close" (click)="dismissBanners()">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+  }
+  @if (successMessage(); as msg) {
+    <div class="gi-alert gi-alert--success">
+      <span class="material-icons-round">check_circle</span>
+      <span>{{ msg }}</span>
+      <button type="button" class="gi-alert__close" (click)="dismissBanners()">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="gi-coupons__loading">
+      <span class="material-icons-round gi-spin">progress_activity</span>
+      Loading coupons…
+    </div>
+  } @else if (coupons().length === 0 && !showCreate()) {
+    <div class="gi-coupons__empty">
+      <span class="material-icons-round">confirmation_number</span>
+      <h2>No coupons yet</h2>
+      <p>Create discount codes for promotional campaigns, B2B deals, or seasonal sales.</p>
+    </div>
+  } @else {
+    <table class="gi-coupons__table">
+      <thead>
+        <tr>
+          <th scope="col">Code</th>
+          <th scope="col">Discount</th>
+          <th scope="col">Currency</th>
+          <th scope="col">Min. subtotal</th>
+          <th scope="col">Free ship</th>
+          <th scope="col">Limits</th>
+          <th scope="col">Redeemed</th>
+          <th scope="col">Active</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of coupons(); track c.id) {
+          <tr>
+            <td>
+              <strong>{{ c.code }}</strong>
+              @if (c.description) {
+                <br><span class="gi-coupons__desc">{{ c.description }}</span>
+              }
+            </td>
+            <td>{{ formatDiscount(c) }}</td>
+            <td>{{ c.currency }}</td>
+            <td>{{ c.minSubtotal ?? '—' }}</td>
+            <td>
+              @if (c.freeShipping) {
+                <span class="material-icons-round gi-coupons__yes">check_circle</span>
+              } @else {
+                <span>—</span>
+              }
+            </td>
+            <td>
+              @if (c.maxRedemptions != null) {
+                <span>Max {{ c.maxRedemptions }}</span>
+              } @else { <span>∞</span> }
+              @if (c.maxPerCustomer != null) {
+                <br><span class="gi-coupons__desc">{{ c.maxPerCustomer }}/customer</span>
+              }
+            </td>
+            <td>{{ c.redeemedCount }}</td>
+            <td>
+              @if (c.active) {
+                <span class="gi-pill gi-pill--active">Active</span>
+              } @else {
+                <span class="gi-pill gi-pill--inactive">Inactive</span>
+              }
+            </td>
+            <td class="gi-coupons__actions">
+              <button type="button" class="gi-btn-inline gi-btn-inline--ghost"
+                      (click)="startEdit(c)" [disabled]="showCreate() || editingId() !== null">
+                <span class="material-icons-round">edit</span>
+              </button>
+              <button type="button" class="gi-btn-inline gi-btn-inline--ghost gi-btn-inline--danger"
+                      (click)="remove(c)" [disabled]="deletingId() === c.id">
+                <span class="material-icons-round">
+                  {{ deletingId() === c.id ? 'progress_activity' : 'delete_outline' }}
+                </span>
+              </button>
+            </td>
+          </tr>
+
+          @if (editingId() === c.id) {
+            <tr class="gi-coupons__edit-row">
+              <td colspan="9">
+                <form [formGroup]="editForm" (ngSubmit)="submitEdit()" class="gi-coupons__form">
+                  <div class="gi-coupons__form-grid">
+                    <label class="gi-field">
+                      <span>Code</span>
+                      <input type="text" formControlName="code" maxlength="64" />
+                    </label>
+                    <label class="gi-field">
+                      <span>Discount type</span>
+                      <select formControlName="discountType">
+                        <option value="PERCENT">Percentage</option>
+                        <option value="FIXED_AMOUNT">Fixed amount</option>
+                      </select>
+                    </label>
+                    <label class="gi-field">
+                      <span>Discount value</span>
+                      <input type="text" formControlName="discountValue" />
+                    </label>
+                    <label class="gi-field">
+                      <span>Currency</span>
+                      <input type="text" formControlName="currency" maxlength="3" />
+                    </label>
+                    <label class="gi-field">
+                      <span>Min. subtotal</span>
+                      <input type="text" formControlName="minSubtotal" placeholder="No minimum" />
+                    </label>
+                    <label class="gi-field gi-field--check">
+                      <input type="checkbox" formControlName="freeShipping" />
+                      <span>Free shipping</span>
+                    </label>
+                    <label class="gi-field">
+                      <span>Max redemptions</span>
+                      <input type="number" formControlName="maxRedemptions" placeholder="Unlimited" />
+                    </label>
+                    <label class="gi-field">
+                      <span>Max per customer</span>
+                      <input type="number" formControlName="maxPerCustomer" placeholder="Unlimited" />
+                    </label>
+                    <label class="gi-field gi-field--check">
+                      <input type="checkbox" formControlName="active" />
+                      <span>Active</span>
+                    </label>
+                    <label class="gi-field">
+                      <span>Starts at</span>
+                      <input type="datetime-local" formControlName="startsAt" />
+                    </label>
+                    <label class="gi-field">
+                      <span>Expires at</span>
+                      <input type="datetime-local" formControlName="expiresAt" />
+                    </label>
+                    <label class="gi-field gi-field--full">
+                      <span>Description</span>
+                      <input type="text" formControlName="description" maxlength="500" />
+                    </label>
+                  </div>
+                  <div class="gi-coupons__form-actions">
+                    <button type="button" class="gi-btn-inline gi-btn-inline--ghost" (click)="cancelEdit()">
+                      Cancel
+                    </button>
+                    <button type="submit" class="gi-btn-inline gi-btn-inline--gold" [disabled]="saving()">
+                      @if (saving()) {
+                        <span class="material-icons-round gi-spin">progress_activity</span>
+                      }
+                      Save changes
+                    </button>
+                  </div>
+                </form>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (showCreate()) {
+    <div class="gi-coupons__create-panel">
+      <h2>Create coupon</h2>
+      <form [formGroup]="form" (ngSubmit)="submitCreate()" class="gi-coupons__form">
+        <div class="gi-coupons__form-grid">
+          <label class="gi-field">
+            <span>Code</span>
+            <input type="text" formControlName="code" maxlength="64" placeholder="SUMMER2026" />
+          </label>
+          <label class="gi-field">
+            <span>Discount type</span>
+            <select formControlName="discountType">
+              <option value="PERCENT">Percentage</option>
+              <option value="FIXED_AMOUNT">Fixed amount</option>
+            </select>
+          </label>
+          <label class="gi-field">
+            <span>Discount value</span>
+            <input type="text" formControlName="discountValue" placeholder="10 or 25.00" />
+          </label>
+          <label class="gi-field">
+            <span>Currency</span>
+            <input type="text" formControlName="currency" maxlength="3" />
+          </label>
+          <label class="gi-field">
+            <span>Min. subtotal</span>
+            <input type="text" formControlName="minSubtotal" placeholder="No minimum" />
+          </label>
+          <label class="gi-field gi-field--check">
+            <input type="checkbox" formControlName="freeShipping" />
+            <span>Free shipping</span>
+          </label>
+          <label class="gi-field">
+            <span>Max redemptions</span>
+            <input type="number" formControlName="maxRedemptions" placeholder="Unlimited" />
+          </label>
+          <label class="gi-field">
+            <span>Max per customer</span>
+            <input type="number" formControlName="maxPerCustomer" placeholder="Unlimited" />
+          </label>
+          <label class="gi-field gi-field--check">
+            <input type="checkbox" formControlName="active" />
+            <span>Active</span>
+          </label>
+          <label class="gi-field">
+            <span>Starts at</span>
+            <input type="datetime-local" formControlName="startsAt" />
+          </label>
+          <label class="gi-field">
+            <span>Expires at</span>
+            <input type="datetime-local" formControlName="expiresAt" />
+          </label>
+          <label class="gi-field gi-field--full">
+            <span>Description</span>
+            <input type="text" formControlName="description" maxlength="500" placeholder="Summer 2026 10% off" />
+          </label>
+        </div>
+        <div class="gi-coupons__form-actions">
+          <button type="button" class="gi-btn-inline gi-btn-inline--ghost" (click)="toggleCreate()">
+            Cancel
+          </button>
+          <button type="submit" class="gi-btn-inline gi-btn-inline--gold" [disabled]="saving()">
+            @if (saving()) {
+              <span class="material-icons-round gi-spin">progress_activity</span>
+            }
+            Create coupon
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</section>

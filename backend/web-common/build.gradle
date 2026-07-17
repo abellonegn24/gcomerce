@@ -1,0 +1,33 @@
+/*
+ * web-common — shared JAX-RS / CDI infrastructure used by every REST module.
+ *
+ * Contains: JwtIssuer, PasswordHasher, SecurityContextHolder, JwtAuthFilter,
+ * CorrelationIdFilter, GlobalExceptionMapper — under package com.gadaaistar.web.
+ *
+ * This is a plain library (no Quarkus plugin). Consumer Quarkus modules must
+ * add `quarkus.index-dependency.web-common.*` to their application.properties
+ * so Quarkus discovers our @ApplicationScoped / @Provider beans at build time.
+ */
+
+apply plugin: 'java-library'
+
+description = 'Shared web + security infrastructure (JWT, filters, exception mapper)'
+
+dependencies {
+    // The Quarkus BOM manages every version below (jakarta.*, nimbus, jboss-logging, ...).
+    api platform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+    api project(':common')
+
+    // Compile-time API surface exposed to downstream modules
+    api 'jakarta.ws.rs:jakarta.ws.rs-api'
+    api 'jakarta.enterprise:jakarta.enterprise.cdi-api'
+    api 'jakarta.inject:jakarta.inject-api'
+    api 'jakarta.annotation:jakarta.annotation-api'
+    api 'jakarta.validation:jakarta.validation-api'
+    api 'org.jboss.logging:jboss-logging'
+    api 'org.eclipse.microprofile.config:microprofile-config-api'
+    // JwtIssuer#verify returns com.nimbusds.jwt.JWTClaimsSet — must be on consumer classpath
+    api 'com.nimbusds:nimbus-jose-jwt'
+
+    implementation "at.favre.lib:bcrypt:${bcryptVersion}"
+}

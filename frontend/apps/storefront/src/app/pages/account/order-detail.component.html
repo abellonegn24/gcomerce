@@ -1,0 +1,197 @@
+<section class="gi-order-detail">
+  <a routerLink="/account/orders" class="gi-order-detail__back">
+    <span class="material-icons-round">arrow_back</span>
+    All orders
+  </a>
+
+  @if (errorMessage(); as msg) {
+    <div class="gi-alert gi-alert--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="gi-order-detail__loading">
+      <span class="material-icons-round gi-spin">progress_activity</span>
+      Loading order…
+    </p>
+  }
+
+  @if (order(); as o) {
+    <header class="gi-order-detail__head">
+      <div>
+        <p class="gi-eyebrow">{{ o.invoiceNumber }}</p>
+        <h1>Order details</h1>
+        <p class="gi-order-detail__placed">
+          Placed {{ o.placedAt | date:'medium' }}
+        </p>
+      </div>
+      <span class="gi-order-detail__status" [ngClass]="statusClass(o.status)">
+        {{ statusLabel(o.status) }}
+      </span>
+    </header>
+
+    @if (gatewayMissing()) {
+      <div class="gi-alert gi-alert--warn" role="status">
+        <span class="material-icons-round">warning_amber</span>
+        <span>
+          The payment gateway isn't configured in this environment. Your order
+          is safely recorded — contact us to complete payment offline.
+        </span>
+      </div>
+    }
+
+    <!-- =========================================================== -->
+    <!-- Line items                                                   -->
+    <!-- =========================================================== -->
+    <section class="gi-order-detail__card">
+      <h2>Items</h2>
+      <ul class="gi-order-detail__lines" role="list">
+        @for (line of o.items; track line.id) {
+          <li>
+            <div class="gi-order-detail__thumb">
+              @if (line.primaryImageUrl) {
+                <img [src]="line.primaryImageUrl" [alt]="line.name" />
+              } @else {
+                <span class="material-icons-round">photo</span>
+              }
+            </div>
+            <div class="gi-order-detail__line-body">
+              <span class="gi-order-detail__line-name">{{ line.name }}</span>
+              <span class="gi-order-detail__line-sku">
+                SKU {{ line.sku }} · {{ line.quantity }} × {{ formatMoney(o.currency, line.unitPrice) }}
+              </span>
+              @if (line.variantName) {
+                <span class="gi-order-detail__line-variant">{{ line.variantName }}</span>
+              }
+            </div>
+            <strong>{{ formatMoney(o.currency, line.lineTotal) }}</strong>
+          </li>
+        }
+      </ul>
+
+      <dl class="gi-order-detail__totals">
+        <div>
+          <dt>Subtotal</dt>
+          <dd>{{ formatMoney(o.currency, o.subtotal) }}</dd>
+        </div>
+        @if (asNumber(o.discountTotal) > 0) {
+          <div>
+            <dt>
+              Discount
+              @if (o.couponCode) {
+                <span class="gi-order-detail__meta">— {{ o.couponCode }}</span>
+              }
+            </dt>
+            <dd>−{{ formatMoney(o.currency, o.discountTotal) }}</dd>
+          </div>
+        }
+        <div>
+          <dt>Tax</dt>
+          <dd>{{ formatMoney(o.currency, o.taxTotal) }}</dd>
+        </div>
+        <div>
+          <dt>
+            Shipping
+            @if (o.shippingMethodName) {
+              <span class="gi-order-detail__meta">— {{ o.shippingMethodName }}</span>
+            }
+          </dt>
+          <dd>{{ formatMoney(o.currency, o.shippingTotal) }}</dd>
+        </div>
+        <div class="gi-order-detail__grand">
+          <dt>Total</dt>
+          <dd>{{ formatMoney(o.currency, o.grandTotal) }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- =========================================================== -->
+    <!-- Addresses                                                    -->
+    <!-- =========================================================== -->
+    <section class="gi-order-detail__grid">
+      @if (o.shipTo; as a) {
+        <div class="gi-order-detail__card">
+          <h2>Ship to</h2>
+          <address>
+            @if (a.fullName) { <strong>{{ a.fullName }}</strong><br> }
+            @if (a.company)  { {{ a.company }}<br> }
+            {{ a.streetLine1 }}<br>
+            @if (a.streetLine2) { {{ a.streetLine2 }}<br> }
+            {{ a.city }}@if (a.region) {, {{ a.region }}}
+            @if (a.postalCode) { {{ a.postalCode }} }
+            <br>{{ a.countryCode }}
+            @if (a.phone) { <br><span class="gi-order-detail__phone">{{ a.phone }}</span> }
+          </address>
+        </div>
+      }
+      @if (o.billTo; as a) {
+        <div class="gi-order-detail__card">
+          <h2>Bill to</h2>
+          <address>
+            @if (a.fullName) { <strong>{{ a.fullName }}</strong><br> }
+            @if (a.company)  { {{ a.company }}<br> }
+            {{ a.streetLine1 }}<br>
+            @if (a.streetLine2) { {{ a.streetLine2 }}<br> }
+            {{ a.city }}@if (a.region) {, {{ a.region }}}
+            @if (a.postalCode) { {{ a.postalCode }} }
+            <br>{{ a.countryCode }}
+          </address>
+        </div>
+      }
+    </section>
+
+    <!-- =========================================================== -->
+    <!-- Status timeline                                              -->
+    <!-- =========================================================== -->
+    <section class="gi-order-detail__card">
+      <h2>Status history</h2>
+      <ol class="gi-order-detail__timeline">
+        @for (event of o.statusHistory; track event.occurredAt) {
+          <li>
+            <span class="gi-order-detail__dot"></span>
+            <div>
+              <strong>{{ statusLabel(event.toStatus) }}</strong>
+              @if (event.source) {
+                <span class="gi-order-detail__source">via {{ event.source | lowercase }}</span>
+              }
+              <span class="gi-order-detail__when">{{ event.occurredAt | date:'medium' }}</span>
+              @if (event.note) {
+                <p class="gi-order-detail__note">{{ event.note }}</p>
+              }
+            </div>
+          </li>
+        }
+      </ol>
+    </section>
+
+    <!-- =========================================================== -->
+    <!-- Actions                                                      -->
+    <!-- =========================================================== -->
+    @if (o.status === 'PENDING_PAYMENT') {
+      <div class="gi-order-detail__actions">
+        <button type="button" class="gi-btn-inline gi-btn-inline--gold"
+                (click)="retryPayment()"
+                [disabled]="startingPayment()">
+          @if (startingPayment()) {
+            <span class="material-icons-round gi-spin">progress_activity</span>
+            Starting…
+          } @else {
+            <span class="material-icons-round">lock</span>
+            Continue payment
+          }
+        </button>
+        <button type="button" class="gi-btn-inline gi-btn-inline--ghost"
+                (click)="cancelOrder()"
+                [disabled]="cancelling()">
+          @if (cancelling()) { Cancelling… }
+          @else {
+            <span class="material-icons-round">close</span>
+            Cancel order
+          }
+        </button>
+      </div>
+    }
+  }
+</section>

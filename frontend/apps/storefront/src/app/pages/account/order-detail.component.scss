@@ -1,0 +1,238 @@
+.gi-order-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.gi-order-detail__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--gi-text-secondary);
+  text-decoration: none;
+  font-size: 0.85rem;
+  padding: 0.25rem 0;
+  margin-bottom: 0.5rem;
+
+  &:hover { color: var(--gi-navy-700); }
+  .material-icons-round { font-size: 1rem; }
+}
+
+.gi-eyebrow {
+  color: var(--gi-gold-700);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0 0 0.25rem 0;
+  font-weight: 700;
+  font-family: var(--gi-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+
+.gi-order-detail__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+
+  h1 { margin: 0; font-size: 1.5rem; }
+}
+
+.gi-order-detail__placed {
+  color: var(--gi-text-secondary);
+  font-size: 0.85rem;
+  margin: 0.25rem 0 0 0;
+}
+
+.gi-order-detail__status {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+
+  &.is-ok       { background: rgba(46, 160, 67, 0.15); color: #256029; }
+  &.is-done     { background: rgba(44, 83, 145, 0.15); color: var(--gi-navy-700); }
+  &.is-pending  { background: rgba(190, 138, 43, 0.15); color: var(--gi-gold-700); }
+  &.is-cancelled { background: rgba(201, 51, 39, 0.1); color: var(--gi-red-600); }
+}
+
+.gi-order-detail__loading {
+  display: flex; gap: 0.5rem; align-items: center;
+  color: var(--gi-text-secondary);
+}
+
+.gi-spin { animation: gi-spin 1s linear infinite; }
+@keyframes gi-spin { to { transform: rotate(360deg); } }
+
+// -----------------------------------------------------------------------------
+// Cards
+// -----------------------------------------------------------------------------
+.gi-order-detail__card {
+  background: #fff;
+  border: 1px solid var(--gi-border);
+  border-radius: var(--gi-radius-md);
+  padding: 1.25rem;
+
+  h2 { margin: 0 0 0.85rem 0; font-size: 1rem; }
+  address { font-style: normal; line-height: 1.6; font-size: 0.9rem; }
+}
+
+.gi-order-detail__phone {
+  color: var(--gi-text-secondary);
+  font-size: 0.8rem;
+}
+
+.gi-order-detail__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+}
+
+// -----------------------------------------------------------------------------
+// Line items
+// -----------------------------------------------------------------------------
+.gi-order-detail__lines {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+
+  li {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    gap: 0.75rem;
+    align-items: center;
+
+    strong { font-variant-numeric: tabular-nums; font-size: 0.9rem; }
+  }
+}
+
+.gi-order-detail__thumb {
+  width: 56px; height: 56px;
+  background: var(--gi-cream-100);
+  border-radius: var(--gi-radius-sm);
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+  .material-icons-round { color: var(--gi-text-secondary); font-size: 1.5rem; }
+}
+
+.gi-order-detail__line-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.gi-order-detail__line-name {
+  font-weight: 500;
+  color: var(--gi-navy-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gi-order-detail__line-sku {
+  font-size: 0.78rem;
+  color: var(--gi-text-secondary);
+  font-family: var(--gi-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+
+.gi-order-detail__line-variant {
+  font-size: 0.78rem;
+  color: var(--gi-gold-700, #8a6d1f);
+  font-weight: 500;
+}
+
+.gi-order-detail__totals {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--gi-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  > div {
+    display: flex; justify-content: space-between; gap: 1rem;
+    dt, dd { margin: 0; }
+    dt { color: var(--gi-text-secondary); font-size: 0.85rem; }
+    dd { font-weight: 600; font-variant-numeric: tabular-nums; }
+  }
+}
+
+// Small inline annotation next to a totals row's label, e.g. the chosen
+// shipping method's name after the "Shipping" caption.
+.gi-order-detail__meta {
+  color: var(--gi-text-secondary);
+  font-weight: 400;
+  font-size: 0.8rem;
+  margin-left: 0.25rem;
+}
+
+.gi-order-detail__grand {
+  border-top: 1px dashed var(--gi-border);
+  padding-top: 0.55rem;
+  dt { color: var(--gi-navy-900) !important; font-weight: 700 !important; }
+  dd { font-size: 1.05rem; }
+}
+
+// -----------------------------------------------------------------------------
+// Timeline
+// -----------------------------------------------------------------------------
+.gi-order-detail__timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+
+  li {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 0.75rem;
+    align-items: flex-start;
+
+    strong { text-transform: capitalize; }
+  }
+}
+
+.gi-order-detail__dot {
+  width: 12px; height: 12px;
+  background: var(--gi-gold-600);
+  border-radius: 50%;
+  margin-top: 6px;
+  box-shadow: 0 0 0 3px rgba(190, 138, 43, 0.2);
+}
+
+.gi-order-detail__source {
+  margin-left: 0.5rem;
+  color: var(--gi-text-secondary);
+  font-size: 0.8rem;
+  text-transform: capitalize;
+}
+
+.gi-order-detail__when {
+  display: block;
+  color: var(--gi-text-secondary);
+  font-size: 0.78rem;
+  margin-top: 0.15rem;
+}
+
+.gi-order-detail__note {
+  color: var(--gi-navy-900);
+  font-size: 0.85rem;
+  margin: 0.35rem 0 0 0;
+  font-style: italic;
+}
+
+.gi-order-detail__actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--gi-border);
+}

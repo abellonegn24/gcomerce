@@ -1,0 +1,190 @@
+version: "3.9"
+
+# Gadaa Istar E-Commerce — Local Dev Stack
+#
+# Usage:
+#   docker compose up -d postgres minio mailhog      # infra only
+#   docker compose up -d                             # full stack
+#
+# Data persists in named volumes; delete with `docker compose down -v`.
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: gi-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rootpw}
+      POSTGRES_DB: ${POSTGRES_DB:-GCOMERCE}
+      POSTGRES_USER: ${POSTGRES_USER:-gadaa}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gadaa} -d ${POSTGRES_DB:-GCOMERCE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: gi-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minio}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-minio_dev_pw}
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Console UI
+    volumes:
+      - minio-data:/data
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: gi-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+
+  # Redis — optional. Only used when GADAA_RATELIMIT_BACKEND=redis or
+  # GADAA_LEASES_BACKEND=redis. Not part of the default infra bring-up so
+  # local dev without Redis still works. Enable with `--profile redis`.
+  redis:
+    image: redis:7-alpine
+    container_name: gi-redis
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    profiles: ["redis", "app"]
+
+  # Storefront REST API (customer-facing, owns the Flyway migrations)
+  api-storefront:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      args:
+        MODULE: api-storefront
+        PORT: "8080"
+    container_name: gi-api-storefront
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      mailhog:
+        condition: service_started
+    environment:
+      QUARKUS_HTTP_PORT: 8080
+      QUARKUS_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-GCOMERCE}
+      QUARKUS_DATASOURCE_USERNAME: ${POSTGRES_USER:-gadaa}
+      QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-gadaa_dev_pw}
+      QUARKUS_LOG_LEVEL: ${QUARKUS_LOG_LEVEL:-INFO}
+      GADAA_JWT_STOREFRONT_SECRET: ${GADAA_JWT_STOREFRONT_SECRET:?set a 32+ char secret in .env}
+      GADAA_JWT_ADMIN_SECRET: ${GADAA_JWT_ADMIN_SECRET:?set a 32+ char secret in .env}
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minio}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-minio_dev_pw}
+      # Redis wiring is opt-in via the two backend selectors. Defaults keep
+      # the storefront on memory-mode so a redis-less bring-up still works.
+      GADAA_RATELIMIT_BACKEND: ${GADAA_RATELIMIT_BACKEND:-memory}
+      GADAA_LEASES_BACKEND: ${GADAA_LEASES_BACKEND:-memory}
+      QUARKUS_REDIS_HOSTS: ${QUARKUS_REDIS_HOSTS:-redis://redis:6379}
+      # MPGS (Mastercard Payment Gateway Services)
+      MPGS_ENABLED: ${MPGS_ENABLED:-false}
+      MPGS_GATEWAY_URL: ${MPGS_GATEWAY_URL:-https://test-gateway.mastercard.com}
+      MPGS_MERCHANT_ID: ${MPGS_MERCHANT_ID:-}
+      MPGS_API_PASSWORD: ${MPGS_API_PASSWORD:-}
+      MPGS_API_VERSION: ${MPGS_API_VERSION:-62}
+      MPGS_CHECKOUT_VERSION: ${MPGS_CHECKOUT_VERSION:-62}
+      MPGS_NOTIFICATION_SECRET: ${MPGS_NOTIFICATION_SECRET:-}
+    ports:
+      - "8080:8080"
+    profiles: ["app"]
+
+  # Admin REST API — separate runtime, shares the schema. Flyway is disabled
+  # here; api-storefront owns the migrations.
+  api-admin:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      args:
+        MODULE: api-admin
+        PORT: "8081"
+    container_name: gi-api-admin
+    restart: unless-stopped
+    environment:
+      QUARKUS_ADMIN_HTTP_PORT: 8081
+      QUARKUS_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-GCOMERCE}
+      QUARKUS_DATASOURCE_USERNAME: ${POSTGRES_USER:-gadaa}
+      QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-gadaa_dev_pw}
+      QUARKUS_LOG_LEVEL: ${QUARKUS_LOG_LEVEL:-INFO}
+      GADAA_JWT_STOREFRONT_SECRET: ${GADAA_JWT_STOREFRONT_SECRET:?set a 32+ char secret in .env}
+      GADAA_JWT_ADMIN_SECRET: ${GADAA_JWT_ADMIN_SECRET:?set a 32+ char secret in .env}
+      GADAA_ADMIN_MFA_ISSUER: ${GADAA_ADMIN_MFA_ISSUER:-Gadaa Istar Admin}
+      GADAA_ADMIN_MFA_CHALLENGE_TTL_SECONDS: ${GADAA_ADMIN_MFA_CHALLENGE_TTL_SECONDS:-300}
+      GADAA_ADMIN_MFA_WINDOW_TOLERANCE: ${GADAA_ADMIN_MFA_WINDOW_TOLERANCE:-1}
+      ADMIN_BASE_URL: ${ADMIN_BASE_URL:-http://localhost:4300}
+      STOREFRONT_BASE_URL: ${STOREFRONT_BASE_URL:-http://localhost:4200}
+      GADAA_ADMIN_PASSWORD_RESET_TTL_MINUTES: ${GADAA_ADMIN_PASSWORD_RESET_TTL_MINUTES:-60}
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      # Object storage: internal endpoint for backend → MinIO, public base URL
+      # for the browser. In dev they differ (Docker network vs host loopback).
+      S3_ENDPOINT: http://minio:9000
+      S3_PUBLIC_BASE_URL: ${S3_PUBLIC_BASE_URL:-http://localhost:9000}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minio}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-minio_dev_pw}
+      S3_BUCKET_MEDIA: ${S3_BUCKET_MEDIA:-gadaa-media}
+      S3_MAX_UPLOAD_BYTES: ${S3_MAX_UPLOAD_BYTES:-20971520}
+      # MPGS (for refunds via admin API)
+      MPGS_GATEWAY_URL: ${MPGS_GATEWAY_URL:-https://test-gateway.mastercard.com}
+      MPGS_MERCHANT_ID: ${MPGS_MERCHANT_ID:-}
+      MPGS_API_PASSWORD: ${MPGS_API_PASSWORD:-}
+      MPGS_API_VERSION: ${MPGS_API_VERSION:-62}
+    depends_on:
+      api-storefront:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    ports:
+      - "8081:8081"
+    profiles: ["app"]
+
+  storefront:
+    build:
+      context: ../frontend
+      dockerfile: apps/storefront/Dockerfile
+    container_name: gi-storefront
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    profiles: ["app"]
+
+  admin:
+    build:
+      context: ../frontend
+      dockerfile: apps/admin/Dockerfile
+    container_name: gi-admin
+    restart: unless-stopped
+    ports:
+      - "4300:80"
+    profiles: ["app"]
+
+volumes:
+  postgres-data:
+  minio-data:

@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /login
+Disallow: /register
+Disallow: /account
+Disallow: /cart
+Disallow: /checkout
+Disallow: /wishlist
+
+Sitemap: /api/storefront/v1/seo/sitemap.xml

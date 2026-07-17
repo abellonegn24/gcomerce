@@ -1,0 +1,11 @@
+Hi {displayName},
+
+Your wholesale (B2B) account with Gadaa Istar has been approved.
+You now have access to tiered wholesale pricing, bulk ordering, and quote requests.
+
+Start shopping: {storeLink}
+
+If you have any questions about your wholesale account, feel free to contact our team.
+We look forward to a great partnership!
+
+— Gadaa Istar Business Group S.C.

@@ -1,0 +1,154 @@
+<section class="gi-quote">
+  <header class="gi-quote__head">
+    <div>
+      <a routerLink="/account/quotes" class="gi-quote__back">
+        <span class="material-icons-round">arrow_back</span>
+        All quotes
+      </a>
+      @if (quote(); as q) {
+        <h1>Quote #{{ q.id }}</h1>
+        <span class="gi-quote__status" [ngClass]="statusClass(q.status)">
+          {{ statusLabel() }}
+        </span>
+      }
+    </div>
+  </header>
+
+  @if (errorMessage(); as msg) {
+    <div class="gi-alert gi-alert--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="gi-quote__loading">
+      <span class="material-icons-round gi-spin">progress_activity</span>
+      Loading quote…
+    </p>
+  }
+
+  @if (quote(); as q) {
+    @if (q.adminNotes) {
+      <div class="gi-quote__note gi-quote__note--admin">
+        <span class="material-icons-round">info</span>
+        <div>
+          <strong>Message from our team:</strong>
+          <p>{{ q.adminNotes }}</p>
+        </div>
+      </div>
+    }
+
+    @if (q.status === 'SENT' && q.validUntil) {
+      <div class="gi-quote__note gi-quote__note--info">
+        <span class="material-icons-round">schedule</span>
+        <span>This quote is valid until {{ q.validUntil | date:'fullDate' }}.</span>
+      </div>
+    }
+
+    @if (q.status === 'ACCEPTED') {
+      <div class="gi-quote__note gi-quote__note--ok">
+        <span class="material-icons-round">check_circle</span>
+        <span>You've accepted this quote. Our team will convert it to an order shortly.</span>
+      </div>
+    }
+
+    @if (q.status === 'CONVERTED') {
+      <div class="gi-quote__note gi-quote__note--done">
+        <span class="material-icons-round">receipt_long</span>
+        <span>This quote has been converted to an order.</span>
+      </div>
+    }
+
+    @if (q.status === 'REJECTED') {
+      <div class="gi-quote__note gi-quote__note--error">
+        <span class="material-icons-round">cancel</span>
+        <span>This quote request was rejected.</span>
+      </div>
+    }
+
+    @if (q.status === 'EXPIRED') {
+      <div class="gi-quote__note gi-quote__note--error">
+        <span class="material-icons-round">timer_off</span>
+        <span>This quote has expired.</span>
+      </div>
+    }
+
+    <div class="gi-quote__grid">
+      <div class="gi-quote__lines">
+        <h2>Line items</h2>
+        <table class="gi-quote__table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th class="gi-quote__num">Qty</th>
+              <th class="gi-quote__num">Unit price</th>
+              <th class="gi-quote__num">Line total</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of q.items; track line.id) {
+              <tr>
+                <td>
+                  <div class="gi-quote__product">
+                    <span class="gi-quote__name">{{ line.name }}</span>
+                    @if (line.variantName) {
+                      <span class="gi-quote__variant">{{ line.variantName }}</span>
+                    }
+                    <span class="gi-quote__sku">SKU {{ line.variantSku || line.sku }}</span>
+                  </div>
+                </td>
+                <td class="gi-quote__num">{{ line.quantity }}</td>
+                <td class="gi-quote__num">{{ formatMoney(q.currency, line.proposedUnitPrice) }}</td>
+                <td class="gi-quote__num"><strong>{{ formatMoney(q.currency, line.lineTotal) }}</strong></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <aside class="gi-quote__summary">
+        <h2>Summary</h2>
+        <dl class="gi-quote__summary-grid">
+          <div>
+            <dt>Subtotal</dt>
+            <dd>{{ formatMoney(q.currency, q.subtotal) }}</dd>
+          </div>
+          @if (toNumber(q.taxTotal) > 0) {
+            <div>
+              <dt>Tax</dt>
+              <dd>{{ formatMoney(q.currency, q.taxTotal) }}</dd>
+            </div>
+          }
+          @if (toNumber(q.shippingTotal) > 0) {
+            <div>
+              <dt>Shipping</dt>
+              <dd>{{ formatMoney(q.currency, q.shippingTotal) }}</dd>
+            </div>
+          }
+          <div class="gi-quote__grand">
+            <dt>Grand total</dt>
+            <dd>{{ formatMoney(q.currency, q.grandTotal) }}</dd>
+          </div>
+        </dl>
+
+        @if (q.customerNotes) {
+          <div class="gi-quote__cust-notes">
+            <strong>Your notes:</strong>
+            <p>{{ q.customerNotes }}</p>
+          </div>
+        }
+
+        @if (canAccept()) {
+          <button type="button"
+                  class="gi-btn-inline gi-btn-inline--gold gi-quote__accept"
+                  (click)="acceptQuote()"
+                  [disabled]="accepting()">
+            <span class="material-icons-round">{{ accepting() ? 'progress_activity' : 'check_circle' }}</span>
+            {{ accepting() ? 'Accepting…' : 'Accept quote' }}
+          </button>
+        }
+      </aside>
+    </div>
+  }
+</section>

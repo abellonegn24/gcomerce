@@ -1,0 +1,157 @@
+<section class="gi-cart">
+  <header class="gi-cart__head">
+    <div>
+      <p class="gi-eyebrow">Your cart</p>
+      <h1>Review + checkout</h1>
+    </div>
+    @if (cart(); as c) {
+      @if (c.items.length > 0) {
+        <button type="button" class="gi-btn-inline gi-btn-inline--ghost" (click)="clearAll()">
+          <span class="material-icons-round">delete_outline</span>
+          Empty cart
+        </button>
+      }
+    }
+  </header>
+
+  @if (errorMessage(); as msg) {
+    <div class="gi-alert gi-alert--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  @if (loading() && !cart()) {
+    <div class="gi-cart__loading" aria-live="polite">
+      <span class="material-icons-round gi-spin">progress_activity</span>
+      Loading your cart…
+    </div>
+  }
+
+  @if (isEmpty()) {
+    <div class="gi-cart__empty">
+      <span class="material-icons-round">shopping_bag</span>
+      <h2>Your cart is empty</h2>
+      <p>Discover our specialty coffees, spices, and export selections.</p>
+      <a routerLink="/shop" class="gi-btn-inline gi-btn-inline--gold">
+        <span class="material-icons-round">explore</span>
+        Browse the catalog
+      </a>
+    </div>
+  }
+
+  @if (cart(); as c) {
+    @if (c.items.length > 0) {
+      <div class="gi-cart__grid">
+        <ul class="gi-cart__lines" role="list">
+          @for (line of c.items; track line.id) {
+            <li class="gi-cart__line" [class.is-busy]="isBusy(line)">
+              <a class="gi-cart__thumb" [routerLink]="['/products', line.slug]"
+                 [attr.aria-label]="line.name">
+                @if (line.primaryImageUrl) {
+                  <img [src]="line.primaryImageUrl" [alt]="line.name" />
+                } @else {
+                  <span class="material-icons-round">photo</span>
+                }
+              </a>
+
+              <div class="gi-cart__body">
+                <a class="gi-cart__title" [routerLink]="['/products', line.slug]">{{ line.name }}</a>
+                @if (line.variantName) {
+                  <p class="gi-cart__variant-name">{{ line.variantName }}</p>
+                }
+                <div class="gi-cart__meta">
+                  <span class="gi-cart__sku">SKU {{ line.variantSku || line.sku }}</span>
+                  <span class="gi-cart__price">{{ formatMoney(line.currency, line.currentUnitPrice) }} / unit</span>
+                  @if (line.priceChanged) {
+                    <span class="gi-cart__flag gi-cart__flag--warn"
+                          title="Snapshot was {{ formatMoney(line.currency, line.unitPrice) }} — price refreshed on checkout.">
+                      <span class="material-icons-round">info</span>
+                      Price updated
+                    </span>
+                  }
+                  @if (!line.inStock) {
+                    <span class="gi-cart__flag gi-cart__flag--danger">
+                      <span class="material-icons-round">warning_amber</span>
+                      Only {{ line.availableStock }} in stock
+                    </span>
+                  }
+                </div>
+              </div>
+
+              <div class="gi-cart__qty" role="group" [attr.aria-label]="'Quantity for ' + line.name">
+                <button type="button" class="gi-cart__qty-btn"
+                        (click)="decrement(line)"
+                        [disabled]="isBusy(line)"
+                        aria-label="Decrease quantity">
+                  <span class="material-icons-round">remove</span>
+                </button>
+                <span class="gi-cart__qty-val">{{ line.quantity }}</span>
+                <button type="button" class="gi-cart__qty-btn"
+                        (click)="increment(line)"
+                        [disabled]="isBusy(line)"
+                        aria-label="Increase quantity">
+                  <span class="material-icons-round">add</span>
+                </button>
+              </div>
+
+              <div class="gi-cart__total">
+                <span class="gi-cart__total-label">Line total</span>
+                <strong>{{ formatMoney(line.currency, line.lineTotal) }}</strong>
+                <button type="button" class="gi-cart__remove"
+                        (click)="remove(line)"
+                        [disabled]="isBusy(line)"
+                        aria-label="Remove line">
+                  <span class="material-icons-round">close</span>
+                  Remove
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+
+        <aside class="gi-cart__summary" aria-label="Order summary">
+          <h2>Summary</h2>
+          <dl class="gi-cart__summary-grid">
+            <div>
+              <dt>Items</dt>
+              <dd>{{ c.distinctItems }} SKU{{ c.distinctItems === 1 ? '' : 's' }}
+                  · {{ c.totalUnits }} unit{{ c.totalUnits === '1' ? '' : 's' }}</dd>
+            </div>
+            <div>
+              <dt>Subtotal</dt>
+              <dd>{{ formatMoney(c.currency, c.subtotal) }}</dd>
+            </div>
+            <div>
+              <dt>Tax</dt>
+              <dd class="gi-cart__summary-hint">Calculated at checkout</dd>
+            </div>
+            <div>
+              <dt>Shipping</dt>
+              <dd class="gi-cart__summary-hint">Calculated at checkout</dd>
+            </div>
+          </dl>
+          <button type="button"
+                  class="gi-btn-inline gi-btn-inline--gold gi-cart__checkout"
+                  (click)="goToCheckout()">
+            <span class="material-icons-round">lock</span>
+            Proceed to checkout
+          </button>
+          @if (canRequestQuote()) {
+            <button type="button"
+                    class="gi-btn-inline gi-btn-inline--ghost gi-cart__quote-btn"
+                    (click)="requestQuote()"
+                    [disabled]="quoteLoading()">
+              <span class="material-icons-round">{{ quoteLoading() ? 'progress_activity' : 'request_quote' }}</span>
+              {{ quoteLoading() ? 'Submitting…' : 'Request a quote' }}
+            </button>
+          }
+          <p class="gi-cart__reassure">
+            <span class="material-icons-round">verified_user</span>
+            Secure payment via CyberSource. Cards never touch our servers.
+          </p>
+        </aside>
+      </div>
+    }
+  }
+</section>

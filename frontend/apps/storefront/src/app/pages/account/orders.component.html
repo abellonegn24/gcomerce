@@ -1,0 +1,67 @@
+<section class="gi-orders">
+  <header class="gi-orders__head">
+    <h2>Order history</h2>
+    @if (total() > 0) {
+      <span class="gi-orders__count">{{ total() }} order{{ total() === 1 ? '' : 's' }}</span>
+    }
+  </header>
+
+  @if (errorMessage(); as msg) {
+    <div class="gi-alert gi-alert--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  @if (loading() && orders().length === 0) {
+    <p class="gi-orders__loading">
+      <span class="material-icons-round gi-spin">progress_activity</span>
+      Loading your orders…
+    </p>
+  }
+
+  @if (isEmpty()) {
+    <div class="gi-empty">
+      <span class="material-icons-round">shopping_bag</span>
+      <h3>No orders yet</h3>
+      <p>You haven't placed any orders. Browse the catalog to get started.</p>
+      <a routerLink="/shop" class="gi-btn-inline gi-btn-inline--gold">
+        <span class="material-icons-round">explore</span>
+        Browse the catalog
+      </a>
+    </div>
+  }
+
+  @if (orders().length > 0) {
+    <ul class="gi-orders__list" role="list">
+      @for (o of orders(); track o.uuid) {
+        <li>
+          <a class="gi-orders__row" [routerLink]="['/account/orders', o.uuid]">
+            <div class="gi-orders__row-main">
+              <span class="gi-orders__invoice">{{ o.invoiceNumber }}</span>
+              <span class="gi-orders__meta">
+                {{ o.placedAt | date:'mediumDate' }} · {{ o.itemCount }} item{{ o.itemCount === 1 ? '' : 's' }}
+              </span>
+            </div>
+            <div class="gi-orders__row-side">
+              <span class="gi-orders__status" [ngClass]="statusClass(o.status)">
+                {{ statusLabel(o.status) }}
+              </span>
+              <strong>{{ formatMoney(o.currency, o.grandTotal) }}</strong>
+              <span class="material-icons-round gi-orders__chevron">chevron_right</span>
+            </div>
+          </a>
+        </li>
+      }
+    </ul>
+
+    @if (hasMore()) {
+      <button type="button" class="gi-btn-inline gi-btn-inline--ghost gi-orders__more"
+              [disabled]="loading()"
+              (click)="loadNextPage()">
+        @if (loading()) { Loading… }
+        @else { Load more }
+      </button>
+    }
+  }
+</section>

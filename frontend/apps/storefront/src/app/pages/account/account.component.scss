@@ -1,0 +1,107 @@
+:host {
+  display: block;
+  background: var(--gi-bg-page);
+  min-height: 70vh;
+}
+
+.gi-account-portal {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 2rem clamp(1rem, 4vw, 3rem) 4rem;
+}
+
+// -----------------------------------------------------------------------------
+// Header
+// -----------------------------------------------------------------------------
+.gi-account-portal__header {
+  padding: 0 0 1.75rem 0;
+
+  h1 {
+    font-family: var(--gi-font-display);
+    color: var(--gi-navy-900);
+    font-size: clamp(1.6rem, 3vw, 2rem);
+    margin: 0.35rem 0 0.4rem 0;
+
+    span {
+      color: var(--gi-red-600);
+    }
+  }
+}
+
+.gi-account-portal__eyebrow {
+  color: var(--gi-red-600);
+  font-family: var(--gi-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+.gi-account-portal__lead {
+  color: var(--gi-text-secondary);
+  font-size: 0.95rem;
+  max-width: 60ch;
+  margin: 0;
+  line-height: 1.5;
+}
+
+// -----------------------------------------------------------------------------
+// Body: tabs + outlet
+// -----------------------------------------------------------------------------
+.gi-account-portal__body {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 2rem;
+
+  @media (max-width: 780px) {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+.gi-account-portal__tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  position: sticky;
+  top: 88px;
+  align-self: start;
+
+  @media (max-width: 780px) {
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+}
+
+.gi-account-portal__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--gi-radius-sm);
+  color: var(--gi-navy-900);
+  font-weight: 500;
+  font-size: 0.92rem;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: background var(--gi-transition), color var(--gi-transition), border-color var(--gi-transition);
+
+  .material-icons-round { font-size: 1.15rem; color: var(--gi-navy-500); }
+
+  &:hover {
+    background: rgba(44, 83, 145, 0.06);
+    color: var(--gi-navy-700);
+  }
+  &.is-active {
+    background: var(--gi-navy-900);
+    color: #fff;
+    border-color: var(--gi-navy-900);
+
+    .material-icons-round { color: var(--gi-gold-500); }
+  }
+}
+
+.gi-account-portal__content {
+  min-width: 0;
+}

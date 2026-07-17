@@ -1,0 +1,223 @@
+<section class="gi-addresses">
+  <header class="gi-addresses__head">
+    <div>
+      <h2>Saved addresses</h2>
+      <p class="gi-addresses__lead">
+        Save shipping and billing addresses to speed up checkout. Your default
+        address is automatically selected on the checkout page.
+      </p>
+    </div>
+
+    @if (mode() === 'list') {
+      <button
+        type="button"
+        class="gi-btn-inline gi-btn-inline--gold"
+        (click)="openCreate()">
+        <span class="material-icons-round">add</span>
+        Add address
+      </button>
+    }
+  </header>
+
+  <!-- Banners -->
+  @if (successMessage(); as msg) {
+    <div class="gi-addresses__banner gi-addresses__banner--success" role="status">
+      <span class="material-icons-round">check_circle</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+  @if (errorMessage(); as msg) {
+    <div class="gi-addresses__banner gi-addresses__banner--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  <!-- LIST MODE -->
+  @if (mode() === 'list') {
+    @if (listLoading() && !hasAddresses()) {
+      <div class="gi-addresses__loading">
+        <span class="material-icons-round gi-spin">progress_activity</span>
+        <span>Loading your addresses…</span>
+      </div>
+    } @else if (!hasAddresses()) {
+      <div class="gi-empty">
+        <span class="material-icons-round">place</span>
+        <h2>No saved addresses yet</h2>
+        <p>
+          Add your first shipping address to make checkout a one-click affair.
+        </p>
+        <button type="button" class="gi-btn-inline gi-btn-inline--gold" (click)="openCreate()">
+          <span class="material-icons-round">add</span>
+          Add your first address
+        </button>
+      </div>
+    } @else {
+      <ul class="gi-addresses__list">
+        @for (a of orderedAddresses(); track a.id) {
+          <li class="gi-address-item" [class.is-default]="a.isDefault" [class.is-busy]="busyId() === a.id">
+            <div class="gi-address-item__body">
+              <div class="gi-address-item__row">
+                <span class="gi-address-item__type">{{ addressTypeLabel(a.addressType) }}</span>
+                @if (a.isDefault) {
+                  <span class="gi-address-item__default">
+                    <span class="material-icons-round">star</span>
+                    Default
+                  </span>
+                }
+              </div>
+              @if (a.fullName || a.company) {
+                <div class="gi-address-item__name">
+                  {{ a.fullName }}
+                  @if (a.company) { <span class="gi-address-item__company">— {{ a.company }}</span> }
+                </div>
+              }
+              <div class="gi-address-item__lines">{{ addressLines(a) }}</div>
+              @if (a.phone) {
+                <div class="gi-address-item__phone">
+                  <span class="material-icons-round">call</span>
+                  {{ a.phone }}
+                </div>
+              }
+            </div>
+
+            <div class="gi-address-item__actions">
+              @if (!a.isDefault) {
+                <button
+                  type="button"
+                  class="gi-btn-inline gi-btn-inline--ghost"
+                  [disabled]="busyId() !== null"
+                  (click)="makeDefault(a)">
+                  <span class="material-icons-round">star_outline</span>
+                  Make default
+                </button>
+              }
+              <button
+                type="button"
+                class="gi-btn-inline gi-btn-inline--ghost"
+                [disabled]="busyId() !== null"
+                (click)="openEdit(a)">
+                <span class="material-icons-round">edit</span>
+                Edit
+              </button>
+              <button
+                type="button"
+                class="gi-btn-inline gi-btn-inline--danger"
+                [disabled]="busyId() !== null"
+                (click)="remove(a)">
+                <span class="material-icons-round">delete_outline</span>
+                Delete
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  }
+
+  <!-- CREATE / EDIT FORM -->
+  @if (mode() === 'create' || mode() === 'edit') {
+    <form class="gi-form" [formGroup]="form" (ngSubmit)="submit()">
+      <h3 class="gi-form__title">
+        {{ mode() === 'create' ? 'Add a new address' : 'Edit address' }}
+      </h3>
+
+      <div class="gi-form__grid">
+        <label class="gi-field gi-field--wide">
+          <span class="gi-field__label">Full name</span>
+          <input type="text" formControlName="fullName" placeholder="Ada Adigrat" />
+        </label>
+
+        <label class="gi-field gi-field--wide">
+          <span class="gi-field__label">Company (optional)</span>
+          <input type="text" formControlName="company" placeholder="Gadaa Istar Trading" />
+        </label>
+
+        <label class="gi-field gi-field--wide">
+          <span class="gi-field__label">Street address <span class="gi-req">*</span></span>
+          <input type="text" formControlName="streetLine1" placeholder="Bole Road, Building 4" />
+          @if (form.controls.streetLine1.touched && form.controls.streetLine1.invalid) {
+            <span class="gi-field__error">Street address is required.</span>
+          }
+        </label>
+
+        <label class="gi-field gi-field--wide">
+          <span class="gi-field__label">Apt / floor / unit (optional)</span>
+          <input type="text" formControlName="streetLine2" placeholder="Suite 205" />
+        </label>
+
+        <label class="gi-field">
+          <span class="gi-field__label">City <span class="gi-req">*</span></span>
+          <input type="text" formControlName="city" placeholder="Addis Ababa" />
+          @if (form.controls.city.touched && form.controls.city.invalid) {
+            <span class="gi-field__error">City is required.</span>
+          }
+        </label>
+
+        <label class="gi-field">
+          <span class="gi-field__label">Region / State</span>
+          <input type="text" formControlName="region" placeholder="Addis Ababa" />
+        </label>
+
+        <label class="gi-field">
+          <span class="gi-field__label">Postal code</span>
+          <input type="text" formControlName="postalCode" placeholder="1000" />
+        </label>
+
+        <label class="gi-field">
+          <span class="gi-field__label">Country code (ISO-2) <span class="gi-req">*</span></span>
+          <input
+            type="text"
+            formControlName="countryCode"
+            maxlength="2"
+            style="text-transform: uppercase;"
+            placeholder="ET" />
+          @if (form.controls.countryCode.touched && form.controls.countryCode.invalid) {
+            <span class="gi-field__error">Enter a 2-letter ISO country code (e.g. ET, DE, US).</span>
+          }
+        </label>
+
+        <label class="gi-field gi-field--wide">
+          <span class="gi-field__label">Phone (optional)</span>
+          <input type="tel" formControlName="phone" placeholder="+251 91 000 0000" />
+        </label>
+
+        <label class="gi-field gi-field--wide">
+          <span class="gi-field__label">Use for</span>
+          <select formControlName="addressType">
+            <option value="BOTH">Shipping &amp; Billing</option>
+            <option value="SHIPPING">Shipping only</option>
+            <option value="BILLING">Billing only</option>
+          </select>
+        </label>
+
+        <label class="gi-field gi-field--wide gi-field--check">
+          <input type="checkbox" formControlName="isDefault" />
+          <span>Set as my default {{ addressTypeLabel(form.controls.addressType.value).toLowerCase() }} address.</span>
+        </label>
+      </div>
+
+      <div class="gi-form__actions">
+        <button
+          type="submit"
+          class="gi-btn-inline gi-btn-inline--gold"
+          [disabled]="saving() || form.invalid">
+          @if (saving()) {
+            <span class="material-icons-round gi-spin">progress_activity</span>
+            Saving…
+          } @else {
+            <span class="material-icons-round">save</span>
+            {{ mode() === 'create' ? 'Save address' : 'Update address' }}
+          }
+        </button>
+        <button
+          type="button"
+          class="gi-btn-inline gi-btn-inline--ghost"
+          (click)="cancelEdit()"
+          [disabled]="saving()">
+          Cancel
+        </button>
+      </div>
+    </form>
+  }
+</section>

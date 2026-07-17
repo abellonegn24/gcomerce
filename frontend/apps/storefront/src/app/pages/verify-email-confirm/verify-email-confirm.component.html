@@ -1,0 +1,52 @@
+<section class="gi-auth">
+  <div class="gi-auth__panel">
+    @switch (state()) {
+      @case ('verifying') {
+        <span class="gi-auth__icon material-icons-round gi-auth__icon--spin" aria-hidden="true">
+          progress_activity
+        </span>
+        <h1>Confirming your email…</h1>
+        <p class="gi-auth__lead">Hang tight — this only takes a moment.</p>
+      }
+
+      @case ('success') {
+        <span class="gi-auth__icon material-icons-round gi-auth__icon--success" aria-hidden="true">
+          verified
+        </span>
+        <h1>Email confirmed</h1>
+        <p class="gi-auth__lead">
+          @if (customer(); as c) {
+            You're all set, {{ c.firstName || c.email }} — your account is now
+            active.
+          } @else {
+            Your email address is now verified.
+          }
+        </p>
+        <div class="gi-auth__actions">
+          <a routerLink="/" class="gi-btn gi-btn--primary">
+            <span>Start shopping</span>
+            <span class="material-icons-round">arrow_forward</span>
+          </a>
+          <a routerLink="/account" class="gi-btn gi-btn--ghost">Go to my account</a>
+        </div>
+      }
+
+      @case ('error') {
+        <span class="gi-auth__icon material-icons-round gi-auth__icon--error" aria-hidden="true">
+          error_outline
+        </span>
+        <h1>We couldn't verify your email</h1>
+        <p class="gi-auth__lead">
+          {{ errorMessage() }}
+        </p>
+        <div class="gi-auth__actions">
+          <a routerLink="/verify-email/pending" class="gi-btn gi-btn--primary">
+            <span class="material-icons-round">refresh</span>
+            <span>Request a new link</span>
+          </a>
+          <a routerLink="/login" class="gi-btn gi-btn--ghost">Back to sign in</a>
+        </div>
+      }
+    }
+  </div>
+</section>
