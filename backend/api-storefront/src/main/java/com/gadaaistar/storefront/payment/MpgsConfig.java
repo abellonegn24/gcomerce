@@ -39,6 +39,16 @@ public class MpgsConfig {
     @ConfigProperty(name = "gadaa.mpgs.enabled", defaultValue = "false")
     boolean enabled;
 
+    // Merchant display info shown on the hosted checkout page
+    @ConfigProperty(name = "gadaa.mpgs.merchant-name", defaultValue = "Gadaa Istar")
+    String merchantName;
+
+    @ConfigProperty(name = "gadaa.mpgs.merchant-phone", defaultValue = "")
+    String merchantPhone;
+
+    @ConfigProperty(name = "gadaa.mpgs.merchant-email", defaultValue = "")
+    String merchantEmail;
+
     @ConfigProperty(name = "gadaa.frontend.storefront-url",
                     defaultValue = "http://localhost:4200")
     String storefrontBaseUrl;
@@ -51,6 +61,9 @@ public class MpgsConfig {
     public String notificationSecret() { return notificationSecret; }
     public boolean enabled()           { return enabled; }
     public String storefrontBaseUrl()  { return storefrontBaseUrl; }
+    public String merchantName()       { return merchantName; }
+    public String merchantPhone()      { return merchantPhone; }
+    public String merchantEmail()      { return merchantEmail; }
 
     /** True when MPGS credentials are wired up and the feature flag is on. */
     public boolean isConfigured() {

@@ -87,13 +87,34 @@ public class MpgsService {
         var amount = order.grandTotal.setScale(2, RoundingMode.HALF_UP).toPlainString();
         var returnUrl = config.storefrontBaseUrl()
                 + "/checkout/return?order=" + order.uuid + "&provider=MPGS";
+        var cancelUrl = config.storefrontBaseUrl()
+                + "/checkout/cancel?order=" + order.uuid + "&provider=MPGS";
+
+        // Build the merchant object — only include phone/email when configured.
+        var merchantJson = new StringBuilder();
+        merchantJson.append("\"name\": \"").append(escapeJson(config.merchantName())).append("\"");
+        if (!config.merchantPhone().isBlank()) {
+            merchantJson.append(", \"phone\": \"").append(escapeJson(config.merchantPhone())).append("\"");
+        }
+        if (!config.merchantEmail().isBlank()) {
+            merchantJson.append(", \"email\": \"").append(escapeJson(config.merchantEmail())).append("\"");
+        }
 
         var body = String.format("""
                 {
                   "apiOperation": "CREATE_CHECKOUT_SESSION",
                   "interaction": {
                     "operation": "PURCHASE",
-                    "returnUrl": "%s"
+                    "returnUrl": "%s",
+                    "cancelUrl": "%s",
+                    "merchant": {
+                      %s
+                    },
+                    "displayControl": {
+                      "customerEmail": "READ_ONLY",
+                      "billingAddress": "HIDE",
+                      "shipping": "HIDE"
+                    }
                   },
                   "order": {
                     "amount": %s,
@@ -105,7 +126,8 @@ public class MpgsService {
                   "transaction": {
                     "reference": "%s-TXN-1"
                   }
-                }""", returnUrl, amount, order.currency,
+                }""", returnUrl, cancelUrl, merchantJson.toString(),
+                amount, order.currency,
                 order.invoiceNumber, order.uuid, order.invoiceNumber,
                 order.invoiceNumber);
 
@@ -158,7 +180,7 @@ public class MpgsService {
             fields.put("merchantId", config.merchantId());
             fields.put("sessionId", sessionId);
             fields.put("successIndicator", nz(successIndicator));
-            fields.put("merchantName", "Gadaa Istar");
+            fields.put("merchantName", config.merchantName());
             fields.put("orderAmount", amount);
             fields.put("orderCurrency", order.currency);
             fields.put("orderId", order.invoiceNumber);
@@ -246,4 +268,13 @@ public class MpgsService {
     }
 
     private static String nz(String s) { return s == null ? "" : s; }
+
+    private static String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
+    }
 }

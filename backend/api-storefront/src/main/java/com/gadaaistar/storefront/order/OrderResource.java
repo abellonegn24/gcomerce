@@ -116,7 +116,7 @@ public class OrderResource {
             fields.put("merchantId", mpgsConfig.merchantId());
             fields.put("sessionId", order.mpgsSessionId);
             fields.put("successIndicator", order.mpgsSuccessIndicator == null ? "" : order.mpgsSuccessIndicator);
-            fields.put("merchantName", "Gadaa Istar");
+            fields.put("merchantName", mpgsConfig.merchantName());
             // gatewayUrl = checkout.js script URL; frontend loads it then calls Checkout.configure().
             return new PaymentPayload("MPGS", mpgsConfig.checkoutJsUrl(), fields);
         }
