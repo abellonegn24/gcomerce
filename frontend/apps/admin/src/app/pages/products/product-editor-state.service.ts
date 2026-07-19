@@ -4,6 +4,7 @@ import { ProductsService } from '../../core/catalog/products.service';
 import {
   ProductDetail,
   ProductMedia,
+  UploadResponse,
   UpdateProductPayload,
 } from '../../core/catalog/catalog.model';
 import { NormalizedApiError } from '../../core/http/error.interceptor';
@@ -95,6 +96,42 @@ export class ProductEditorStateService {
     const p = this._product();
     if (!p) return;
     this._product.set({ ...p, media: list });
+  }
+
+  /**
+   * Attach an uploaded image as primary media to the current product.
+   * Called by the details tab when an image is uploaded in edit mode.
+   */
+  attachImage(img: UploadResponse, onDone: (ok: boolean, err?: string) => void): void {
+    const p = this._product();
+    if (!p) return;
+    const isVideo = img.contentType.startsWith('video/');
+    this._saving.set(true);
+    this._errorMessage.set(null);
+    this._successMessage.set(null);
+    this.service
+      .addMedia(p.id, {
+        url: img.url,
+        mediaType: isVideo ? 'VIDEO' : 'IMAGE',
+        isPrimary: true,
+        sortOrder: 0,
+        cardThumbnailUrl: img.cardThumbnailUrl,
+        detailThumbnailUrl: img.detailThumbnailUrl,
+      })
+      .subscribe({
+        next: (list) => {
+          this._saving.set(false);
+          this._product.set({ ...p, media: list });
+          this._successMessage.set('Primary image updated.');
+          onDone(true);
+        },
+        error: (err: NormalizedApiError) => {
+          this._saving.set(false);
+          const msg = err.message || 'Could not attach that image.';
+          this._errorMessage.set(msg);
+          onDone(false, msg);
+        },
+      });
   }
 
   /**

@@ -6,6 +6,13 @@
     </div>
   }
 
+  @if (successMessage) {
+    <div class="gi-pform__banner gi-pform__banner--success" role="status">
+      <span class="material-icons-round">check_circle</span>
+      <span>{{ successMessage }}</span>
+    </div>
+  }
+
   <fieldset class="gi-pform__section">
     <legend>Identity</legend>
     <div class="gi-pform__grid">
@@ -135,11 +142,88 @@
     </div>
   </fieldset>
 
+  <fieldset class="gi-pform__section">
+    <legend>Product image</legend>
+    <p class="gi-pform__hint">
+      Upload a primary product image, or skip and add media later from the Media tab.
+    </p>
+
+      @if (uploadError()) {
+        <div class="gi-pform__banner gi-pform__banner--error" role="alert">
+          <span class="material-icons-round">error_outline</span>
+          <span>{{ uploadError() }}</span>
+        </div>
+      }
+
+      @if (mode === 'edit' && currentPrimaryImage() && !pendingImage()) {
+        <div class="gi-pform__preview">
+          <img [src]="currentPrimaryImage()" alt="Current primary image" />
+          <div class="gi-pform__preview-info">
+            <div class="gi-pform__preview-name">Current primary image</div>
+            <div class="gi-pform__drop-sub">Upload a new image to replace it.</div>
+          </div>
+        </div>
+      } @if (pendingImage(); as img) {
+        <div class="gi-pform__preview">
+          <img [src]="img.url" alt="Product image preview" />
+          <div class="gi-pform__preview-info">
+            <div class="gi-pform__preview-name">{{ uploadedFileName() }}</div>
+            <div class="gi-pform__preview-size">{{ (img.sizeBytes / 1024).toFixed(1) }} KB</div>
+          </div>
+          <button type="button" class="gi-btn gi-btn--ghost gi-btn--sm"
+                  (click)="clearPendingImage()" [disabled]="uploading()">
+            <span class="material-icons-round">close</span>
+            Remove
+          </button>
+        </div>
+      } @else {
+        <div
+          class="gi-pform__drop"
+          [class.is-active]="dragActive()"
+          [class.is-uploading]="uploading()"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave($event)"
+          (drop)="onDrop($event)"
+          (click)="openPicker()"
+          role="button"
+          tabindex="0"
+          (keydown.enter)="openPicker()"
+          (keydown.space)="openPicker()">
+          <input
+            #filePicker
+            type="file"
+            [accept]="acceptTypes"
+            hidden
+            (change)="onFileSelected($event)" />
+
+          @if (uploading()) {
+            <div class="gi-pform__drop-body">
+              <span class="material-icons-round gi-spin">progress_activity</span>
+              <div class="gi-pform__drop-title">Uploading {{ uploadedFileName() }}…</div>
+              <div class="gi-pform__progress">
+                <div class="gi-pform__progress-bar" [style.width.%]="uploadPercent()"></div>
+              </div>
+              <div class="gi-pform__drop-sub">{{ uploadPercent() }}%</div>
+            </div>
+          } @else {
+            <div class="gi-pform__drop-body">
+              <span class="material-icons-round gi-pform__drop-icon">cloud_upload</span>
+              <div class="gi-pform__drop-title">
+                Drag &amp; drop an image here, or <u>click to browse</u>
+              </div>
+              <div class="gi-pform__drop-sub">JPG, PNG, WEBP, GIF · up to 20 MB</div>
+            </div>
+          }
+        </div>
+      }
+    </fieldset>
+
   <div class="gi-pform__actions">
     <button
       type="submit"
       class="gi-btn gi-btn--gold"
-      [disabled]="submitting || form.invalid">
+      [disabled]="submitting || form.invalid"
+      [title]="form.invalid ? 'Please fix validation errors before saving' : ''">
       @if (submitting) {
         <span class="material-icons-round gi-spin">progress_activity</span>
         Saving…

@@ -181,6 +181,8 @@ export const routes: Routes = [
   },
 
   // -------------------- CMS static pages --------------------
+  { path: 'about', redirectTo: 'pages/about', pathMatch: 'full' },
+  { path: 'contact', redirectTo: 'pages/contact', pathMatch: 'full' },
   {
     path: 'pages/:slug',
     loadComponent: () =>

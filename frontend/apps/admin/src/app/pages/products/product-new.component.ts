@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { ProductsService } from '../../core/catalog/products.service';
 import {
   CreateProductPayload,
+  UploadResponse,
   UpdateProductPayload,
 } from '../../core/catalog/catalog.model';
 import { NormalizedApiError } from '../../core/http/error.interceptor';
@@ -45,6 +46,7 @@ import { ProductFormComponent } from './product-form.component';
         [submitting]="submitting()"
         [errorMessage]="errorMessage()"
         (save)="onSave($event)"
+        (imageChange)="onImageChange($event)"
         (cancel)="onCancel()" />
     </section>
   `,
@@ -108,20 +110,57 @@ export class ProductNewComponent {
   protected readonly submitting = signal<boolean>(false);
   protected readonly errorMessage = signal<string | null>(null);
 
+  private pendingImage: UploadResponse | null = null;
+
+  protected onImageChange(img: UploadResponse | null): void {
+    this.pendingImage = img;
+  }
+
   protected onSave(payload: CreateProductPayload | UpdateProductPayload): void {
     // In "create" mode the form always emits a CreateProductPayload.
     this.errorMessage.set(null);
     this.submitting.set(true);
     this.service.create(payload as CreateProductPayload).subscribe({
       next: (created) => {
-        this.submitting.set(false);
-        void this.router.navigate(['/products', created.id], { queryParams: { created: '1' } });
+        if (this.pendingImage) {
+          this.attachImage(created.id, this.pendingImage);
+        } else {
+          this.submitting.set(false);
+          void this.router.navigate(['/products', created.id], { queryParams: { created: '1' } });
+        }
       },
       error: (err: NormalizedApiError) => {
         this.submitting.set(false);
         this.errorMessage.set(err.message || 'Could not create that product.');
       },
     });
+  }
+
+  private attachImage(productId: number, img: UploadResponse): void {
+    const isVideo = img.contentType.startsWith('video/');
+    this.service
+      .addMedia(productId, {
+        url: img.url,
+        mediaType: isVideo ? 'VIDEO' : 'IMAGE',
+        isPrimary: true,
+        sortOrder: 0,
+        cardThumbnailUrl: img.cardThumbnailUrl,
+        detailThumbnailUrl: img.detailThumbnailUrl,
+      })
+      .subscribe({
+        next: () => {
+          this.submitting.set(false);
+          void this.router.navigate(['/products', productId], { queryParams: { created: '1' } });
+        },
+        error: (err: NormalizedApiError) => {
+          // Product was created but media attachment failed — still navigate
+          // to the editor so the user can retry from the Media tab.
+          this.submitting.set(false);
+          void this.router.navigate(['/products', productId], {
+            queryParams: { created: '1', mediaError: err.message || 'Image upload failed to attach.' },
+          });
+        },
+      });
   }
 
   protected onCancel(): void {

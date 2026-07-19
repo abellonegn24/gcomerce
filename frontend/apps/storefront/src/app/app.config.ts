@@ -7,6 +7,7 @@ import { provideClientHydration } from '@angular/platform-browser';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
 import { correlationInterceptor } from './core/http/correlation.interceptor';
+import { timeoutInterceptor } from './core/http/timeout.interceptor';
 import { errorInterceptor } from './core/http/error.interceptor';
 
 export const appConfig: ApplicationConfig = {
@@ -19,8 +20,8 @@ export const appConfig: ApplicationConfig = {
     ),
     provideHttpClient(
       withFetch(),
-      // Order matters: correlation → auth → error (so error can see the normalized envelope)
-      withInterceptors([correlationInterceptor, authInterceptor, errorInterceptor])
+      // Order matters: correlation → auth → timeout → error (so error can see the normalized envelope)
+      withInterceptors([correlationInterceptor, authInterceptor, timeoutInterceptor, errorInterceptor])
     ),
     provideAnimationsAsync(),
     provideClientHydration(),

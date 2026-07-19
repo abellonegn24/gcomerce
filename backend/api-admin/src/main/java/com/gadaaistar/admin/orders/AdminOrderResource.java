@@ -6,6 +6,7 @@ import com.gadaaistar.common.OrderStatus;
 import com.gadaaistar.web.security.SecurityContextHolder;
 
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
@@ -28,6 +29,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @Path("/api/admin/v1/orders")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Transactional
 @Tag(name = "Orders (Admin)", description = "Operator view of every placed order.")
 public class AdminOrderResource {
 

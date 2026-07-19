@@ -35,39 +35,41 @@ export class CmsPageComponent implements OnInit {
   protected readonly error = signal<string | null>(null);
 
   ngOnInit(): void {
-    const slug = this.route.snapshot.paramMap.get('slug');
-    if (!slug) {
-      this.router.navigateByUrl('/');
-      return;
-    }
-    this.loading.set(true);
-    this.error.set(null);
-    this.cms.getPage(slug).subscribe({
-      next: (dto) => {
-        this.page.set(dto);
-        this.bodyHtml.set(
-          dto.bodyHtml
-            ? this.sanitizer.bypassSecurityTrustHtml(dto.bodyHtml)
-            : null,
-        );
-        this.loading.set(false);
-        this.seo.set({
-          title: dto.seoTitle || dto.title,
-          description: dto.seoDescription || undefined,
-          canonicalUrl: `${this.document.location.origin}/pages/${slug}`,
-          ogType: 'article',
-          jsonLd: {
-            '@context': 'https://schema.org',
-            '@type': 'WebPage',
-            name: dto.title,
+    this.route.paramMap.subscribe((params) => {
+      const slug = params.get('slug');
+      if (!slug) {
+        this.router.navigateByUrl('/');
+        return;
+      }
+      this.loading.set(true);
+      this.error.set(null);
+      this.cms.getPage(slug).subscribe({
+        next: (dto) => {
+          this.page.set(dto);
+          this.bodyHtml.set(
+            dto.bodyHtml
+              ? this.sanitizer.bypassSecurityTrustHtml(dto.bodyHtml)
+              : null,
+          );
+          this.loading.set(false);
+          this.seo.set({
+            title: dto.seoTitle || dto.title,
             description: dto.seoDescription || undefined,
-          },
-        });
-      },
-      error: () => {
-        this.error.set('Page not found.');
-        this.loading.set(false);
-      },
+            canonicalUrl: `${this.document.location.origin}/pages/${slug}`,
+            ogType: 'article',
+            jsonLd: {
+              '@context': 'https://schema.org',
+              '@type': 'WebPage',
+              name: dto.title,
+              description: dto.seoDescription || undefined,
+            },
+          });
+        },
+        error: () => {
+          this.error.set('Page not found.');
+          this.loading.set(false);
+        },
+      });
     });
   }
 }

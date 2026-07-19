@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, afterNextRender, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
@@ -7,6 +7,8 @@ import { AuthService } from './core/auth/auth.service';
 import { CartService } from './core/cart/cart.service';
 import { WishlistService } from './core/wishlist/wishlist.service';
 import { I18nService } from './core/i18n/i18n.service';
+import { StorefrontCmsService } from './core/cms/cms.service';
+import { CmsPageDto } from './core/cms/cms.model';
 import { LanguageSwitcherComponent } from './shared/language-switcher/language-switcher.component';
 
 @Component({
@@ -23,6 +25,7 @@ export class AppComponent {
   private readonly wishlist = inject(WishlistService);
   private readonly router = inject(Router);
   protected readonly i18n = inject(I18nService);
+  private readonly cms = inject(StorefrontCmsService);
 
   protected readonly currency = this.i18n.currency;
   /** Backed by CartService — refreshes automatically on auth + cart mutations. */
@@ -51,6 +54,8 @@ export class AppComponent {
     return (c.firstName ?? '').trim() || c.email;
   });
 
+  protected readonly cmsPages = signal<CmsPageDto[]>([]);
+
   protected readonly searchQuery = signal<string>('');
 
   protected submitSearch(): void {
@@ -60,6 +65,15 @@ export class AppComponent {
     } else {
       void this.router.navigate(['/shop']);
     }
+  }
+
+  constructor() {
+    afterNextRender(() => {
+      this.cms.listPages().subscribe({
+        next: (pages) => this.cmsPages.set(pages),
+        error: () => {},
+      });
+    });
   }
 
   setCurrency(code: 'USD' | 'ETB'): void {

@@ -6,6 +6,7 @@ import com.gadaaistar.common.QuoteStatus;
 import com.gadaaistar.web.security.SecurityContextHolder;
 
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
@@ -39,6 +40,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @Path("/api/admin/v1/quotes")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Transactional
 @Tag(name = "Quotes (Admin)", description = "B2B quote review, pricing, and conversion.")
 public class AdminQuoteResource {
 

@@ -7,6 +7,7 @@ import { ProductEditorStateService } from '../product-editor-state.service';
 import {
   CreateProductPayload,
   UpdateProductPayload,
+  UploadResponse,
 } from '../../../core/catalog/catalog.model';
 
 /**
@@ -24,8 +25,10 @@ import {
         [mode]="'edit'"
         [initial]="p"
         [submitting]="state.saving()"
-        [errorMessage]="null"
+        [errorMessage]="state.errorMessage()"
+        [successMessage]="state.successMessage()"
         (save)="onSave($event)"
+        (imageChange)="onImageChange($event)"
         (cancel)="onCancel()" />
     }
   `,
@@ -39,6 +42,12 @@ export class ProductDetailsTabComponent {
     // In edit mode the payload is always an UpdateProductPayload; the union
     // exists so ProductFormComponent stays reusable by /products/new.
     this.state.saveDetails(payload as UpdateProductPayload);
+  }
+
+  protected onImageChange(img: UploadResponse | null): void {
+    if (img) {
+      this.state.attachImage(img, () => {});
+    }
   }
 
   protected onCancel(): void {

@@ -23,6 +23,10 @@ export class StorefrontCmsService {
     );
   }
 
+  listPages(): Observable<CmsPageDto[]> {
+    return this.http.get<CmsPageDto[]>(`${this.base()}/pages`);
+  }
+
   listBanners(placement: string = 'HOMEPAGE_HERO'): Observable<CmsBannerListResponse> {
     return this.http.get<CmsBannerListResponse>(
       `${this.base()}/banners`,

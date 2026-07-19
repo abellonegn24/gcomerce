@@ -29,21 +29,24 @@
     <div class="gi-hero__copy">
       <span class="gi-eyebrow">Direct from origin · Ethiopia</span>
       <h1 id="gi-hero-title">
-        Ethiopian coffee, honey &amp; spices —<br />
-        <span class="gi-hero__accent">for the world.</span>
+        From Ethiopian highlands<br />
+        <span class="gi-hero__accent">to the world's table.</span>
       </h1>
       <p class="gi-hero__lead">
-        Gadaa Istar Business Group S.C. connects specialty roasters, distributors and discerning
-        buyers with authentic, traceable Ethiopian goods — from single-origin green coffee
-        to hand-blended berbere.
+        Gadaa Istar Business Group S.C. is your direct link to Ethiopia's finest agricultural and
+        mineral exports. We source single-origin green coffee from Sidamo, Yirgacheffe, Harrar, and
+        Guji; golden sesame and Niger seed from the highland farms; wild highland honey; hand-blended
+        berbere, mitmita, and korerima spices; teff and injera flour; and ethically mined gold and
+        gemstones. Every shipment is traceable to its origin, quality-checked at our Addis Ababa
+        facility, and delivered with compliant export documentation.
       </p>
       <div class="gi-hero__ctas">
         <a routerLink="/shop/raw-coffee" class="gi-btn gi-btn--primary">
-          Shop coffee
+          Explore products
           <span class="material-icons-round">arrow_forward</span>
         </a>
-        <a routerLink="/wholesale" class="gi-btn gi-btn--ghost">
-          Wholesale &amp; export inquiries
+        <a routerLink="/contact" class="gi-btn gi-btn--ghost">
+          Contact &amp; export inquiries
         </a>
       </div>
       <div class="gi-hero__trust">
@@ -61,11 +64,106 @@
   </div>
 </section>
 
+<!-- Stats strip -->
+<section class="gi-stats">
+  <div class="gi-container gi-stats__grid">
+    <div class="gi-stats__item">
+      <span class="gi-stats__num">7</span>
+      <span class="gi-stats__label">Product categories</span>
+    </div>
+    <div class="gi-stats__item">
+      <span class="gi-stats__num">100%</span>
+      <span class="gi-stats__label">Traceable origin</span>
+    </div>
+    <div class="gi-stats__item">
+      <span class="gi-stats__num">30+</span>
+      <span class="gi-stats__label">Destination countries</span>
+    </div>
+    <div class="gi-stats__item">
+      <span class="gi-stats__num">Addis Ababa</span>
+      <span class="gi-stats__label">Quality-check facility</span>
+    </div>
+  </div>
+</section>
+
+<!-- Product slideshow -->
+@if (products().length > 0) {
+  <section class="gi-slideshow" aria-labelledby="gi-slideshow-title">
+    <div class="gi-container">
+      <div class="gi-slideshow__header">
+        <div>
+          <h2 id="gi-slideshow-title" class="gi-section-title gi-section-title--left">Featured products</h2>
+          <p class="gi-section-lead gi-section-lead--left">A rotating selection from our latest shipments.</p>
+        </div>
+        <a routerLink="/shop" class="gi-slideshow__view-all">
+          View all
+          <span class="material-icons-round">arrow_forward</span>
+        </a>
+      </div>
+
+      <div class="gi-slideshow__viewport">
+        <div class="gi-slideshow__track" [style.transform]="'translateX(-' + slideIndex() * 100 + '%)'">
+          @for (p of products(); track p.id) {
+            <div class="gi-slideshow__slide">
+              <a [routerLink]="['/product', p.slug]" class="gi-slide-card">
+                <div class="gi-slide-card__img-wrap">
+                  @if (p.cardThumbnailUrl || p.primaryImageUrl) {
+                    <img [src]="p.cardThumbnailUrl || p.primaryImageUrl"
+                         [alt]="p.name" class="gi-slide-card__img" loading="lazy" />
+                  } @else {
+                    <span class="gi-slide-card__placeholder material-icons-round">image</span>
+                  }
+                </div>
+                <div class="gi-slide-card__body">
+                  <h3 class="gi-slide-card__name">{{ p.name }}</h3>
+                  @if (p.shortDescription) {
+                    <p class="gi-slide-card__desc">{{ p.shortDescription }}</p>
+                  }
+                  <div class="gi-slide-card__footer">
+                    <span class="gi-slide-card__price">{{ formatPrice(p.currency, p.displayPrice) }}</span>
+                    @if (p.inStock) {
+                      <span class="gi-slide-card__stock gi-slide-card__stock--in">In stock</span>
+                    } @else {
+                      <span class="gi-slide-card__stock gi-slide-card__stock--out">Sold out</span>
+                    }
+                  </div>
+                </div>
+              </a>
+            </div>
+          }
+        </div>
+
+        @if (products().length > 1) {
+          <button class="gi-slideshow__nav gi-slideshow__nav--prev" (click)="prevSlide()" aria-label="Previous">
+            <span class="material-icons-round">chevron_left</span>
+          </button>
+          <button class="gi-slideshow__nav gi-slideshow__nav--next" (click)="nextSlide()" aria-label="Next">
+            <span class="material-icons-round">chevron_right</span>
+          </button>
+        }
+      </div>
+
+      @if (products().length > 1) {
+        <div class="gi-slideshow__dots">
+          @for (p of products(); track p.id; let i = $index) {
+            <button
+              class="gi-slideshow__dot"
+              [class.is-active]="slideIndex() === i"
+              (click)="goToSlide(i)"
+              [attr.aria-label]="'Go to slide ' + (i + 1)">
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </section>
+}
+
 <!-- Categories -->
 <section class="gi-categories" aria-labelledby="gi-cats-title">
   <div class="gi-container">
     <h2 id="gi-cats-title" class="gi-section-title">Shop by category</h2>
-    <p class="gi-section-lead">Four product lines, one commitment: authenticity you can trace.</p>
+    <p class="gi-section-lead">Seven product lines, one commitment: authenticity you can trace.</p>
 
     <div class="gi-cat-grid">
       @for (tile of tiles; track tile.slug) {
