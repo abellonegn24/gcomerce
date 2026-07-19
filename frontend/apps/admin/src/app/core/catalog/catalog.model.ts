@@ -9,9 +9,12 @@
 export type ProductStatus = 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
 export type ProductCategoryCode =
   | 'RAW_COFFEE'
-  | 'PROCESSED_COFFEE'
+  | 'ROASTED_COFFEE'
   | 'WHITE_PRODUCTS'
-  | 'SPICY_PRODUCTS';
+  | 'SPICY_PRODUCTS'
+  | 'OIL_SEED'
+  | 'LIVESTOCK'
+  | 'MINING';
 
 export type PriceTier = 'RETAIL' | 'WHOLESALE_T1' | 'WHOLESALE_T2' | 'VIP';
 export type MediaType = 'IMAGE' | 'VIDEO';
@@ -314,12 +317,13 @@ export const PRICE_TIER_OPTIONS: Array<{ code: PriceTier; label: string }> = [
 // -----------------------------------------------------------------------------
 
 export interface PagedResponse<T> {
-  items: T[];
-  page: number;
-  size: number;
-  total: number;
-  hasNext: boolean;
-  hasPrev: boolean;
+  data: T[];
+  meta: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export interface ProductListResponse {
@@ -328,16 +332,22 @@ export interface ProductListResponse {
 
 export const CATEGORY_LABELS: Record<ProductCategoryCode, string> = {
   RAW_COFFEE:        'Raw Coffee',
-  PROCESSED_COFFEE:  'Processed Coffee',
+  ROASTED_COFFEE:    'Roasted Coffee',
   WHITE_PRODUCTS:    'White Products',
   SPICY_PRODUCTS:    'Spicy Products',
+  OIL_SEED:          'Oil Seed',
+  LIVESTOCK:         'Livestock',
+  MINING:            'Mining',
 };
 
 export const CATEGORY_OPTIONS: Array<{ code: ProductCategoryCode; label: string }> = [
-  { code: 'RAW_COFFEE',       label: 'Raw Coffee' },
-  { code: 'PROCESSED_COFFEE', label: 'Processed Coffee' },
-  { code: 'WHITE_PRODUCTS',   label: 'White Products' },
-  { code: 'SPICY_PRODUCTS',   label: 'Spicy Products' },
+  { code: 'RAW_COFFEE',     label: 'Raw Coffee' },
+  { code: 'ROASTED_COFFEE', label: 'Roasted Coffee' },
+  { code: 'WHITE_PRODUCTS', label: 'White Products' },
+  { code: 'SPICY_PRODUCTS', label: 'Spicy Products' },
+  { code: 'OIL_SEED',       label: 'Oil Seed' },
+  { code: 'LIVESTOCK',      label: 'Livestock' },
+  { code: 'MINING',         label: 'Mining' },
 ];
 
 export const STATUS_OPTIONS: Array<{ code: ProductStatus; label: string }> = [

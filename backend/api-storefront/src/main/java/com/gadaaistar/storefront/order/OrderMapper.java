@@ -75,7 +75,7 @@ public class OrderMapper {
                 it.name,
                 it.variantSku,
                 it.variantName,
-                it.product == null ? null : it.product.primaryImageUrl(),
+                it.primaryImageUrl,
                 it.unitPrice,
                 it.quantity,
                 it.taxRate,

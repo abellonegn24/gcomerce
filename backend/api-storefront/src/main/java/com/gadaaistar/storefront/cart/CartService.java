@@ -64,6 +64,7 @@ public class CartService {
     // -------------------------------------------------------------------------
 
     /** Returns the caller's cart (creating an empty one on first read). */
+    @Transactional
     public CartDtos.CartResponse getForCustomer(long customerId) {
         var cart = getOrCreate(customerId);
         return toResponse(cart);
@@ -173,17 +174,13 @@ public class CartService {
         var line = cartItems.findByCartProductAndVariant(cart.id, productId, variantId)
                 .orElseThrow(() -> new NotFoundException("CartItem", productId));
         cart.items.remove(line);
-        cartItems.delete(line);
         return toResponse(cart);
     }
 
     @Transactional
     public CartDtos.CartResponse clear(long customerId) {
         var cart = getOrCreate(customerId);
-        if (!cart.items.isEmpty()) {
-            cartItems.deleteByCart(cart.id);
-            cart.items.clear();
-        }
+        cart.items.clear();
         return toResponse(cart);
     }
 
@@ -191,6 +188,7 @@ public class CartService {
     // Guest cart (session-keyed, no auth required)
     // -------------------------------------------------------------------------
 
+    @Transactional
     public CartDtos.CartResponse getForSession(String sessionKey) {
         var cart = getOrCreateForSession(sessionKey);
         return toResponse(cart);
@@ -292,17 +290,13 @@ public class CartService {
         var line = cartItems.findByCartProductAndVariant(cart.id, productId, variantId)
                 .orElseThrow(() -> new NotFoundException("CartItem", productId));
         cart.items.remove(line);
-        cartItems.delete(line);
         return toResponse(cart);
     }
 
     @Transactional
     public CartDtos.CartResponse clearForSession(String sessionKey) {
         var cart = getOrCreateForSession(sessionKey);
-        if (!cart.items.isEmpty()) {
-            cartItems.deleteByCart(cart.id);
-            cart.items.clear();
-        }
+        cart.items.clear();
         return toResponse(cart);
     }
 

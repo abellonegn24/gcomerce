@@ -2,9 +2,12 @@ import { TranslationMap } from '../i18n.model';
 
 export const amTranslations: TranslationMap = {
   'nav.rawCoffee': 'ጥሬ ቡና',
-  'nav.processedCoffee': 'ድብልቅ ቡና',
+  'nav.roastedCoffee': 'የተጠበሰ ቡና',
   'nav.whiteProducts': 'ነጭ ምርቶች',
-  'nav.spicyProducts': 'ቅመም ምርቶች',
+  'nav.spicyProducts': 'ቅመማ ምርቶች',
+  'nav.oilSeed': 'ዘር ዘይት',
+  'nav.livestock': 'ከብት',
+  'nav.mining': 'ማዕድን',
   'nav.wholesale': 'ሽያጭ',
   'nav.about': 'ታሪካችን',
   'nav.contact': 'አግኙን',

@@ -6,10 +6,10 @@
  */
 
 export const BRAND_COLORS = Object.freeze({
-  navy900: '#12294A',
-  navy700: '#1B3A6B',
-  navy500: '#2C5391',
-  navy100: '#E4EBF5',
+  navy900: '#0A0A0A',
+  navy700: '#1A1A1A',
+  navy500: '#333333',
+  navy100: '#E8E8E8',
 
   red600: '#C93327',
   red500: '#D63A2F',
@@ -19,9 +19,9 @@ export const BRAND_COLORS = Object.freeze({
   gold300: '#F4CE7A',
 
   cream50: '#FAF6F0',
-  espresso900: '#3B2A20',
+  espresso900: '#0A0A0A',
 
-  textPrimary: '#0F172A',
+  textPrimary: '#0A0A0A',
   textSecondary: '#64748B',
 
   success: '#16A34A',

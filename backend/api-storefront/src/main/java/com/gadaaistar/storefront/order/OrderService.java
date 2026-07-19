@@ -245,6 +245,7 @@ public class OrderService {
             item.name       = product.name;
             item.variantSku  = variant == null ? null : variant.sku;
             item.variantName = variant == null ? null : variant.name;
+            item.primaryImageUrl = product.primaryImageUrl();
             item.unitPrice  = resolvedUnit;
             item.quantity   = line.quantity;
             item.taxRate    = taxRateFraction;
@@ -325,7 +326,7 @@ public class OrderService {
         }
 
         // Cart is emptied — a fresh empty one is auto-created next request.
-        cartItems.deleteByCart(cart.id);
+        // orphanRemoval=true on Cart.items handles the CartItem deletion.
         cart.items.clear();
 
         LOG.infof("Customer %d placed order %s (invoice %s, %s %s, tax %s, ship %s via %s, ship-to %s)",

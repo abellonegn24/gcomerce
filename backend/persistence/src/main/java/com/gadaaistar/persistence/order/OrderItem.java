@@ -52,6 +52,9 @@ public class OrderItem {
     @Column(name = "variant_name", length = 255)
     public String variantName;
 
+    @Column(name = "primary_image_url", length = 1024)
+    public String primaryImageUrl;
+
     @Column(name = "unit_price", nullable = false, precision = 19, scale = 4)
     public BigDecimal unitPrice;
 

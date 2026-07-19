@@ -45,7 +45,7 @@ export class AccountProfileComponent {
     companyName: ['', [Validators.maxLength(255)]],
     companyTin: ['', [Validators.maxLength(64), Validators.pattern(/^[A-Za-z0-9\- ]*$/)]],
     companyVatNumber: ['', [Validators.maxLength(64)]],
-    preferredCurrency: ['USD' as 'USD' | 'EUR' | 'GBP'],
+    preferredCurrency: ['USD' as 'USD' | 'ETB'],
     preferredLocale: ['', [Validators.maxLength(10)]],
   });
 
@@ -79,7 +79,7 @@ export class AccountProfileComponent {
         companyName: c.companyName ?? '',
         companyTin: c.companyTin ?? '',
         companyVatNumber: '',
-        preferredCurrency: (c.preferredCurrency as 'USD' | 'EUR' | 'GBP') || 'USD',
+        preferredCurrency: (c.preferredCurrency as 'USD' | 'ETB') || 'USD',
         preferredLocale: c.preferredLocale ?? '',
       });
     });

@@ -33,7 +33,10 @@ export class AppComponent {
 
   protected readonly categories = [
     { slug: 'raw-coffee', label: 'Raw Coffee' },
-    { slug: 'processed-coffee', label: 'Processed Coffee' },
+    { slug: 'roasted-coffee', label: 'Roasted Coffee' },
+    { slug: 'oil-seed', label: 'Oil Seed' },
+    { slug: 'livestock', label: 'Livestock' },
+    { slug: 'mining', label: 'Mining' },
     { slug: 'white-products', label: 'White Products' },
     { slug: 'spicy-products', label: 'Spicy Products' },
   ];
@@ -59,7 +62,7 @@ export class AppComponent {
     }
   }
 
-  setCurrency(code: 'USD' | 'EUR' | 'GBP'): void {
+  setCurrency(code: 'USD' | 'ETB'): void {
     this.i18n.setCurrency(code);
   }
 

@@ -32,3 +32,4 @@ flyway {
     locations = ['filesystem:src/main/resources/db/migration']
     cleanDisabled = true
 }
+

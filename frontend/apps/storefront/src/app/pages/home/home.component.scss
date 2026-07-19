@@ -38,7 +38,7 @@
     position: absolute;
     bottom: 1.5rem;
     left: 1.5rem;
-    background: rgba(18, 41, 74, 0.85);
+    background: rgba(10, 10, 10, 0.85);
     color: #fff;
     padding: 0.5rem 1.25rem;
     border-radius: var(--gi-radius-md);
@@ -63,7 +63,7 @@
 // -----------------------------------------------------------------------------
 .gi-hero {
   background:
-    radial-gradient(circle at 85% 20%, rgba(233, 180, 76, 0.25), transparent 55%),
+    radial-gradient(circle at 85% 20%, rgba(201, 51, 39, 0.25), transparent 55%),
     linear-gradient(135deg, var(--gi-navy-900) 0%, var(--gi-navy-700) 100%);
   color: var(--gi-text-inverse);
   padding: 5rem 0 5.5rem;
@@ -83,7 +83,7 @@
 
 .gi-eyebrow {
   display: inline-block;
-  color: var(--gi-gold-500);
+  color: var(--gi-red-500);
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -101,7 +101,7 @@
 }
 
 .gi-hero__accent {
-  color: var(--gi-gold-500);
+  color: var(--gi-red-500);
   font-style: italic;
 }
 
@@ -169,8 +169,8 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: var(--gi-gold-500);
-  color: var(--gi-navy-900);
+  background: var(--gi-red-600);
+  color: #fff;
   font-size: 1.5rem;
   display: inline-flex;
   align-items: center;
@@ -269,15 +269,15 @@
 .gi-cat-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--gi-shadow-lg);
-  border-color: var(--gi-navy-100);
+  border-color: var(--gi-red-100);
 }
 
 .gi-cat-card__icon {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: var(--gi-navy-100);
-  color: var(--gi-navy-700);
+  background: var(--gi-red-100);
+  color: var(--gi-red-600);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -339,8 +339,8 @@
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: var(--gi-navy-700);
-    color: var(--gi-gold-500);
+    background: var(--gi-red-600);
+    color: #fff;
     font-size: 1.6rem;
     margin-bottom: 0.75rem;
   }

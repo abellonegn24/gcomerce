@@ -29,7 +29,7 @@ export class RegisterComponent {
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8)]],
     phone: [''],
-    preferredCurrency: ['USD' as 'USD' | 'EUR' | 'GBP', Validators.required],
+    preferredCurrency: ['USD' as 'USD' | 'ETB', Validators.required],
   });
 
   protected readonly submitting = signal(false);

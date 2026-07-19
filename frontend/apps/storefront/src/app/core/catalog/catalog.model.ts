@@ -5,16 +5,22 @@
 
 export type ProductCategorySlug =
   | 'raw-coffee'
-  | 'processed-coffee'
+  | 'roasted-coffee'
   | 'white-products'
-  | 'spicy-products';
+  | 'spicy-products'
+  | 'oil-seed'
+  | 'livestock'
+  | 'mining';
 
 /** Enum value stored in the DB; the API returns this on read models. */
 export type ProductCategoryCode =
   | 'RAW_COFFEE'
-  | 'PROCESSED_COFFEE'
+  | 'ROASTED_COFFEE'
   | 'WHITE_PRODUCTS'
-  | 'SPICY_PRODUCTS';
+  | 'SPICY_PRODUCTS'
+  | 'OIL_SEED'
+  | 'LIVESTOCK'
+  | 'MINING';
 
 export interface ProductCard {
   id: number;
@@ -116,22 +122,40 @@ export const CATEGORIES: readonly CategoryMeta[] = [
     blurb: 'Single-origin green beans from Yirgacheffe, Sidamo, and beyond.',
   },
   {
-    slug: 'processed-coffee',
-    code: 'PROCESSED_COFFEE',
-    label: 'Processed Coffee',
+    slug: 'roasted-coffee',
+    code: 'ROASTED_COFFEE',
+    label: 'Roasted Coffee',
     blurb: 'Small-batch roasts, whole bean and ground, ready to brew.',
   },
   {
     slug: 'white-products',
     code: 'WHITE_PRODUCTS',
     label: 'White Products',
-    blurb: 'Teff, honey, and heritage grains milled from Ethiopian farms.',
+    blurb: 'Teff, injera flour, honey, and other white-agri exports.',
   },
   {
     slug: 'spicy-products',
     code: 'SPICY_PRODUCTS',
     label: 'Spicy Products',
-    blurb: 'Berbere, mitmita, and traditional spice blends from the highlands.',
+    blurb: 'Berbere, mitmita, korerima, and other Ethiopian spice blends.',
+  },
+  {
+    slug: 'oil-seed',
+    code: 'OIL_SEED',
+    label: 'Oil Seed',
+    blurb: 'Sesame, Niger seed, and sunflower — export-grade oil seeds from Ethiopian farms.',
+  },
+  {
+    slug: 'livestock',
+    code: 'LIVESTOCK',
+    label: 'Livestock',
+    blurb: 'Live animals and by-products — cattle, sheep, goats, and poultry from Ethiopian highlands.',
+  },
+  {
+    slug: 'mining',
+    code: 'MINING',
+    label: 'Mining',
+    blurb: 'Gold, gemstones, and industrial minerals from Ethiopian mining operations.',
   },
 ] as const;
 

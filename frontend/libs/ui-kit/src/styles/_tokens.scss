@@ -12,15 +12,15 @@
 // Color palette (Sass maps, so themes can pick shades programmatically)
 // -----------------------------------------------------------------------------
 $gi-navy: (
-  50:  #F1F5FA,
-  100: #E4EBF5,
-  200: #C9D6EA,
-  300: #9AB0D0,
-  400: #6684B2,
-  500: #2C5391,
-  700: #1B3A6B,   // primary brand — extracted from logo emblem
-  800: #16305A,
-  900: #12294A,
+  50:  #F5F5F5,
+  100: #E8E8E8,
+  200: #D0D0D0,
+  300: #ABABAB,
+  400: #757575,
+  500: #333333,
+  700: #1A1A1A,   // primary dark — near black
+  800: #121212,
+  900: #0A0A0A,
 );
 
 $gi-red: (
@@ -93,8 +93,8 @@ $gi-neutral: (
   --gi-espresso-900: #{map.get($gi-espresso, 900)};
 
   // Semantic aliases
-  --gi-brand:              var(--gi-navy-700);
-  --gi-brand-hover:        var(--gi-navy-500);
+  --gi-brand:              var(--gi-red-600);
+  --gi-brand-hover:        var(--gi-red-700);
   --gi-brand-contrast:     #FFFFFF;
   --gi-cta:                var(--gi-red-600);
   --gi-cta-hover:          var(--gi-red-500);

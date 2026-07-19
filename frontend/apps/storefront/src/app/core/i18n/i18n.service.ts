@@ -19,10 +19,10 @@ const translations: Record<SupportedLocale, TranslationMap> = {
   om: omTranslations,
 };
 
-const localeToCurrency: Record<SupportedLocale, 'USD' | 'EUR' | 'GBP'> = {
+const localeToCurrency: Record<SupportedLocale, 'USD' | 'ETB'> = {
   en: 'USD',
-  am: 'USD',
-  om: 'USD',
+  am: 'ETB',
+  om: 'ETB',
 };
 
 /**
@@ -35,7 +35,7 @@ const localeToCurrency: Record<SupportedLocale, 'USD' | 'EUR' | 'GBP'> = {
 @Injectable({ providedIn: 'root' })
 export class I18nService {
   private readonly _locale = signal<SupportedLocale>(this.readStoredLocale());
-  private readonly _currency = signal<'USD' | 'EUR' | 'GBP'>(this.readStoredCurrency());
+  private readonly _currency = signal<'USD' | 'ETB'>(this.readStoredCurrency());
 
   readonly locale = this._locale.asReadonly();
   readonly currency = this._currency.asReadonly();
@@ -55,7 +55,7 @@ export class I18nService {
     }
   }
 
-  setCurrency(code: 'USD' | 'EUR' | 'GBP'): void {
+  setCurrency(code: 'USD' | 'ETB'): void {
     this._currency.set(code);
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(CURRENCY_KEY, code);
@@ -85,10 +85,10 @@ export class I18nService {
     return 'en';
   }
 
-  private readStoredCurrency(): 'USD' | 'EUR' | 'GBP' {
+  private readStoredCurrency(): 'USD' | 'ETB' {
     if (typeof localStorage === 'undefined') return localeToCurrency[this._locale()];
-    const stored = localStorage.getItem(CURRENCY_KEY) as 'USD' | 'EUR' | 'GBP' | null;
-    if (stored && ['USD', 'EUR', 'GBP'].includes(stored)) return stored;
+    const stored = localStorage.getItem(CURRENCY_KEY) as 'USD' | 'ETB' | null;
+    if (stored && ['USD', 'ETB'].includes(stored)) return stored;
     return localeToCurrency[this._locale()];
   }
 }

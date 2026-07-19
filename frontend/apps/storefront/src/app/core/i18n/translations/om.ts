@@ -2,9 +2,12 @@ import { TranslationMap } from '../i18n.model';
 
 export const omTranslations: TranslationMap = {
   'nav.rawCoffee': 'Buna Dabarsaa',
-  'nav.processedCoffee': 'Buna Hojjetame',
-  'nav.whiteProducts': 'Adii Oomishaalee',
-  'nav.spicyProducts': 'Quraannaa Oomishaalee',
+  'nav.roastedCoffee': 'Buna Burqame',
+  'nav.whiteProducts': 'Bifa Adii',
+  'nav.spicyProducts': 'Quraanna Qxurii',
+  'nav.oilSeed': 'Zarri Zayitaa',
+  'nav.livestock': 'Hoolaa Loon',
+  'nav.mining': 'Qxurii Aadama',
   'nav.wholesale': 'Gurgistuu',
   'nav.about': 'Seenaa Keenya',
   'nav.contact': 'Nu Quunnamuu',

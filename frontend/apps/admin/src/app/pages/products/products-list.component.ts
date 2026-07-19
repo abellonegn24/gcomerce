@@ -16,11 +16,14 @@ const PAGE_SIZE = 20;
 
 /** Category filter chips shown above the table. `null` = all. */
 const CATEGORY_FILTERS: Array<{ code: ProductCategoryCode | null; label: string }> = [
-  { code: null,                label: 'All' },
-  { code: 'RAW_COFFEE',        label: 'Raw Coffee' },
-  { code: 'PROCESSED_COFFEE',  label: 'Processed' },
-  { code: 'WHITE_PRODUCTS',    label: 'White' },
-  { code: 'SPICY_PRODUCTS',    label: 'Spicy' },
+  { code: null,              label: 'All' },
+  { code: 'RAW_COFFEE',      label: 'Raw Coffee' },
+  { code: 'ROASTED_COFFEE',  label: 'Roasted' },
+  { code: 'WHITE_PRODUCTS',  label: 'White Products' },
+  { code: 'SPICY_PRODUCTS',  label: 'Spicy Products' },
+  { code: 'OIL_SEED',        label: 'Oil Seed' },
+  { code: 'LIVESTOCK',       label: 'Livestock' },
+  { code: 'MINING',          label: 'Mining' },
 ];
 
 const STATUS_FILTERS: Array<{ code: ProductStatus | null; label: string }> = [
@@ -78,8 +81,8 @@ export class ProductsListComponent implements OnInit {
       })
       .subscribe({
         next: (res) => {
-          this.items.set(res.page.items);
-          this.total.set(res.page.total);
+          this.items.set(res.page.data);
+          this.total.set(res.page.meta.total);
           this.loading.set(false);
         },
         error: (err: NormalizedApiError) => {

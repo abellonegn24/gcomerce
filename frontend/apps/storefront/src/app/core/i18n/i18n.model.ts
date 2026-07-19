@@ -14,9 +14,12 @@ export const LOCALE_OPTIONS: LocaleOption[] = [
 
 export type TranslationKey =
   | 'nav.rawCoffee'
-  | 'nav.processedCoffee'
+  | 'nav.roastedCoffee'
   | 'nav.whiteProducts'
   | 'nav.spicyProducts'
+  | 'nav.oilSeed'
+  | 'nav.livestock'
+  | 'nav.mining'
   | 'nav.wholesale'
   | 'nav.about'
   | 'nav.contact'

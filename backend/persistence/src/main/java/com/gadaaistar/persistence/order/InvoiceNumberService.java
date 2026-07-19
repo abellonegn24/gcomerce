@@ -8,7 +8,6 @@ import com.gadaaistar.common.exceptions.NotFoundException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.LockModeType;
 import jakarta.transaction.Transactional;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -78,10 +77,10 @@ public class InvoiceNumberService {
                 SELECT id, prefix, current_value
                 FROM invoice_sequence
                 WHERE doc_type = :docType AND fiscal_year = :year
+                FOR UPDATE
                 """)
                 .setParameter("docType", docType)
                 .setParameter("year", fiscalYear)
-                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
                 .setMaxResults(1)
                 .getResultList();
 
@@ -99,10 +98,10 @@ public class InvoiceNumberService {
                     SELECT id, prefix, current_value
                     FROM invoice_sequence
                     WHERE doc_type = :docType AND fiscal_year = :year
+                    FOR UPDATE
                     """)
                     .setParameter("docType", docType)
                     .setParameter("year", fiscalYear)
-                    .setLockMode(LockModeType.PESSIMISTIC_WRITE)
                     .setMaxResults(1)
                     .getResultList();
             if (row.isEmpty()) {

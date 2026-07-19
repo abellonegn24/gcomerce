@@ -2,9 +2,12 @@ import { TranslationMap } from '../i18n.model';
 
 export const enTranslations: TranslationMap = {
   'nav.rawCoffee': 'Raw Coffee',
-  'nav.processedCoffee': 'Processed Coffee',
+  'nav.roastedCoffee': 'Roasted Coffee',
   'nav.whiteProducts': 'White Products',
   'nav.spicyProducts': 'Spicy Products',
+  'nav.oilSeed': 'Oil Seed',
+  'nav.livestock': 'Livestock',
+  'nav.mining': 'Mining',
   'nav.wholesale': 'Wholesale',
   'nav.about': 'Our Story',
   'nav.contact': 'Contact',

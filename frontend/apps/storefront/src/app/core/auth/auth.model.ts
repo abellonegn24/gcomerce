@@ -47,7 +47,7 @@ export interface RegisterPayload {
   companyTin?: string;
   companyVatNumber?: string;
   phone?: string;
-  preferredCurrency?: 'USD' | 'EUR' | 'GBP';
+  preferredCurrency?: 'USD' | 'ETB';
   preferredLocale?: string;
   customerGroupCode?: string;
 }
@@ -71,7 +71,7 @@ export interface UpdateProfilePayload {
   companyTin?: string;
   companyVatNumber?: string;
   phone?: string;
-  preferredCurrency?: 'USD' | 'EUR' | 'GBP';
+  preferredCurrency?: 'USD' | 'ETB';
   preferredLocale?: string;
 }
 
