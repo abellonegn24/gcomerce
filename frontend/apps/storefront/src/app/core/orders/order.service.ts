@@ -54,4 +54,11 @@ export class OrderService {
       payload,
     );
   }
+
+  confirmMpgsPayment(uuid: string): Observable<OrderDetail> {
+    return this.http.post<OrderDetail>(
+      `${environment.apiBaseUrl}/me/orders/${uuid}/confirm-mpgs`,
+      {},
+    );
+  }
 }

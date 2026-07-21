@@ -12,6 +12,7 @@ import com.gadaaistar.storefront.ratelimit.RateLimit;
 import com.gadaaistar.web.security.SecurityContextHolder;
 
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
@@ -26,6 +27,7 @@ import jakarta.ws.rs.core.Response;
 
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.jboss.logging.Logger;
 
 /**
  * Customer-facing orders API.
@@ -44,6 +46,8 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Orders (Storefront)", description = "The signed-in customer's placed orders.")
 public class OrderResource {
+
+    private static final Logger LOG = Logger.getLogger(OrderResource.class);
 
     @Inject OrderService          orderService;
     @Inject OrderMapper           mapper;
@@ -126,6 +130,60 @@ public class OrderResource {
         // Default: CyberSource signed form fields.
         var payload = cybersource.buildRedirectPayload(order);
         return new PaymentPayload("CYBERSOURCE", payload.endpoint(), payload.fields());
+    }
+
+    // -------------------------------------------------------------------------
+    // MPGS payment confirmation (pull-based fallback for when the webhook
+    // hasn't been configured in the MPGS Merchant Administration portal)
+    // -------------------------------------------------------------------------
+
+    @POST
+    @Path("/{uuid}/confirm-mpgs")
+    @Transactional
+    @Operation(summary = "Pull the order status from MPGS and mark the order PAID if captured. "
+            + "Used as a fallback when the MPGS webhook notification URL is not configured.")
+    public OrderDtos.OrderDetail confirmMpgsPayment(@PathParam("uuid") String uuid) {
+        var customerId = security.requireCustomer();
+        var order = orderService.getForCustomer(customerId, uuid);
+
+        if (order.status != OrderStatus.PENDING_PAYMENT) {
+            return mapper.toDetail(order);
+        }
+
+        if (!"MPGS".equals(order.paymentMethod == null ? "" : order.paymentMethod.toUpperCase())) {
+            throw new ConflictException("ORDER_NOT_MPGS",
+                    "This order was not placed with MPGS.",
+                    Map.of("paymentMethod", order.paymentMethod == null ? "UNKNOWN" : order.paymentMethod));
+        }
+
+        var result = mpgs.retrieveOrder(order.invoiceNumber);
+        if (result == null) {
+            throw new ConflictException("MPGS_LOOKUP_FAILED",
+                    "Could not retrieve payment status from MPGS. Please try again or contact support.",
+                    Map.of());
+        }
+
+        var statusUpper = result.status() == null ? "" : result.status().toUpperCase();
+        var resultUpper = result.result() == null ? "" : result.result().toUpperCase();
+
+        if ("CAPTURED".equals(statusUpper) && "SUCCESS".equals(resultUpper)) {
+            orderService.markPaid(order, result.transactionId(), "MPGS");
+            LOG.infof("MPGS payment confirmed via pull for order %s (txn %s)", order.uuid, result.transactionId());
+        } else if ("FAILED".equals(statusUpper) || "FAILURE".equals(resultUpper)
+                || "CANCELLED".equals(statusUpper)) {
+            var reason = "MPGS payment " + statusUpper.toLowerCase() + " (result " + resultUpper + ")";
+            orderService.markPaymentFailed(order, reason);
+            LOG.infof("MPGS payment %s via pull for order %s", statusUpper, order.uuid);
+        } else {
+            LOG.warnf("MPGS pull returned indeterminate status '%s' (result '%s') for order %s",
+                    result.status(), result.result(), order.uuid);
+            throw new ConflictException("MPGS_PAYMENT_PENDING",
+                    "Payment status is " + statusUpper + " — the payment may still be processing. "
+                            + "Please check back in a moment or contact support if this persists.",
+                    Map.of("mpgsStatus", result.status() == null ? "" : result.status()));
+        }
+
+        return mapper.toDetail(orderService.getForCustomer(customerId, uuid));
     }
 
     // -------------------------------------------------------------------------

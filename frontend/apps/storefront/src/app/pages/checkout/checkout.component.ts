@@ -344,10 +344,8 @@ export class CheckoutComponent implements OnInit {
   // -------------------------------------------------------------------------
 
   private fetchPaymentPayloadAndRedirect(orderUuid: string): void {
-    console.log('[MPGS] Fetching payment payload for order:', orderUuid);
     this.orderService.paymentPayload(orderUuid).subscribe({
       next: (payload) => {
-        console.log('[MPGS] Payment payload received:', JSON.stringify(payload));
         this.placing.set(false);
         this.redirecting.set(true);
         if (payload.provider === 'MPGS') {
@@ -357,7 +355,6 @@ export class CheckoutComponent implements OnInit {
         }
       },
       error: (err: NormalizedApiError) => {
-        console.error('[MPGS] Payment payload error:', err);
         this.placing.set(false);
         if (err.code === 'PAYMENT_GATEWAY_NOT_CONFIGURED') {
           // Dev / staging path — take the customer to the order detail so
@@ -379,20 +376,15 @@ export class CheckoutComponent implements OnInit {
    * successIndicator) comes in {@link payload.fields}.
    */
   private initMpgsCheckout(checkoutJsUrl: string, fields: Record<string, string>, orderUuid: string): void {
-    console.log('[MPGS] Loading Checkout.js from:', checkoutJsUrl);
-    console.log('[MPGS] Session fields:', JSON.stringify(fields));
     const script = this.doc.createElement('script');
     script.src = checkoutJsUrl;
     script.onload = () => {
-      console.log('[MPGS] Checkout.js script loaded');
       const checkout = (window as any).Checkout;
       if (!checkout) {
-        console.error('[MPGS] window.Checkout is undefined after script load');
         this.redirecting.set(false);
         this.errorMessage.set('MPGS Checkout.js failed to load. Please try again.');
         return;
       }
-      console.log('[MPGS] Checkout object found, calling configure()');
       checkout.configure({
         merchant: fields['merchantId'],
         session: {
@@ -415,9 +407,22 @@ export class CheckoutComponent implements OnInit {
         const successIndicator = fields['successIndicator'];
         if (result && result.resultIndicator && successIndicator
             && result.resultIndicator === successIndicator) {
-          // Payment successful — redirect to the order return page.
-          void this.router.navigate(['/checkout/return'], {
-            queryParams: { order: orderUuid, provider: 'MPGS' },
+          // Payment successful — call the backend to pull the MPGS order
+          // status and mark the order PAID, then navigate to the return page.
+          this.orderService.confirmMpgsPayment(orderUuid).subscribe({
+            next: () => {
+              void this.router.navigate(['/checkout/return'], {
+                queryParams: { order: orderUuid, provider: 'MPGS' },
+              });
+            },
+            error: () => {
+              // Even if the confirmation call fails, navigate to the return
+              // page — it polls the order status and will eventually pick up
+              // the PAID state from the webhook or a retry.
+              void this.router.navigate(['/checkout/return'], {
+                queryParams: { order: orderUuid, provider: 'MPGS' },
+              });
+            },
           });
         } else {
           // Payment declined or cancelled.

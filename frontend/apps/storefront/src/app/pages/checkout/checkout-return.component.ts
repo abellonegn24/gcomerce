@@ -43,6 +43,7 @@ export class CheckoutReturnComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const orderUuid = this.route.snapshot.queryParamMap.get('order');
+    const provider = this.route.snapshot.queryParamMap.get('provider');
     if (!orderUuid) {
       this.errorMessage.set('This page needs an order reference to proceed.');
       this.loading.set(false);
@@ -53,6 +54,31 @@ export class CheckoutReturnComponent implements OnInit, OnDestroy {
     // reflects that if the customer bounced back before the effect fired.
     this.cartService.reset();
 
+    // For MPGS, proactively confirm the payment by pulling the order status
+    // from the gateway. This handles the case where the MPGS webhook hasn't
+    // been configured — the checkout component already calls this once, but
+    // we call it again here in case the customer navigated directly.
+    if (provider === 'MPGS') {
+      this.orderService.confirmMpgsPayment(orderUuid).subscribe({
+        next: (order) => {
+          this.order.set(order);
+          this.loading.set(false);
+          // If still pending after confirmation, start polling.
+          if (order.status === 'PENDING_PAYMENT') {
+            this.startPolling(orderUuid);
+          }
+        },
+        error: () => {
+          // Confirmation failed — fall back to polling the order status.
+          this.startPolling(orderUuid);
+        },
+      });
+    } else {
+      this.startPolling(orderUuid);
+    }
+  }
+
+  private startPolling(orderUuid: string): void {
     // Initial fetch + then poll up to 10 times (30s total) while still pending.
     let attempts = 0;
     this.pollSub = timer(0, 3000)

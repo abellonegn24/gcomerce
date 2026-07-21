@@ -111,17 +111,18 @@ public class OrderService {
     }
 
     /**
-     * Public order lookup by UUID + email — used by the no-auth order tracking
-     * page. Returns the order only if the email matches the customer's email
-     * on file. Throws 404 (same shape as unknown) on mismatch to prevent
-     * enumeration.
+     * Public order lookup by UUID or invoice number + email — used by the
+     * no-auth order tracking page. Returns the order only if the email matches
+     * the customer's email on file. Throws 404 (same shape as unknown) on
+     * mismatch to prevent enumeration.
      */
-    public CheckoutOrder getForPublicTracking(String uuid, String email) {
-        var order = orders.findByUuid(uuid)
-                .orElseThrow(() -> new NotFoundException("Order", uuid));
+    public CheckoutOrder getForPublicTracking(String uuidOrInvoice, String email) {
+        var order = orders.findByUuid(uuidOrInvoice)
+                .or(() -> orders.findByInvoiceNumber(uuidOrInvoice))
+                .orElseThrow(() -> new NotFoundException("Order", uuidOrInvoice));
         if (order.customer == null || order.customer.email == null
             || !order.customer.email.equalsIgnoreCase(email.trim())) {
-            throw new NotFoundException("Order", uuid);
+            throw new NotFoundException("Order", uuidOrInvoice);
         }
         return order;
     }
