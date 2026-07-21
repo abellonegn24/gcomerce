@@ -166,9 +166,10 @@ public class OrderResource {
         var statusUpper = result.status() == null ? "" : result.status().toUpperCase();
         var resultUpper = result.result() == null ? "" : result.result().toUpperCase();
 
-        if ("CAPTURED".equals(statusUpper) && "SUCCESS".equals(resultUpper)) {
+        if (("CAPTURED".equals(statusUpper) || "AUTHORIZED".equals(statusUpper))
+                && "SUCCESS".equals(resultUpper)) {
             orderService.markPaid(order, result.transactionId(), "MPGS");
-            LOG.infof("MPGS payment confirmed via pull for order %s (txn %s)", order.uuid, result.transactionId());
+            LOG.infof("MPGS payment confirmed via pull (%s) for order %s (txn %s)", statusUpper, order.uuid, result.transactionId());
         } else if ("FAILED".equals(statusUpper) || "FAILURE".equals(resultUpper)
                 || "CANCELLED".equals(statusUpper)) {
             var reason = "MPGS payment " + statusUpper.toLowerCase() + " (result " + resultUpper + ")";

@@ -11,6 +11,13 @@
     </div>
   }
 
+  @if (successMessage(); as msg) {
+    <div class="gi-alert gi-alert--success" role="status">
+      <span class="material-icons-round">check_circle</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
   @if (loading()) {
     <p class="gi-order-detail__loading">
       <span class="material-icons-round gi-spin">progress_activity</span>
@@ -173,7 +180,7 @@
       <div class="gi-order-detail__actions">
         <button type="button" class="gi-btn-inline gi-btn-inline--gold"
                 (click)="retryPayment()"
-                [disabled]="startingPayment()">
+                [disabled]="startingPayment() || checkingPayment()">
           @if (startingPayment()) {
             <span class="material-icons-round gi-spin">progress_activity</span>
             Starting…
@@ -183,8 +190,20 @@
           }
         </button>
         <button type="button" class="gi-btn-inline gi-btn-inline--ghost"
+                (click)="refreshPayment()"
+                [disabled]="checkingPayment() || startingPayment()"
+                title="If you've already paid, click to sync the latest status from the payment gateway.">
+          @if (checkingPayment()) {
+            <span class="material-icons-round gi-spin">progress_activity</span>
+            Checking…
+          } @else {
+            <span class="material-icons-round">refresh</span>
+            I've paid — refresh status
+          }
+        </button>
+        <button type="button" class="gi-btn-inline gi-btn-inline--ghost"
                 (click)="cancelOrder()"
-                [disabled]="cancelling()">
+                [disabled]="cancelling() || checkingPayment()">
           @if (cancelling()) { Cancelling… }
           @else {
             <span class="material-icons-round">close</span>

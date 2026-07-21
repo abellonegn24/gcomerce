@@ -124,7 +124,7 @@ export class CheckoutComponent implements OnInit {
 
   // --- Payment methods ------------------------------------------------------
   protected readonly paymentMethods = signal<PaymentMethodOption[]>([]);
-  protected readonly selectedPaymentMethod = signal<string>('CYBERSOURCE');
+  protected readonly selectedPaymentMethod = signal<string>('MPGS');
   protected readonly paymentMethodsLoading = signal<boolean>(false);
 
   // --- Submission state -----------------------------------------------------
@@ -158,16 +158,19 @@ export class CheckoutComponent implements OnInit {
       next: (methods) => {
         this.paymentMethodsLoading.set(false);
         this.paymentMethods.set(methods);
-        // Default to the first available method.
-        if (methods.length > 0) {
+        // Prefer MPGS as the default payment method.
+        const mpgs = methods.find((m) => m.id === 'MPGS');
+        if (mpgs) {
+          this.selectedPaymentMethod.set('MPGS');
+        } else if (methods.length > 0) {
           this.selectedPaymentMethod.set(methods[0].id);
         }
       },
       error: () => {
         this.paymentMethodsLoading.set(false);
-        // If the endpoint isn't available, fall back to CyberSource.
-        this.paymentMethods.set([{ id: 'CYBERSOURCE', name: 'CyberSource', description: 'Pay via CyberSource', logoUrl: null }]);
-        this.selectedPaymentMethod.set('CYBERSOURCE');
+        // If the endpoint isn't available, fall back to MPGS.
+        this.paymentMethods.set([{ id: 'MPGS', name: 'Mastercard (MPGS)', description: 'Pay via Mastercard Payment Gateway', logoUrl: null }]);
+        this.selectedPaymentMethod.set('MPGS');
       },
     });
   }

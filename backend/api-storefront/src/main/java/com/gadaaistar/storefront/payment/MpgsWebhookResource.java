@@ -114,13 +114,17 @@ public class MpgsWebhookResource {
                 ? json.get("status").asText() : null;
 
         // Determine outcome. MPGS status can be: CAPTURED, AUTHORIZED,
-        // FAILED, CANCELLED, etc. For PURCHASE operation, CAPTURED = success.
+        // FAILED, CANCELLED, etc. Both CAPTURED and AUTHORIZED with SUCCESS
+        // result indicate a successful payment — CAPTURED means the funds
+        // have been captured, AUTHORIZED means the card was authenticated
+        // and the funds are reserved (capture may happen separately).
         var statusUpper = orderStatus == null ? "" : orderStatus.toUpperCase();
         var resultUpper = txnResult == null ? "" : txnResult.toUpperCase();
 
-        if ("CAPTURED".equals(statusUpper) && "SUCCESS".equals(resultUpper)) {
+        if (("CAPTURED".equals(statusUpper) || "AUTHORIZED".equals(statusUpper))
+                && "SUCCESS".equals(resultUpper)) {
             orderService.markPaid(order, txnId, "MPGS");
-            LOG.infof("MPGS CAPTURED for order %s (txn %s)", order.uuid, txnId);
+            LOG.infof("MPGS %s for order %s (txn %s)", statusUpper, order.uuid, txnId);
             return Response.ok(Map.of("status", "paid", "orderUuid", order.uuid)).build();
         }
 

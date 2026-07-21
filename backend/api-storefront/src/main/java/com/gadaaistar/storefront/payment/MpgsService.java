@@ -204,24 +204,46 @@ public class MpgsService {
      */
     public MpgsOrderResult retrieveOrder(String mpgsOrderId) {
         if (!config.isConfigured()) {
+            LOG.warnf("MPGS retrieveOrder skipped — MPGS is not configured (enabled=%s, merchantId set=%s)",
+                    config.enabled(), !config.merchantId().isBlank());
             return null;
         }
 
         try {
+            var url = config.orderUrl(mpgsOrderId);
+            LOG.infof("MPGS retrieveOrder: GET %s", url);
+
             var request = HttpRequest.newBuilder()
-                    .uri(URI.create(config.orderUrl(mpgsOrderId)))
+                    .uri(URI.create(url))
                     .header("Authorization", config.basicAuthHeader())
                     .GET()
                     .timeout(Duration.ofSeconds(15))
                     .build();
 
             var response = http.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            LOG.infof("MPGS retrieveOrder response: HTTP %d for order %s — body: %s",
+                    response.statusCode(), mpgsOrderId, response.body());
+
+            if (response.statusCode() != 200) {
+                LOG.errorf("MPGS retrieveOrder returned non-200 for order %s: HTTP %d — body: %s",
+                        mpgsOrderId, response.statusCode(), response.body());
+                return null;
+            }
+
             var json = MAPPER.readTree(response.body());
 
             var status = str(json, "status");
             var result = str(json, "result");
             var captured = num(json, "totalCapturedAmount");
-            var txnId = str(json, "transaction[0].id");
+            String txnId = null;
+            if (json.has("transaction") && json.get("transaction").isArray()
+                    && json.get("transaction").size() > 0) {
+                var firstTxn = json.get("transaction").get(0);
+                txnId = firstTxn.has("id") ? firstTxn.get("id").asText() : null;
+            }
+
+            LOG.infof("MPGS retrieveOrder parsed for order %s: status=%s, result=%s, captured=%s, txnId=%s",
+                    mpgsOrderId, status, result, captured, txnId);
 
             return new MpgsOrderResult(status, result, captured, txnId);
 

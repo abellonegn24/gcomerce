@@ -27,8 +27,10 @@ export class AccountOrderDetailComponent implements OnInit {
   protected readonly order = signal<OrderDetail | null>(null);
   protected readonly loading = signal<boolean>(true);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly successMessage = signal<string | null>(null);
   protected readonly cancelling = signal<boolean>(false);
   protected readonly startingPayment = signal<boolean>(false);
+  protected readonly checkingPayment = signal<boolean>(false);
 
   /**
    * If the customer arrived from the checkout page's payment-not-configured
@@ -79,6 +81,36 @@ export class AccountOrderDetailComponent implements OnInit {
       error: (err: NormalizedApiError) => {
         this.startingPayment.set(false);
         this.errorMessage.set(err.message || 'Could not restart payment.');
+      },
+    });
+  }
+
+  /**
+   * Pull the latest payment status from MPGS. Useful when the webhook is not
+   * configured (e.g. local dev) — the customer can click to sync the order
+   * status with what MPGS actually recorded.
+   */
+  protected refreshPayment(): void {
+    const o = this.order();
+    if (!o) return;
+    this.checkingPayment.set(true);
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+    this.orderService.confirmMpgsPayment(o.uuid).subscribe({
+      next: (updated) => {
+        this.order.set(updated);
+        this.checkingPayment.set(false);
+        if (updated.status === 'PAID') {
+          this.successMessage.set('Payment confirmed — your order is now marked as paid.');
+        } else if (updated.status === 'PENDING_PAYMENT') {
+          this.errorMessage.set('MPGS still shows this payment as pending. Try again in a moment.');
+        } else if (updated.status === 'CANCELLED') {
+          this.errorMessage.set('MPGS reports the payment was declined or cancelled.');
+        }
+      },
+      error: (err: NormalizedApiError) => {
+        this.checkingPayment.set(false);
+        this.errorMessage.set(err.message || 'Could not refresh payment status from MPGS.');
       },
     });
   }

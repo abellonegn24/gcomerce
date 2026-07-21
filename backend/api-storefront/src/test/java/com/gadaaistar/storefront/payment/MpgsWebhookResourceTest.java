@@ -232,15 +232,15 @@ class MpgsWebhookResourceTest {
         }
 
         @Test
-        @DisplayName("AUTHORIZED → returns pending_review, no state mutation")
+        @DisplayName("AUTHORIZED + SUCCESS → calls markPaid with MPGS provider")
         void authorized() {
             var order = pendingOrder();
             when(orders.findByInvoiceNumber(INVOICE_NUMBER)).thenReturn(Optional.of(order));
             var body = webhookBody(VALID_SECRET, INVOICE_NUMBER, "AUTHORIZED", "txn-abc", "SUCCESS");
             var response = resource.handle(body);
             assertEquals(200, response.getStatus());
-            assertTrue(response.getEntity().toString().contains("pending_review"));
-            verify(orderService, never()).markPaid(any(), any(), any());
+            assertTrue(response.getEntity().toString().contains("paid"));
+            verify(orderService).markPaid(order, "txn-abc", "MPGS");
             verify(orderService, never()).markPaymentFailed(any(), any());
         }
 
