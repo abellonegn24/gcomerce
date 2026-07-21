@@ -344,8 +344,10 @@ export class CheckoutComponent implements OnInit {
   // -------------------------------------------------------------------------
 
   private fetchPaymentPayloadAndRedirect(orderUuid: string): void {
+    console.log('[MPGS] Fetching payment payload for order:', orderUuid);
     this.orderService.paymentPayload(orderUuid).subscribe({
       next: (payload) => {
+        console.log('[MPGS] Payment payload received:', JSON.stringify(payload));
         this.placing.set(false);
         this.redirecting.set(true);
         if (payload.provider === 'MPGS') {
@@ -355,6 +357,7 @@ export class CheckoutComponent implements OnInit {
         }
       },
       error: (err: NormalizedApiError) => {
+        console.error('[MPGS] Payment payload error:', err);
         this.placing.set(false);
         if (err.code === 'PAYMENT_GATEWAY_NOT_CONFIGURED') {
           // Dev / staging path — take the customer to the order detail so
@@ -376,15 +379,20 @@ export class CheckoutComponent implements OnInit {
    * successIndicator) comes in {@link payload.fields}.
    */
   private initMpgsCheckout(checkoutJsUrl: string, fields: Record<string, string>, orderUuid: string): void {
+    console.log('[MPGS] Loading Checkout.js from:', checkoutJsUrl);
+    console.log('[MPGS] Session fields:', JSON.stringify(fields));
     const script = this.doc.createElement('script');
     script.src = checkoutJsUrl;
     script.onload = () => {
+      console.log('[MPGS] Checkout.js script loaded');
       const checkout = (window as any).Checkout;
       if (!checkout) {
+        console.error('[MPGS] window.Checkout is undefined after script load');
         this.redirecting.set(false);
         this.errorMessage.set('MPGS Checkout.js failed to load. Please try again.');
         return;
       }
+      console.log('[MPGS] Checkout object found, calling configure()');
       checkout.configure({
         merchant: fields['merchantId'],
         session: {
@@ -417,6 +425,11 @@ export class CheckoutComponent implements OnInit {
           this.errorMessage.set('Payment was not completed. Please try again.');
         }
       });
+      // Some versions of Checkout.js don't auto-open the lightbox.
+      // Call showLightbox() explicitly to ensure the payment modal appears.
+      if (typeof checkout.showLightbox === 'function') {
+        checkout.showLightbox();
+      }
     };
     script.onerror = () => {
       this.redirecting.set(false);

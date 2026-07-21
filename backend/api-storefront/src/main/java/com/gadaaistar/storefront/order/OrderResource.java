@@ -117,6 +117,9 @@ public class OrderResource {
             fields.put("sessionId", order.mpgsSessionId);
             fields.put("successIndicator", order.mpgsSuccessIndicator == null ? "" : order.mpgsSuccessIndicator);
             fields.put("merchantName", mpgsConfig.merchantName());
+            fields.put("orderAmount", order.grandTotal.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString());
+            fields.put("orderCurrency", order.currency);
+            fields.put("orderId", order.invoiceNumber);
             // gatewayUrl = checkout.js script URL; frontend loads it then calls Checkout.configure().
             return new PaymentPayload("MPGS", mpgsConfig.checkoutJsUrl(), fields);
         }
