@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -34,14 +34,12 @@ export class RegisterComponent {
 
   protected readonly submitting = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
-
-  protected readonly isB2B = computed(
-    () => this.form.controls.customerType.value === 'B2B'
-  );
+  protected readonly isB2B = signal(false);
 
   constructor() {
     // Toggle company-field validation when switching between B2C and B2B.
     this.form.controls.customerType.valueChanges.subscribe((type) => {
+      this.isB2B.set(type === 'B2B');
       const companyName = this.form.controls.companyName;
       if (type === 'B2B') {
         companyName.setValidators([Validators.required, Validators.maxLength(255)]);
@@ -75,13 +73,7 @@ export class RegisterComponent {
 
     this.auth.register(payload).subscribe({
       next: () => {
-        // B2C accounts must confirm their email before they can transact →
-        // send them to the "check your inbox" screen instead of straight to
-        // /account. B2B accounts still need admin approval anyway, so the
-        // same screen doubles as a clear "next step" prompt.
-        void this.router.navigate(['/verify-email/pending'], {
-          queryParams: { email: payload.email },
-        });
+        void this.router.navigate(['/shop']);
       },
       error: (err: NormalizedApiError) => {
         this.submitting.set(false);

@@ -82,6 +82,13 @@ export const routes: Routes = [
         title: 'Order detail — Gadaa Istar',
       },
       {
+        path: 'transactions',
+        loadComponent: () =>
+          import('./pages/account/transactions.component')
+            .then((m) => m.AccountTransactionsComponent),
+        title: 'All transactions — Gadaa Istar',
+      },
+      {
         path: 'quotes',
         loadComponent: () =>
           import('./pages/account/quotes.component')

@@ -83,6 +83,28 @@ export interface PagedOrders {
   total: number;
 }
 
+export interface TransactionSummary {
+  id: number;
+  uuid: string;
+  invoiceNumber: string;
+  status: OrderStatus;
+  currency: string;
+  grandTotal: string;
+  itemCount: number;
+  customerName: string | null;
+  customerEmail: string | null;
+  customerType: string | null;
+  placedAt: string;
+  paidAt: string | null;
+}
+
+export interface PagedTransactions {
+  items: TransactionSummary[];
+  page: number;
+  size: number;
+  total: number;
+}
+
 export interface PlaceOrderPayload {
   shipToAddressId: number;
   billToAddressId?: number | null;

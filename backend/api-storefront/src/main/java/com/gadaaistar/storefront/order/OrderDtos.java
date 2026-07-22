@@ -132,6 +132,23 @@ public final class OrderDtos {
      * gateway. The {@code payment} block is populated on-demand by
      * {@code /me/orders/{uuid}/payment-payload}.
      */
+    public record TransactionSummary(
+            Long id,
+            String uuid,
+            String invoiceNumber,
+            OrderStatus status,
+            String currency,
+            BigDecimal grandTotal,
+            int itemCount,
+            String customerName,
+            String customerEmail,
+            String customerType,
+            Instant placedAt,
+            Instant paidAt
+    ) {}
+
+    public record PagedTransactions(List<TransactionSummary> items, int page, int size, long total) {}
+
     public record PlaceOrderResponse(
             OrderDetail order,
             /** URL to POST the signed CyberSource fields to (endpoint URL). */

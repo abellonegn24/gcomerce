@@ -1,0 +1,93 @@
+<section class="gi-transactions">
+  <header class="gi-transactions__head">
+    <h2>All transactions</h2>
+    @if (total() > 0) {
+      <span class="gi-transactions__count">{{ total() }} transaction{{ total() === 1 ? '' : 's' }}</span>
+    }
+  </header>
+
+  @if (errorMessage(); as msg) {
+    <div class="gi-alert gi-alert--error" role="alert">
+      <span class="material-icons-round">error_outline</span>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  @if (loading() && transactions().length === 0) {
+    <p class="gi-transactions__loading">
+      <span class="material-icons-round gi-spin">progress_activity</span>
+      Loading transactions…
+    </p>
+  }
+
+  @if (isEmpty()) {
+    <div class="gi-empty">
+      <span class="material-icons-round">receipt_long</span>
+      <h3>No transactions yet</h3>
+      <p>There are no orders from any customer to display.</p>
+    </div>
+  }
+
+  @if (transactions().length > 0) {
+    <div class="gi-transactions__table-wrap">
+      <table class="gi-transactions__table">
+        <thead>
+          <tr>
+            <th>Invoice</th>
+            <th>Customer</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of transactions(); track t.uuid) {
+            <tr>
+              <td>
+                <a [routerLink]="['/account/orders', t.uuid]" class="gi-transactions__invoice">
+                  {{ t.invoiceNumber }}
+                </a>
+              </td>
+              <td>
+                <div class="gi-transactions__customer">
+                  <span class="gi-transactions__customer-name">{{ t.customerName || '—' }}</span>
+                  @if (t.customerEmail) {
+                    <span class="gi-transactions__customer-email">{{ t.customerEmail }}</span>
+                  }
+                </div>
+              </td>
+              <td>
+                @if (t.customerType) {
+                  <span class="gi-transactions__type" [class.is-b2b]="t.customerType === 'B2B'">
+                    {{ t.customerType }}
+                  </span>
+                } @else {
+                  <span>—</span>
+                }
+              </td>
+              <td>
+                <span class="gi-transactions__status" [ngClass]="statusClass(t.status)">
+                  {{ statusLabel(t.status) }}
+                </span>
+              </td>
+              <td>{{ t.itemCount }}</td>
+              <td><strong>{{ formatMoney(t.currency, t.grandTotal) }}</strong></td>
+              <td>{{ t.placedAt | date:'mediumDate' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (hasMore()) {
+      <button type="button" class="gi-btn-inline gi-btn-inline--ghost gi-transactions__more"
+              [disabled]="loading()"
+              (click)="loadNextPage()">
+        @if (loading()) { Loading… }
+        @else { Load more }
+      </button>
+    }
+  }
+</section>

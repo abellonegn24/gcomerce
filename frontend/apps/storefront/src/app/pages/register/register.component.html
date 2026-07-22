@@ -17,7 +17,7 @@
       <div class="gi-type-toggle" role="radiogroup" aria-label="Account type">
         @for (option of [
           { value: 'B2C', label: 'Personal (retail)', hint: 'Shop retail packs; instant checkout.' },
-          { value: 'B2B', label: 'Business (wholesale)', hint: 'Tiered pricing; requires approval.' }
+          { value: 'B2B', label: 'Business (wholesale)', hint: 'Tiered pricing for bulk orders.' }
         ]; track option.value) {
           <label class="gi-type-toggle__opt" [class.is-active]="form.controls.customerType.value === option.value">
             <input type="radio" formControlName="customerType" [value]="option.value" />

@@ -39,7 +39,6 @@ public class AuthService {
     @Inject JwtIssuer            jwtIssuer;
     @Inject RefreshTokenService  refreshTokens;
     @Inject AuthMapper           mapper;
-    @Inject EmailVerificationService emailVerification;
 
     // -------------------------------------------------------------------------
     // Register
@@ -63,9 +62,8 @@ public class AuthService {
         customer.email             = normalizedEmail;
         customer.passwordHash      = hasher.hash(req.password());
         customer.customerType      = type;
-        customer.status            = type == CustomerType.B2B
-                                        ? CustomerStatus.PENDING_APPROVAL
-                                        : CustomerStatus.PENDING_VERIFICATION;
+        customer.status            = CustomerStatus.ACTIVE;
+        customer.emailVerifiedAt   = Instant.now();
         customer.firstName         = req.firstName().trim();
         customer.lastName          = req.lastName().trim();
         customer.companyName       = req.companyName();
@@ -82,21 +80,12 @@ public class AuthService {
                     .orElseThrow(() -> new ValidationException("Unknown customer group '"
                             + req.customerGroupCode() + "'."));
         } else {
-            customer.group = groups.findByCode("RETAIL").orElse(null);
+            var defaultGroupCode = type == CustomerType.B2B ? "WHOLESALE_T1" : "RETAIL";
+            customer.group = groups.findByCode(defaultGroupCode).orElse(null);
         }
 
         customers.persist(customer);
         LOG.infof("Registered new customer id=%d type=%s status=%s", customer.id, customer.customerType, customer.status);
-
-        // Fire off the verification email. B2B still needs manual approval before
-        // ACTIVE status but we want their email confirmed regardless.
-        try {
-            emailVerification.start(customer);
-        } catch (Exception mailErr) {
-            // Don't fail the registration if the mailer is unavailable — the
-            // customer can hit /auth/resend-verification later.
-            LOG.warnf(mailErr, "Failed to enqueue verification email for customer id=%d", customer.id);
-        }
 
         return issueSessionForCustomer(customer, ip, userAgent);
     }
@@ -117,6 +106,14 @@ public class AuthService {
         if (!customer.status.canLogin()) {
             throw new UnauthorizedException("ACCOUNT_" + customer.status.name(),
                     "This account cannot sign in at this time.");
+        }
+
+        // Ensure account stays ACTIVE and verified — email verification is disabled.
+        if (customer.status != CustomerStatus.ACTIVE) {
+            customer.status = CustomerStatus.ACTIVE;
+        }
+        if (customer.emailVerifiedAt == null) {
+            customer.emailVerifiedAt = Instant.now();
         }
 
         customer.lastLoginAt = Instant.now();
@@ -167,6 +164,15 @@ public class AuthService {
     public AuthDtos.CustomerDto me(long customerId) {
         var customer = customers.findByIdOptional(customerId)
                 .orElseThrow(() -> new NotFoundException("Customer", customerId));
+
+        // Ensure account stays ACTIVE and verified — email verification is disabled.
+        if (customer.status != CustomerStatus.ACTIVE) {
+            customer.status = CustomerStatus.ACTIVE;
+        }
+        if (customer.emailVerifiedAt == null) {
+            customer.emailVerifiedAt = Instant.now();
+        }
+
         return mapper.toDto(customer);
     }
 
@@ -192,6 +198,14 @@ public class AuthService {
         if (nonBlank(req.preferredCurrency())) customer.preferredCurrency = req.preferredCurrency().trim().toUpperCase();
         if (nonBlank(req.preferredLocale()))   customer.preferredLocale = req.preferredLocale().trim();
 
+        // Ensure account stays ACTIVE and verified — email verification is disabled.
+        if (customer.status != CustomerStatus.ACTIVE) {
+            customer.status = CustomerStatus.ACTIVE;
+        }
+        if (customer.emailVerifiedAt == null) {
+            customer.emailVerifiedAt = Instant.now();
+        }
+
         return mapper.toDto(customer);
     }
 
@@ -215,6 +229,15 @@ public class AuthService {
         }
 
         customer.passwordHash = hasher.hash(req.newPassword());
+
+        // Ensure account stays ACTIVE and verified — email verification is disabled.
+        if (customer.status != CustomerStatus.ACTIVE) {
+            customer.status = CustomerStatus.ACTIVE;
+        }
+        if (customer.emailVerifiedAt == null) {
+            customer.emailVerifiedAt = Instant.now();
+        }
+
         refreshTokens.revokeAllForCustomer(customer.id);
         LOG.infof("Customer id=%d changed password; all sessions revoked.", customer.id);
     }

@@ -7,6 +7,7 @@ import {
   CancelOrderPayload,
   OrderDetail,
   PagedOrders,
+  PagedTransactions,
   PaymentPayload,
   PlaceOrderPayload,
 } from './order.model';
@@ -27,6 +28,16 @@ export class OrderService {
     return this.http.get<PagedOrders>(`${environment.apiBaseUrl}/me/orders`, {
       params,
     });
+  }
+
+  listAllTransactions(page = 0, size = 20): Observable<PagedTransactions> {
+    const params = new HttpParams()
+      .set('page', String(page))
+      .set('size', String(size));
+    return this.http.get<PagedTransactions>(
+      `${environment.apiBaseUrl}/me/orders/transactions`,
+      { params },
+    );
   }
 
   get(uuid: string): Observable<OrderDetail> {

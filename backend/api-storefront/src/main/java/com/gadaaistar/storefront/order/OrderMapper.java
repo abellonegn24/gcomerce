@@ -29,6 +29,24 @@ public class OrderMapper {
         );
     }
 
+    public OrderDtos.TransactionSummary toTransactionSummary(CheckoutOrder o) {
+        var cust = o.customer;
+        return new OrderDtos.TransactionSummary(
+                o.id,
+                o.uuid,
+                o.invoiceNumber,
+                o.status,
+                o.currency,
+                o.grandTotal,
+                o.items == null ? 0 : o.items.size(),
+                cust == null ? null : cust.displayName(),
+                cust == null ? null : cust.email,
+                cust == null ? null : cust.customerType.name(),
+                o.placedAt,
+                o.paidAt
+        );
+    }
+
     public OrderDtos.OrderDetail toDetail(CheckoutOrder o) {
         return toDetail(o, o.items == null ? List.of() : o.items.stream().map(this::toLine).toList(),
                         o.statusEvents == null ? List.of() : o.statusEvents.stream().map(this::toEvent).toList());

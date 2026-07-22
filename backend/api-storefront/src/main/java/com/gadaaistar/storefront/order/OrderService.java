@@ -42,6 +42,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 /**
@@ -87,6 +88,10 @@ public class OrderService {
     @Inject MailService                 mailService;
     @Inject MpgsService                 mpgsService;
 
+    @ConfigProperty(name = "gadaa.transactions.admin-viewer-email",
+                    defaultValue = "admin@gplus.com")
+    String adminViewerEmail;
+
     // -------------------------------------------------------------------------
     // Reads
     // -------------------------------------------------------------------------
@@ -108,6 +113,24 @@ public class OrderService {
             throw new NotFoundException("Order", uuid);
         }
         return order;
+    }
+
+    // -------------------------------------------------------------------------
+    // All-transactions view (B2B admin viewer only)
+    // -------------------------------------------------------------------------
+
+    public boolean isTransactionViewer(long customerId) {
+        var customer = customers.findById(customerId);
+        if (customer == null) return false;
+        return adminViewerEmail.equalsIgnoreCase(customer.email);
+    }
+
+    public List<CheckoutOrder> listAllTransactions(int page, int size) {
+        return orders.listAllOrders(page, size);
+    }
+
+    public long countAllTransactions() {
+        return orders.countAllOrders();
     }
 
     /**

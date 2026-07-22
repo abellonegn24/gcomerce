@@ -32,6 +32,16 @@ public class CheckoutOrderRepository implements PanacheRepository<CheckoutOrder>
         return count("customer.id", customerId);
     }
 
+    public List<CheckoutOrder> listAllOrders(int page, int size) {
+        return find("1=1", Sort.by("placedAt").descending())
+                .page(Page.of(page, size))
+                .list();
+    }
+
+    public long countAllOrders() {
+        return count();
+    }
+
     public List<CheckoutOrder> listByStatus(OrderStatus status, int page, int size) {
         return find("status", Sort.by("placedAt").descending(), status)
                 .page(Page.of(page, size))

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
@@ -21,10 +21,22 @@ export class AccountComponent {
 
   protected readonly customer = this.auth.currentCustomer;
 
-  protected readonly tabs = [
-    { path: '/account',           exact: true,  icon: 'person',       label: 'Profile' },
-    { path: '/account/addresses', exact: false, icon: 'place',        label: 'Addresses' },
-    { path: '/account/orders',    exact: false, icon: 'shopping_bag', label: 'Orders' },
-    { path: '/account/quotes',    exact: false, icon: 'request_quote', label: 'Quotes' },
-  ];
+  private readonly isTransactionViewer = computed<boolean>(() => {
+    const c = this.customer();
+    if (!c) return false;
+    return c.email === 'admin@gplus.com';
+  });
+
+  protected readonly tabs = computed(() => {
+    const base = [
+      { path: '/account',           exact: true,  icon: 'person',        label: 'Profile' },
+      { path: '/account/addresses', exact: false, icon: 'place',         label: 'Addresses' },
+      { path: '/account/orders',    exact: false, icon: 'shopping_bag',  label: 'Orders' },
+    ];
+    if (this.isTransactionViewer()) {
+      base.push({ path: '/account/transactions', exact: false, icon: 'receipt_long', label: 'Transactions' });
+    }
+    base.push({ path: '/account/quotes', exact: false, icon: 'request_quote', label: 'Quotes' });
+    return base;
+  });
 }

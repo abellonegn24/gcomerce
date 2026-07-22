@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.gadaaistar.common.OrderStatus;
 import com.gadaaistar.common.exceptions.ConflictException;
+import com.gadaaistar.common.exceptions.ForbiddenException;
 import com.gadaaistar.storefront.payment.CyberSourceService;
 import com.gadaaistar.storefront.payment.MpgsConfig;
 import com.gadaaistar.storefront.payment.MpgsService;
@@ -71,6 +72,23 @@ public class OrderResource {
                 .stream().map(mapper::toSummary).toList();
         var total   = orderService.countForCustomer(customerId);
         return new PagedOrders(rows, pageIdx, clamped, total);
+    }
+
+    @GET
+    @Path("/transactions")
+    @Operation(summary = "All transactions across all customers — only available to the B2B admin viewer.")
+    public PagedTransactions listAllTransactions(@QueryParam("page") @DefaultValue("0") int page,
+                                                  @QueryParam("size") @DefaultValue("20") int size) {
+        var customerId = security.requireCustomer();
+        if (!orderService.isTransactionViewer(customerId)) {
+            throw new ForbiddenException("You do not have access to this resource.");
+        }
+        var clamped = Math.min(Math.max(size, 1), 100);
+        var pageIdx = Math.max(page, 0);
+        var rows    = orderService.listAllTransactions(pageIdx, clamped)
+                .stream().map(mapper::toTransactionSummary).toList();
+        var total   = orderService.countAllTransactions();
+        return new PagedTransactions(rows, pageIdx, clamped, total);
     }
 
     @GET
@@ -207,6 +225,8 @@ public class OrderResource {
     // -------------------------------------------------------------------------
 
     public record PagedOrders(List<OrderDtos.OrderSummary> items, int page, int size, long total) {}
+
+    public record PagedTransactions(List<OrderDtos.TransactionSummary> items, int page, int size, long total) {}
 
     public record PaymentPayload(String provider, String gatewayUrl, java.util.LinkedHashMap<String, String> fields) {}
 }

@@ -14,7 +14,7 @@
 
   <div class="gi-account-portal__body">
     <aside class="gi-account-portal__tabs" aria-label="Account sections">
-      @for (t of tabs; track t.path) {
+      @for (t of tabs(); track t.path) {
         <a
           [routerLink]="t.path"
           routerLinkActive="is-active"

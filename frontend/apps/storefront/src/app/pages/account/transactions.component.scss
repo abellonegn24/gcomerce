@@ -1,0 +1,146 @@
+.gi-transactions {
+  &__head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+
+    h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--gi-navy-900);
+    }
+  }
+
+  &__count {
+    font-size: 0.85rem;
+    color: var(--gi-text-secondary);
+  }
+
+  &__loading {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--gi-text-secondary);
+    padding: 2rem 0;
+
+    .material-icons-round { font-size: 1.25rem; }
+  }
+
+  &__table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--gi-border);
+    border-radius: var(--gi-radius-md);
+    background: #fff;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+
+    thead th {
+      text-align: left;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--gi-text-secondary);
+      border-bottom: 1px solid var(--gi-border);
+      white-space: nowrap;
+    }
+
+    tbody td {
+      padding: 0.65rem 0.85rem;
+      border-bottom: 1px solid var(--gi-border);
+      vertical-align: top;
+
+      &:last-child { border-bottom: none; }
+    }
+
+    tbody tr:hover {
+      background: rgba(44, 83, 145, 0.02);
+    }
+  }
+
+  &__invoice {
+    font-weight: 600;
+    color: var(--gi-navy-700);
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover { text-decoration: underline; }
+  }
+
+  &__customer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  &__customer-name {
+    font-weight: 500;
+    color: var(--gi-navy-900);
+  }
+
+  &__customer-email {
+    font-size: 0.75rem;
+    color: var(--gi-text-secondary);
+  }
+
+  &__type {
+    display: inline-block;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: var(--gi-border);
+    color: var(--gi-navy-900);
+
+    &.is-b2b {
+      background: rgba(212, 175, 55, 0.15);
+      color: #8a6d00;
+    }
+  }
+
+  &__status {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+
+    &.is-ok {
+      background: rgba(34, 139, 34, 0.12);
+      color: #2d7a2d;
+    }
+    &.is-done {
+      background: rgba(34, 139, 34, 0.18);
+      color: #1b5e1b;
+    }
+    &.is-pending {
+      background: rgba(212, 175, 55, 0.15);
+      color: #8a6d00;
+    }
+    &.is-cancelled {
+      background: rgba(220, 53, 69, 0.12);
+      color: #a0202c;
+    }
+  }
+
+  &__more {
+    margin-top: 1rem;
+  }
+}
+
+.gi-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+
+  .material-icons-round { font-size: 2.5rem; color: var(--gi-gold-600); }
+  h3 { margin: 0.5rem 0 0.35rem; }
+  p  { color: var(--gi-text-secondary); margin: 0; }
+}
