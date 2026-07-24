@@ -89,9 +89,10 @@ public class MpgsWebhookResource {
                     .build();
         }
 
-        var orderOpt = orders.findByInvoiceNumber(orderId);
+        var orderOpt = orders.findByUuid(orderId)
+                .or(() -> orders.findByInvoiceNumber(orderId));
         if (orderOpt.isEmpty()) {
-            LOG.warnf("MPGS webhook for unknown invoice %s", orderId);
+            LOG.warnf("MPGS webhook for unknown order.id %s", orderId);
             return Response.ok(Map.of("status", "unknown_order")).build();
         }
         var order = orderOpt.get();

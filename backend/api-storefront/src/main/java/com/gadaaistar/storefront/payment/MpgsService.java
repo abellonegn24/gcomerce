@@ -128,7 +128,7 @@ public class MpgsService {
                   }
                 }""", returnUrl, cancelUrl, merchantJson.toString(),
                 amount, order.currency,
-                order.invoiceNumber, order.uuid, order.invoiceNumber,
+                order.uuid, order.invoiceNumber, order.invoiceNumber,
                 order.invoiceNumber);
 
         try {
@@ -183,7 +183,8 @@ public class MpgsService {
             fields.put("merchantName", config.merchantName());
             fields.put("orderAmount", amount);
             fields.put("orderCurrency", order.currency);
-            fields.put("orderId", order.invoiceNumber);
+            fields.put("orderId", order.uuid);
+            fields.put("orderReference", order.invoiceNumber);
 
             return new MpgsSession(sessionId, nz(successIndicator),
                     config.checkoutJsUrl(), config.merchantId(), fields);

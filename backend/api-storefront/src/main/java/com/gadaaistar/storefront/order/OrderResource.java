@@ -141,7 +141,8 @@ public class OrderResource {
             fields.put("merchantName", mpgsConfig.merchantName());
             fields.put("orderAmount", order.grandTotal.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString());
             fields.put("orderCurrency", order.currency);
-            fields.put("orderId", order.invoiceNumber);
+            fields.put("orderId", order.uuid);
+            fields.put("orderReference", order.invoiceNumber);
             // gatewayUrl = checkout.js script URL; frontend loads it then calls Checkout.configure().
             return new PaymentPayload("MPGS", mpgsConfig.checkoutJsUrl(), fields);
         }
@@ -174,7 +175,10 @@ public class OrderResource {
                     Map.of("paymentMethod", order.paymentMethod == null ? "UNKNOWN" : order.paymentMethod));
         }
 
-        var result = mpgs.retrieveOrder(order.invoiceNumber);
+        var result = mpgs.retrieveOrder(order.uuid);
+        if (result == null) {
+            result = mpgs.retrieveOrder(order.invoiceNumber);
+        }
         if (result == null) {
             throw new ConflictException("MPGS_LOOKUP_FAILED",
                     "Could not retrieve payment status from MPGS. Please try again or contact support.",
