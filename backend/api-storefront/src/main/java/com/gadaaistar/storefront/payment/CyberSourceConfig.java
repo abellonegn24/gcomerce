@@ -29,7 +29,7 @@ public class CyberSourceConfig {
     String secretKey;
 
     @ConfigProperty(name = "gadaa.frontend.storefront-url",
-                    defaultValue = "http://localhost:4200")
+                    defaultValue = "https://gedaaistar.et")
     String storefrontBaseUrl;
 
     public String env()               { return env; }

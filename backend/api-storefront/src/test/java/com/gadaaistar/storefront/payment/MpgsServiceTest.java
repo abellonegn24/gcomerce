@@ -200,7 +200,7 @@ class MpgsServiceTest {
         String checkoutVersion = "62";
         String notificationSecret = "test-notification-secret";
         boolean enabled = true;
-        String storefrontBaseUrl = "http://localhost:4200";
+        String storefrontBaseUrl = "https://gedaaistar.et";
 
         @Override public String gatewayUrl()         { return gatewayUrl; }
         @Override public String merchantId()         { return merchantId; }

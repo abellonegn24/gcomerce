@@ -50,7 +50,7 @@ public class MpgsConfig {
     String merchantEmail;
 
     @ConfigProperty(name = "gadaa.frontend.storefront-url",
-                    defaultValue = "http://localhost:4200")
+                    defaultValue = "https://gedaaistar.et")
     String storefrontBaseUrl;
 
     public String gatewayUrl()         { return gatewayUrl; }

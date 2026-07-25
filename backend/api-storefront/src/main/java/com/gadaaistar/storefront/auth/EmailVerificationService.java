@@ -47,7 +47,7 @@ public class EmailVerificationService {
     @ConfigProperty(name = "gadaa.auth.email-verification-ttl-minutes", defaultValue = "60")
     long ttlMinutes;
 
-    @ConfigProperty(name = "gadaa.frontend.storefront-url", defaultValue = "http://localhost:4200")
+    @ConfigProperty(name = "gadaa.frontend.storefront-url", defaultValue = "https://gedaaistar.et")
     String storefrontBaseUrl;
 
     // -------------------------------------------------------------------------

@@ -93,10 +93,10 @@ npm install
 Then, in two separate terminals:
 
 ```powershell
-# Storefront on http://localhost:4200
+# Storefront on https://gedaaistar.et
 npm run start:storefront
 
-# Admin on http://localhost:4300
+# Admin on https://admin.gedaaistar.et
 npm run start:admin
 ```
 

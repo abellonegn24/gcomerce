@@ -2406,8 +2406,8 @@ See README.md > Quick Start. Auth-flow smoke test after `npm install`:
 
   # 5. Frontend (storefront + admin)
   cd ../frontend && npm install
-  npm run start:storefront          # http://localhost:4200
-  npm run start:admin               # http://localhost:4300
+  npm run start:storefront          # https://gedaaistar.et
+  npm run start:admin               # https://admin.gedaaistar.et
 
   # 6. Admin API smoke test (Phase 2.1)
   # First sign-in triggers TOTP enrollment. The response includes an

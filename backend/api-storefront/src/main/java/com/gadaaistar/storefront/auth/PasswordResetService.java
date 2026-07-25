@@ -47,7 +47,7 @@ public class PasswordResetService {
     @ConfigProperty(name = "gadaa.auth.password-reset-ttl-minutes", defaultValue = "30")
     long ttlMinutes;
 
-    @ConfigProperty(name = "gadaa.frontend.storefront-url", defaultValue = "http://localhost:4200")
+    @ConfigProperty(name = "gadaa.frontend.storefront-url", defaultValue = "https://gedaaistar.et")
     String storefrontBaseUrl;
 
     // -------------------------------------------------------------------------
