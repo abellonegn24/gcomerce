@@ -27,10 +27,10 @@ public class MpgsConfig {
     @ConfigProperty(name = "gadaa.mpgs.api-password", defaultValue = "")
     String apiPassword;
 
-    @ConfigProperty(name = "gadaa.mpgs.api-version", defaultValue = "62")
+    @ConfigProperty(name = "gadaa.mpgs.api-version", defaultValue = "100")
     String apiVersion;
 
-    @ConfigProperty(name = "gadaa.mpgs.checkout-version", defaultValue = "62")
+    @ConfigProperty(name = "gadaa.mpgs.checkout-version", defaultValue = "100")
     String checkoutVersion;
 
     @ConfigProperty(name = "gadaa.mpgs.notification-secret", defaultValue = "")
