@@ -18,7 +18,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 public class MpgsConfig {
 
     @ConfigProperty(name = "gadaa.mpgs.gateway-url",
-                    defaultValue = "https://test-gateway.mastercard.com")
+                    defaultValue = "https://mtf.gateway.mastercard.com")
     String gatewayUrl;
 
     @ConfigProperty(name = "gadaa.mpgs.merchant-id", defaultValue = "")

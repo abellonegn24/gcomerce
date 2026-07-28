@@ -132,7 +132,7 @@ class MpgsServiceTest {
             config.enabled = true;
             config.merchantId = "";
             config.apiPassword = "password";
-            config.gatewayUrl = "https://test-gateway.mastercard.com";
+            config.gatewayUrl = "https://mtf.gateway.mastercard.com";
             var order = minimalOrder();
 
             var ex = assertThrows(ConflictException.class,
@@ -146,7 +146,7 @@ class MpgsServiceTest {
             config.enabled = true;
             config.merchantId = "TESTMID";
             config.apiPassword = "";
-            config.gatewayUrl = "https://test-gateway.mastercard.com";
+            config.gatewayUrl = "https://mtf.gateway.mastercard.com";
             var order = minimalOrder();
 
             var ex = assertThrows(ConflictException.class,
@@ -193,7 +193,7 @@ class MpgsServiceTest {
      * mutable fields set by individual tests.
      */
     private static class TestMpgsConfig extends MpgsConfig {
-        String gatewayUrl = "https://test-gateway.mastercard.com";
+        String gatewayUrl = "https://mtf.gateway.mastercard.com";
         String merchantId = "TESTMID";
         String apiPassword = "testpassword";
         String apiVersion = "62";

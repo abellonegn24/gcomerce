@@ -22,7 +22,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 public class MpgsRefundConfig {
 
     @ConfigProperty(name = "gadaa.mpgs.gateway-url",
-                    defaultValue = "https://test-gateway.mastercard.com")
+                    defaultValue = "https://mtf.gateway.mastercard.com")
     String gatewayUrl;
 
     @ConfigProperty(name = "gadaa.mpgs.merchant-id", defaultValue = "")
@@ -31,7 +31,7 @@ public class MpgsRefundConfig {
     @ConfigProperty(name = "gadaa.mpgs.api-password", defaultValue = "")
     String apiPassword;
 
-    @ConfigProperty(name = "gadaa.mpgs.api-version", defaultValue = "62")
+    @ConfigProperty(name = "gadaa.mpgs.api-version", defaultValue = "100")
     String apiVersion;
 
     @ConfigProperty(name = "gadaa.mpgs.timeout-seconds", defaultValue = "30")

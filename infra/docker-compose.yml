@@ -103,7 +103,7 @@ services:
       QUARKUS_REDIS_HOSTS: ${QUARKUS_REDIS_HOSTS:-redis://redis:6379}
       # MPGS (Mastercard Payment Gateway Services)
       MPGS_ENABLED: ${MPGS_ENABLED:-false}
-      MPGS_GATEWAY_URL: ${MPGS_GATEWAY_URL:-https://test-gateway.mastercard.com}
+      MPGS_GATEWAY_URL: ${MPGS_GATEWAY_URL:-https://mtf.gateway.mastercard.com}
       MPGS_MERCHANT_ID: ${MPGS_MERCHANT_ID:-}
       MPGS_API_PASSWORD: ${MPGS_API_PASSWORD:-}
       MPGS_API_VERSION: ${MPGS_API_VERSION:-62}
@@ -150,7 +150,7 @@ services:
       S3_BUCKET_MEDIA: ${S3_BUCKET_MEDIA:-gadaa-media}
       S3_MAX_UPLOAD_BYTES: ${S3_MAX_UPLOAD_BYTES:-20971520}
       # MPGS (for refunds via admin API)
-      MPGS_GATEWAY_URL: ${MPGS_GATEWAY_URL:-https://test-gateway.mastercard.com}
+      MPGS_GATEWAY_URL: ${MPGS_GATEWAY_URL:-https://mtf.gateway.mastercard.com}
       MPGS_MERCHANT_ID: ${MPGS_MERCHANT_ID:-}
       MPGS_API_PASSWORD: ${MPGS_API_PASSWORD:-}
       MPGS_API_VERSION: ${MPGS_API_VERSION:-62}
