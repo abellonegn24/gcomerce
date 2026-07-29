@@ -59,7 +59,7 @@
                   @if (editingLineId() === line.id) {
                     <input type="number" step="0.01" min="0" class="gi-quote__price-input"
                            [ngModel]="editPrice()"
-                           (ngModelChange)="editPrice.set($event)"
+                           (ngModelChange)="editPrice.set(toStr($event))"
                            name="price-{{ line.id }}" />
                   } @else {
                     {{ formatMoney(q.currency, line.proposedUnitPrice) }}
@@ -153,14 +153,14 @@
               <span>Shipping total ({{ q.currency }})</span>
               <input type="number" step="0.01" min="0"
                      [ngModel]="sendShipping()"
-                     (ngModelChange)="sendShipping.set($event)"
+                     (ngModelChange)="sendShipping.set(toStr($event))"
                      name="send-shipping" />
             </label>
             <label class="gi-field">
               <span>Tax total ({{ q.currency }})</span>
               <input type="number" step="0.01" min="0"
                      [ngModel]="sendTax()"
-                     (ngModelChange)="sendTax.set($event)"
+                     (ngModelChange)="sendTax.set(toStr($event))"
                      name="send-tax" />
             </label>
             <label class="gi-field">
@@ -208,18 +208,29 @@
             <h2>Convert to order</h2>
             <p class="gi-quote__hint">The customer has accepted this quote. Convert it to a placed order.</p>
             <label class="gi-field">
-              <span>Shipping address ID</span>
-              <input type="number" min="1"
-                     [ngModel]="convertAddressId()"
-                     (ngModelChange)="convertAddressId.set($event)"
-                     name="convert-addr" placeholder="Customer address ID" />
+              <span>Shipping address</span>
+              <select [ngModel]="convertAddressId()"
+                      (ngModelChange)="convertAddressId.set(toStr($event))"
+                      name="convert-addr">
+                <option value="" disabled>Select a shipping address…</option>
+                @for (addr of shippingAddresses(); track addr.id) {
+                  <option [value]="addr.id">{{ addressLabel(addr) }}</option>
+                }
+                @if (shippingAddresses().length === 0) {
+                  <option value="" disabled>No shipping addresses on file</option>
+                }
+              </select>
             </label>
             <label class="gi-field">
-              <span>Shipping method ID (optional)</span>
-              <input type="number" min="1"
-                     [ngModel]="convertShippingMethodId()"
-                     (ngModelChange)="convertShippingMethodId.set($event)"
-                     name="convert-ship" placeholder="Leave blank for pickup" />
+              <span>Shipping method (optional)</span>
+              <select [ngModel]="convertShippingMethodId()"
+                      (ngModelChange)="convertShippingMethodId.set(toStr($event))"
+                      name="convert-ship">
+                <option value="">Pickup / no shipping</option>
+                @for (m of shippingMethods(); track m.id) {
+                  <option [value]="m.id">{{ m.name }} ({{ m.code }})</option>
+                }
+              </select>
             </label>
             <button type="button" class="gi-btn gi-btn--primary"
                     (click)="convertQuote()" [disabled]="actionLoading()">

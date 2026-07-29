@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DOCUMENT, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { NormalizedApiError } from '../../core/http/error.interceptor';
-import { OrderDetail, OrderStatus } from '../../core/orders/order.model';
+import { OrderDetail, OrderStatus, PaymentMethodOption } from '../../core/orders/order.model';
 import { OrderService } from '../../core/orders/order.service';
+import { PaymentMethodsService } from '../../core/orders/payment-methods.service';
 
 /**
  * /account/orders/:uuid — line-by-line detail + status history for a single
@@ -23,6 +24,8 @@ export class AccountOrderDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly orderService = inject(OrderService);
+  private readonly paymentMethodsService = inject(PaymentMethodsService);
+  private readonly doc = inject(DOCUMENT);
 
   protected readonly order = signal<OrderDetail | null>(null);
   protected readonly loading = signal<boolean>(true);
@@ -31,6 +34,11 @@ export class AccountOrderDetailComponent implements OnInit {
   protected readonly cancelling = signal<boolean>(false);
   protected readonly startingPayment = signal<boolean>(false);
   protected readonly checkingPayment = signal<boolean>(false);
+
+  // Payment method selection
+  protected readonly paymentMethods = signal<PaymentMethodOption[]>([]);
+  protected readonly paymentMethodsLoading = signal<boolean>(false);
+  protected readonly selectedPaymentMethod = signal<string>('');
 
   /**
    * If the customer arrived from the checkout page's payment-not-configured
@@ -41,6 +49,16 @@ export class AccountOrderDetailComponent implements OnInit {
   protected readonly canCancel = computed<boolean>(
     () => this.order()?.status === 'PENDING_PAYMENT',
   );
+
+  /**
+   * True when the order is awaiting payment and has no payment method set yet
+   * (e.g. orders created from quote conversion). The UI shows a payment method
+   * picker instead of immediately redirecting to the gateway.
+   */
+  protected readonly needsPaymentMethodSelection = computed<boolean>(() => {
+    const o = this.order();
+    return !!o && o.status === 'PENDING_PAYMENT' && !o.paymentMethod;
+  });
 
   ngOnInit(): void {
     const uuid = this.route.snapshot.paramMap.get('uuid');
@@ -59,6 +77,11 @@ export class AccountOrderDetailComponent implements OnInit {
       next: (o) => {
         this.order.set(o);
         this.loading.set(false);
+        // If the order is awaiting payment without a payment method, load the
+        // available payment methods so the customer can pick one.
+        if (o.status === 'PENDING_PAYMENT' && !o.paymentMethod) {
+          this.loadPaymentMethods();
+        }
       },
       error: (err: NormalizedApiError) => {
         this.loading.set(false);
@@ -71,18 +94,145 @@ export class AccountOrderDetailComponent implements OnInit {
     });
   }
 
+  private loadPaymentMethods(): void {
+    this.paymentMethodsLoading.set(true);
+    this.paymentMethodsService.list().subscribe({
+      next: (methods) => {
+        this.paymentMethodsLoading.set(false);
+        this.paymentMethods.set(methods);
+        // Prefer MPGS (Mastercard) as the default payment method.
+        if (!this.selectedPaymentMethod()) {
+          const mpgs = methods.find((m) => m.id === 'MPGS');
+          if (mpgs) {
+            this.selectedPaymentMethod.set('MPGS');
+          } else if (methods.length > 0) {
+            this.selectedPaymentMethod.set(methods[0].id);
+          }
+        }
+      },
+      error: () => {
+        this.paymentMethodsLoading.set(false);
+      },
+    });
+  }
+
   protected retryPayment(): void {
     const o = this.order();
     if (!o) return;
     this.startingPayment.set(true);
     this.errorMessage.set(null);
-    this.orderService.paymentPayload(o.uuid).subscribe({
-      next: (payload) => this.autoPostToGateway(payload.gatewayUrl, payload.fields),
+
+    // If the order has no payment method yet (e.g. created from quote
+    // conversion), set the selected method first, then fetch the payload.
+    if (!o.paymentMethod) {
+      const method = this.selectedPaymentMethod();
+      if (!method) {
+        this.startingPayment.set(false);
+        this.errorMessage.set('Please select a payment method.');
+        return;
+      }
+      this.orderService.setPaymentMethod(o.uuid, { paymentMethod: method }).subscribe({
+        next: (updated) => {
+          this.order.set(updated);
+          this.fetchPayloadAndRedirect(updated.uuid);
+        },
+        error: (err: NormalizedApiError) => {
+          this.startingPayment.set(false);
+          this.errorMessage.set(err.message || 'Could not set payment method.');
+        },
+      });
+      return;
+    }
+
+    this.fetchPayloadAndRedirect(o.uuid);
+  }
+
+  private fetchPayloadAndRedirect(uuid: string): void {
+    this.orderService.paymentPayload(uuid).subscribe({
+      next: (payload) => {
+        this.startingPayment.set(false);
+        if (payload.provider === 'MPGS') {
+          this.initMpgsCheckout(payload.gatewayUrl, payload.fields, uuid);
+        } else {
+          this.autoPostToGateway(payload.gatewayUrl, payload.fields);
+        }
+      },
       error: (err: NormalizedApiError) => {
         this.startingPayment.set(false);
-        this.errorMessage.set(err.message || 'Could not restart payment.');
+        if (err.code === 'PAYMENT_GATEWAY_NOT_CONFIGURED') {
+          this.errorMessage.set(
+            'The selected payment gateway is not configured. Please choose another method or contact support.',
+          );
+        } else {
+          this.errorMessage.set(err.message || 'Could not start payment. Please try again.');
+        }
       },
     });
+  }
+
+  /**
+   * Load the MPGS Checkout.js script and configure the hosted checkout
+   * lightbox. Mirrors the checkout page's implementation — the script URL
+   * comes from {@code payload.gatewayUrl} and the session config (merchantId,
+   * sessionId, successIndicator) from {@code payload.fields}.
+   */
+  private initMpgsCheckout(checkoutJsUrl: string, fields: Record<string, string>, orderUuid: string): void {
+    this.startingPayment.set(true);
+    const script = this.doc.createElement('script');
+    script.src = checkoutJsUrl;
+    script.onload = () => {
+      const checkout = (window as any).Checkout;
+      if (!checkout) {
+        this.startingPayment.set(false);
+        this.errorMessage.set('MPGS Checkout.js failed to load. Please try again.');
+        return;
+      }
+      checkout.configure({
+        merchant: fields['merchantId'],
+        session: {
+          id: fields['sessionId'],
+        },
+        order: {
+          amount: fields['orderAmount'] ?? undefined,
+          currency: fields['orderCurrency'] ?? undefined,
+          description: fields['merchantName'] ?? 'Gadaa Istar',
+          id: fields['orderId'] ?? undefined,
+        },
+        interaction: {
+          merchant: {
+            name: fields['merchantName'] ?? 'Gadaa Istar',
+          },
+        },
+      }, (result: any) => {
+        const successIndicator = fields['successIndicator'];
+        if (result && result.resultIndicator && successIndicator
+            && result.resultIndicator === successIndicator) {
+          this.orderService.confirmMpgsPayment(orderUuid).subscribe({
+            next: () => {
+              void this.router.navigate(['/checkout/return'], {
+                queryParams: { order: orderUuid, provider: 'MPGS' },
+              });
+            },
+            error: () => {
+              void this.router.navigate(['/checkout/return'], {
+                queryParams: { order: orderUuid, provider: 'MPGS' },
+              });
+            },
+          });
+        } else {
+          this.startingPayment.set(false);
+          this.errorMessage.set('Payment was not completed. Please try again.');
+        }
+      });
+      if (typeof checkout.showLightbox === 'function') {
+        checkout.showLightbox();
+      }
+    };
+    script.onerror = () => {
+      this.startingPayment.set(false);
+      this.errorMessage.set('Could not load the payment page. Please try again.');
+    };
+    this.doc.head.appendChild(script);
   }
 
   /**

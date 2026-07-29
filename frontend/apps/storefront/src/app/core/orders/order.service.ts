@@ -10,6 +10,7 @@ import {
   PagedTransactions,
   PaymentPayload,
   PlaceOrderPayload,
+  SetPaymentMethodPayload,
 } from './order.model';
 
 /**
@@ -56,6 +57,13 @@ export class OrderService {
   paymentPayload(uuid: string): Observable<PaymentPayload> {
     return this.http.get<PaymentPayload>(
       `${environment.apiBaseUrl}/me/orders/${uuid}/payment-payload`,
+    );
+  }
+
+  setPaymentMethod(uuid: string, payload: SetPaymentMethodPayload): Observable<OrderDetail> {
+    return this.http.post<OrderDetail>(
+      `${environment.apiBaseUrl}/me/orders/${uuid}/payment-method`,
+      payload,
     );
   }
 

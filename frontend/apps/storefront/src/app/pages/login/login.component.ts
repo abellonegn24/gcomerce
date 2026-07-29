@@ -27,6 +27,11 @@ export class LoginComponent {
 
   protected readonly submitting = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly showPassword = signal<boolean>(false);
+
+  protected togglePasswordVisibility(): void {
+    this.showPassword.update((v) => !v);
+  }
 
   /** True when the user just completed a password reset and landed here. */
   protected readonly resetSuccess = signal<boolean>(

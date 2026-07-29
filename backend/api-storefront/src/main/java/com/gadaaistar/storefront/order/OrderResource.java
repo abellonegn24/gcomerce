@@ -152,6 +152,23 @@ public class OrderResource {
     }
 
     // -------------------------------------------------------------------------
+    // Payment method selection
+    // -------------------------------------------------------------------------
+
+    @POST
+    @Path("/{uuid}/payment-method")
+    @Transactional
+    @Operation(summary = "Set or change the payment method on a PENDING_PAYMENT order. "
+            + "Used by the order-detail 'Continue payment' flow for orders that don't yet "
+            + "have a payment method (e.g. orders created from quote conversion).")
+    public OrderDtos.OrderDetail setPaymentMethod(@PathParam("uuid") String uuid,
+                                                  @Valid OrderDtos.SetPaymentMethodRequest req) {
+        var customerId = security.requireCustomer();
+        var order = orderService.setPaymentMethod(customerId, uuid, req.paymentMethod());
+        return mapper.toDetail(order);
+    }
+
+    // -------------------------------------------------------------------------
     // MPGS payment confirmation (pull-based fallback for when the webhook
     // hasn't been configured in the MPGS Merchant Administration portal)
     // -------------------------------------------------------------------------

@@ -154,6 +154,42 @@
 }
 
 // -----------------------------------------------------------------------------
+// Password visibility toggle
+// -----------------------------------------------------------------------------
+.gi-field--password {
+  position: relative;
+}
+
+.gi-field--password input {
+  padding-right: 2.5rem;
+}
+
+.gi-field__toggle {
+  // Anchor to the top of the field (just below the label + gap) with a
+  // fixed height that spans the input's vertical space. The icon is then
+  // centered inside the button via `align-items: center`, so its position
+  // stays consistent regardless of whether the error message below is shown.
+  position: absolute;
+  right: 0.5rem;
+  top: 1.6rem;
+  bottom: auto;
+  height: 2.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--gi-text-secondary);
+  padding: 0.25rem;
+  border-radius: var(--gi-radius-sm);
+
+  .material-icons-round { font-size: 1.2rem; }
+
+  &:hover { color: var(--gi-navy-700); }
+}
+
+// -----------------------------------------------------------------------------
 // Form-level error banner
 // -----------------------------------------------------------------------------
 .gi-form__error {

@@ -1,0 +1,46 @@
+@startuml B2B Quote Flow
+!theme plain
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontSize 12
+skinparam roundCorner 10
+skinparam shadowing false
+
+title B2B Quote Request Flow — Data Flow Diagram
+
+|B2B Customer|
+start
+:Browse wholesale catalog;
+:Request quote for products;
+|Storefront SSR (Angular 20)|
+:Submit quote request form;
+|api-storefront (Quarkus :8080)|
+:POST /quotes;
+|PostgreSQL|
+:INSERT quote, quote_item\n(status = PENDING);
+|api-storefront (Quarkus :8080)|
+:Return quote reference;
+|B2B Customer|
+:Wait for admin review;
+|api-admin (Quarkus :8081)|
+:Admin reviews quote;
+if (Approve?) then (Yes)
+  :UPDATE quote status = APPROVED;
+  |SMTP Relay|
+  :Send B2B approval email\nwith quote details;
+else (No)
+  :UPDATE quote status = REJECTED;
+  |SMTP Relay|
+  :Send B2B rejection email;
+endif
+|B2B Customer|
+:Receive email notification;
+:Convert approved quote to order;
+|api-storefront (Quarkus :8080)|
+:POST /orders (from quote);
+|PostgreSQL|
+:INSERT checkout_order\nfrom quote items;
+|api-storefront (Quarkus :8080)|
+:Continue to standard checkout\n(MPGS payment flow);
+stop
+
+@enduml

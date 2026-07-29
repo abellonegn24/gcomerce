@@ -37,14 +37,22 @@
         }
       </label>
 
-      <label class="gi-field">
+      <label class="gi-field gi-field--password">
         <span class="gi-field__label">Password</span>
         <input
-          type="password"
+          [type]="showPassword() ? 'text' : 'password'"
           formControlName="password"
           autocomplete="current-password"
           placeholder="At least 8 characters"
           [attr.aria-invalid]="form.controls.password.invalid && form.controls.password.touched" />
+        <button
+          type="button"
+          class="gi-field__toggle"
+          (click)="togglePasswordVisibility()"
+          [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+          tabindex="-1">
+          <span class="material-icons-round">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
+        </button>
         @if (form.controls.password.touched && form.controls.password.invalid) {
           <span class="gi-field__error">Password must be at least 8 characters.</span>
         }

@@ -10,6 +10,10 @@ import {
   QuoteStatus,
   quoteStatusVariant,
 } from '../../core/quotes/quote.model';
+import { CustomerAddressDto } from '../../core/customers/customer.model';
+import { CustomersService } from '../../core/customers/customers.service';
+import { ShippingMethodDto } from '../../core/shipping/shipping.model';
+import { ShippingMethodsService } from '../../core/shipping/shipping-methods.service';
 import { NormalizedApiError } from '../../core/http/error.interceptor';
 
 @Component({
@@ -24,6 +28,8 @@ export class QuoteDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly service = inject(AdminQuotesService);
+  private readonly customersService = inject(CustomersService);
+  private readonly shippingMethodsService = inject(ShippingMethodsService);
 
   protected readonly quote = signal<QuoteDetail | null>(null);
   protected readonly loading = signal<boolean>(true);
@@ -47,6 +53,10 @@ export class QuoteDetailComponent implements OnInit {
   // Convert form
   protected readonly convertAddressId = signal<string>('');
   protected readonly convertShippingMethodId = signal<string>('');
+
+  // Convert-form option lists (loaded lazily once the quote is ACCEPTED)
+  protected readonly shippingAddresses = signal<CustomerAddressDto[]>([]);
+  protected readonly shippingMethods = signal<ShippingMethodDto[]>([]);
 
   protected readonly canReview = computed<boolean>(() => this.quote()?.status === 'SUBMITTED');
   protected readonly canEdit = computed<boolean>(() =>
@@ -75,12 +85,48 @@ export class QuoteDetailComponent implements OnInit {
     this.errorMessage.set(null);
     this.service.get(uuid).subscribe({
       next: (q) => {
-        this.quote.set(q);
+        this.setQuote(q);
         this.loading.set(false);
       },
       error: (err: NormalizedApiError) => {
         this.errorMessage.set(err.message || 'Could not load this quote.');
         this.loading.set(false);
+      },
+    });
+  }
+
+  /**
+   * Update the quote signal and, when the quote becomes ACCEPTED, lazily
+   * load the customer's shipping addresses and the active shipping methods
+   * so the convert-to-order form can render them as dropdowns.
+   */
+  private setQuote(q: QuoteDetail): void {
+    this.quote.set(q);
+    if (q.status === 'ACCEPTED') {
+      this.loadConvertOptions(q.customerId);
+    }
+  }
+
+  private loadConvertOptions(customerId: number): void {
+    this.customersService.get(customerId).subscribe({
+      next: (detail) => {
+        // Only addresses that can ship (SHIPPING or BOTH) are valid targets.
+        this.shippingAddresses.set(
+          detail.addresses.filter(
+            (a) => a.addressType === 'SHIPPING' || a.addressType === 'BOTH',
+          ),
+        );
+      },
+      error: (err: NormalizedApiError) => {
+        this.errorMessage.set(err.message || 'Could not load customer addresses.');
+      },
+    });
+    this.shippingMethodsService.list().subscribe({
+      next: (methods) => {
+        this.shippingMethods.set(methods.filter((m) => m.active));
+      },
+      error: (err: NormalizedApiError) => {
+        this.errorMessage.set(err.message || 'Could not load shipping methods.');
       },
     });
   }
@@ -96,7 +142,7 @@ export class QuoteDetailComponent implements OnInit {
     this.clearBanners();
     this.service.startReview(q.uuid).subscribe({
       next: (updated) => {
-        this.quote.set(updated);
+        this.setQuote(updated);
         this.actionLoading.set(false);
         this.successMessage.set('Quote is now under review.');
       },
@@ -129,7 +175,7 @@ export class QuoteDetailComponent implements OnInit {
     this.clearBanners();
     this.service.updateLine(q.uuid, line.id, { proposedUnitPrice: price }).subscribe({
       next: (updated) => {
-        this.quote.set(updated);
+        this.setQuote(updated);
         this.editingLineId.set(null);
         this.editPrice.set('');
         this.successMessage.set('Line price updated.');
@@ -152,7 +198,7 @@ export class QuoteDetailComponent implements OnInit {
       taxTotal: this.sendTax().trim() || undefined,
     }).subscribe({
       next: (updated) => {
-        this.quote.set(updated);
+        this.setQuote(updated);
         this.actionLoading.set(false);
         this.successMessage.set('Quote sent to customer.');
         this.sendAdminNotes.set('');
@@ -175,7 +221,7 @@ export class QuoteDetailComponent implements OnInit {
       adminNotes: this.rejectNotes().trim() || undefined,
     }).subscribe({
       next: (updated) => {
-        this.quote.set(updated);
+        this.setQuote(updated);
         this.actionLoading.set(false);
         this.successMessage.set('Quote rejected.');
         this.rejectNotes.set('');
@@ -219,6 +265,32 @@ export class QuoteDetailComponent implements OnInit {
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
+
+  /**
+   * Coerce a value emitted by a number input into a string signal.
+   * Angular's NumberValueAccessor emits `number | null`, but these signals
+   * are typed as strings and the action methods call `.trim()` on them.
+   */
+  protected toStr(v: unknown): string {
+    return v == null ? '' : String(v);
+  }
+
+  /**
+   * Human-readable label for a customer address in the convert dropdown.
+   * Shows the recipient, a single-line street/city/country summary, and
+   * flags the default address.
+   */
+  protected addressLabel(a: CustomerAddressDto): string {
+    const parts: string[] = [];
+    if (a.fullName) parts.push(a.fullName);
+    else if (a.company) parts.push(a.company);
+    const city = [a.city, a.region, a.postalCode].filter((x) => !!x).join(' ');
+    const loc = [a.streetLine1, a.streetLine2, city, a.countryCode]
+      .filter((x) => !!x).join(', ');
+    if (loc) parts.push(loc);
+    const label = parts.join(' — ');
+    return a.isDefault ? `${label} (default)` : label;
+  }
 
   protected statusVariant(s: QuoteStatus): string {
     return quoteStatusVariant(s);

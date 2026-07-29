@@ -6,6 +6,7 @@ import com.gadaaistar.storefront.ratelimit.RateLimit;
 import com.gadaaistar.web.security.SecurityContextHolder;
 
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
@@ -35,6 +36,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @Path("/api/storefront/v1/me/quotes")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Transactional
 @Tag(name = "Quotes (Storefront)", description = "B2B quote requests.")
 public class QuoteResource {
 
