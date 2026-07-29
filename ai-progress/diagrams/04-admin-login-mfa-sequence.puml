@@ -1,0 +1,57 @@
+@startuml Admin Login MFA Sequence
+!theme plain
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontSize 12
+skinparam roundCorner 10
+skinparam shadowing false
+
+title Admin Login Flow — Two-Step Authentication with Mandatory TOTP MFA
+
+actor "Admin User" as admin
+participant "Admin SPA\n(Angular 20)" as spa
+participant "api-admin\n(Quarkus :8081)" as api
+database "PostgreSQL" as db
+participant "TOTP\n(Google Auth)" as totp
+
+== Step 1: Password Login ==
+
+admin -> spa : Enter email + password
+spa -> api : POST /api/admin/v1/auth/login\n{email, password}
+api -> db : SELECT admin_user\nWHERE email = ?
+api -> api : Verify BCrypt hash\n(cost 12)
+api -> api : Check mfa_secret\nIS NULL?
+
+alt MFA not yet enrolled (first login)
+    api -> api : Generate TOTP secret\n(SecureRandom, 20 bytes)
+    api -> db : UPDATE admin_user\nSET mfa_secret = ?
+    api -> api : Build otpauth:// URI
+    api --> spa : 200 {state: MFA_ENROLLMENT_REQUIRED,\nchallenge_jwt, qr_provisioning_uri}
+    spa --> admin : Display QR code\n"Scan with Google Authenticator"
+else MFA already enrolled
+    api --> spa : 200 {state: MFA_REQUIRED,\nchallenge_jwt}
+    spa --> admin : "Enter 6-digit TOTP code"
+end
+
+== Step 2: TOTP Verification ==
+
+admin -> totp : Open authenticator app\n(generate 6-digit code)
+admin -> spa : Enter TOTP code
+spa -> api : POST /api/admin/v1/auth/verify-mfa\n{challenge_jwt, totp_code}
+api -> api : Verify challenge JWT\n(purpose = mfa-challenge,\nTTL = 5 minutes)
+api -> api : Verify TOTP code\n(RFC 6238, HMAC-SHA1,\nconstant-time compare)
+api -> db : UPDATE admin_user\nSET mfa_enrolled_at = now(),\nlast_login_at = now()
+api -> api : Issue access JWT (15min TTL)\n+ refresh token (30day TTL)
+api -> db : INSERT admin_refresh_token\n(SHA-256 hashed, IP, User-Agent)
+api --> spa : 200 {access_token, refresh_token,\nexpires_at, admin_profile}
+spa --> admin : Redirect to /dashboard
+
+== Subsequent Authenticated Requests ==
+
+admin -> spa : Navigate to admin page
+spa -> api : GET /api/admin/v1/...\nAuthorization: Bearer <access_jwt>
+api -> api : JwtAuthFilter verifies\nsignature + issuer + audience + exp
+api -> api : SecurityContextHolder\npopulated with roles
+api -> api : requireAdmin() +\nrequireAnyRole("SUPERADMIN", ...)
+api --> spa : 200 {data}
+
+@enduml

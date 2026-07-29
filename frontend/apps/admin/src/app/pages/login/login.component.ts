@@ -28,6 +28,11 @@ export class LoginComponent {
 
   protected readonly submitting = signal<boolean>(false);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly showPassword = signal<boolean>(false);
+
+  protected togglePasswordVisibility(): void {
+    this.showPassword.update((v) => !v);
+  }
 
   protected submit(): void {
     if (this.form.invalid || this.submitting()) {

@@ -33,6 +33,8 @@ import com.gadaaistar.persistence.shipping.ShippingRateZone;
 import com.gadaaistar.persistence.shipping.ShippingRateZoneRepository;
 import com.gadaaistar.storefront.coupon.CouponService;
 import com.gadaaistar.storefront.mail.MailService;
+import com.gadaaistar.storefront.payment.CyberSourceConfig;
+import com.gadaaistar.storefront.payment.MpgsConfig;
 import com.gadaaistar.storefront.payment.MpgsService;
 import com.gadaaistar.storefront.pricing.PriceResolver;
 import com.gadaaistar.storefront.shipping.ShippingQuoteService;
@@ -87,6 +89,8 @@ public class OrderService {
     @Inject CouponRepository            couponRepo;
     @Inject MailService                 mailService;
     @Inject MpgsService                 mpgsService;
+    @Inject MpgsConfig                  mpgsConfig;
+    @Inject CyberSourceConfig           cybersourceConfig;
 
     @ConfigProperty(name = "gadaa.transactions.admin-viewer-email",
                     defaultValue = "admin@gplus.com")
@@ -112,6 +116,67 @@ public class OrderService {
             // Same shape as 404 to avoid leaking that a foreign order exists.
             throw new NotFoundException("Order", uuid);
         }
+        return order;
+    }
+
+    // -------------------------------------------------------------------------
+    // Payment method selection (for orders that don't yet have one, e.g.
+    // orders created from quote conversion where the admin didn't pick a
+    // gateway at conversion time)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Set or change the payment method on a PENDING_PAYMENT order.
+     *
+     * <p>Validates that the requested method is one of the configured gateways.
+     * For MPGS, creates the checkout session (storing sessionId +
+     * successIndicator on the order) if one doesn't already exist — the
+     * {@code payment-payload} endpoint needs it to hand the session to the
+     * frontend.
+     *
+     * @throws ConflictException if the order is not PENDING_PAYMENT or the
+     *         requested gateway is not configured.
+     */
+    @Transactional
+    public CheckoutOrder setPaymentMethod(long customerId, String uuid, String paymentMethod) {
+        var order = getForCustomer(customerId, uuid);
+        if (order.status != OrderStatus.PENDING_PAYMENT) {
+            throw new ConflictException("ORDER_NOT_AWAITING_PAYMENT",
+                    "This order is no longer awaiting payment.",
+                    Map.of("status", order.status.name()));
+        }
+
+        var method = paymentMethod == null ? "" : paymentMethod.toUpperCase();
+        if ("CYBERSOURCE".equals(method)) {
+            if (!cybersourceConfig.isConfigured()) {
+                throw new ConflictException("PAYMENT_GATEWAY_NOT_CONFIGURED",
+                        "CyberSource is not configured. Contact support.",
+                        Map.of("paymentMethod", method));
+            }
+        } else if ("MPGS".equals(method)) {
+            if (!mpgsConfig.isConfigured()) {
+                throw new ConflictException("PAYMENT_GATEWAY_NOT_CONFIGURED",
+                        "MPGS is not configured. Contact support.",
+                        Map.of("paymentMethod", method));
+            }
+        } else {
+            throw new ConflictException("UNSUPPORTED_PAYMENT_METHOD",
+                    "Unsupported payment method: " + paymentMethod,
+                    Map.of("paymentMethod", paymentMethod == null ? "" : paymentMethod));
+        }
+
+        order.paymentMethod = method;
+
+        // If the customer chose MPGS and no session exists yet (e.g. the
+        // order was created from a quote conversion), create one now.
+        if ("MPGS".equals(method) &&
+                (order.mpgsSessionId == null || order.mpgsSessionId.isBlank())) {
+            var session = mpgsService.createCheckoutSession(order);
+            order.mpgsSessionId        = session.sessionId();
+            order.mpgsSuccessIndicator = session.successIndicator();
+        }
+
+        LOG.infof("Customer %d set payment method %s on order %s", customerId, method, uuid);
         return order;
     }
 

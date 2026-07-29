@@ -177,10 +177,49 @@
     <!-- Actions                                                      -->
     <!-- =========================================================== -->
     @if (o.status === 'PENDING_PAYMENT') {
+      @if (needsPaymentMethodSelection()) {
+        <section class="gi-order-detail__card">
+          <h2>Choose a payment method</h2>
+          <p class="gi-order-detail__hint">
+            Select how you'd like to pay for this order, then continue to the
+            payment gateway.
+          </p>
+          @if (paymentMethodsLoading()) {
+            <p class="gi-order-detail__hint">
+              <span class="material-icons-round gi-spin">progress_activity</span>
+              Loading payment options…
+            </p>
+          } @else if (paymentMethods().length === 0) {
+            <p class="gi-order-detail__hint">
+              No payment methods are configured. Please contact support to
+              complete payment offline.
+            </p>
+          } @else {
+            <div class="gi-order-detail__payment-methods">
+              @for (method of paymentMethods(); track method.id) {
+                <label
+                  class="gi-order-detail__payment-method"
+                  [class.is-selected]="selectedPaymentMethod() === method.id">
+                  <input
+                    type="radio"
+                    name="orderPaymentMethod"
+                    [value]="method.id"
+                    [checked]="selectedPaymentMethod() === method.id"
+                    (change)="selectedPaymentMethod.set(method.id)" />
+                  <span class="gi-order-detail__payment-method-body">
+                    <strong>{{ method.name }}</strong>
+                    <span>{{ method.description }}</span>
+                  </span>
+                </label>
+              }
+            </div>
+          }
+        </section>
+      }
       <div class="gi-order-detail__actions">
         <button type="button" class="gi-btn-inline gi-btn-inline--gold"
                 (click)="retryPayment()"
-                [disabled]="startingPayment() || checkingPayment()">
+                [disabled]="startingPayment() || checkingPayment() || (needsPaymentMethodSelection() && !selectedPaymentMethod())">
           @if (startingPayment()) {
             <span class="material-icons-round gi-spin">progress_activity</span>
             Starting…

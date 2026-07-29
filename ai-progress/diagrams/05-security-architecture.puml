@@ -1,0 +1,53 @@
+@startuml Security Architecture
+!theme plain
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontSize 12
+skinparam roundCorner 10
+skinparam shadowing false
+
+title Security Architecture — Defense in Depth
+
+actor "Client" as client
+
+rectangle "Layer 1: Cloudflare Edge" as l1 #LightBlue {
+    component "WAF\n(Managed + Custom Rules)" as waf
+    component "DDoS Protection" as ddos
+    component "TLS 1.2/1.3\n(Full-Strict)" as tls
+    component "Rate Limiting\n(Edge)" as edge_rl
+}
+
+rectangle "Layer 2: Nginx Reverse Proxy" as l2 #NavajoWhite {
+    component "Rate Limiting\n(20r/s API, 5r/s auth)" as nginx_rl
+    component "Security Headers\n(HSTS, X-Frame-Options,\nX-Content-Type-Options,\nReferrer-Policy)" as headers
+    component "HTTP -> HTTPS Redirect" as redirect
+}
+
+rectangle "Layer 3: Quarkus Application" as l3 #Khaki {
+    component "CorrelationIdFilter\n(X-Correlation-Id)" as corr
+    component "RateLimitFilter\n(@RateLimit annotation\nsliding window)" as app_rl
+    component "JwtAuthFilter\n(Bearer token verify:\nsignature, issuer,\naudience, expiry)" as jwt_filter
+    component "SecurityContextHolder\n(requireCustomer /\nrequireAdmin /\nrequireAnyRole)" as holder
+    component "Bean Validation\n(@Valid, JSR 380)" as validation
+    component "GlobalExceptionMapper\n(structured errors,\nno stack trace leakage)" as errors
+}
+
+rectangle "Layer 4: Data Security" as l4 #LightYellow {
+    component "JPA / Hibernate\n(parameterized queries\nno SQL injection)" as jpa
+    component "BCrypt (cost 12)\npassword hashing" as bcrypt
+    component "JWT HS256\n(Nimbus JOSE)" as jwt
+    component "Refresh tokens\n(SHA-256 hashed at rest,\nrotating)" as refresh
+    component "TOTP MFA\n(RFC 6238, mandatory\nfor admins)" as mfa
+    component "HMAC-SHA256\n(Payment gateway signatures)" as hmac
+}
+
+client --> l1
+l1 --> l2
+l2 --> l3
+l3 --> l4
+
+note right of l1
+  Multiple layers must fail
+  for an attack to succeed
+end note
+
+@enduml

@@ -1,0 +1,58 @@
+@startuml System_Architecture
+!theme plain
+skinparam backgroundColor #FAFAFA
+skinparam componentStyle rectangle
+skinparam defaultFontSize 12
+skinparam roundCorner 10
+skinparam shadowing false
+
+title Gadaa Istar E-Commerce Platform - System Architecture
+
+actor "Customer\n(B2C / B2B)" as customer
+actor "Admin User" as admin
+actor "Payment Gateway\n(MPGS)" as gateway
+
+rectangle "Cloudflare Edge\n(TLS 1.2/1.3 | WAF | DDoS | CDN)" as cloudflare #LightBlue
+
+package "Origin - Ethio Telecom Cloud" as origin #F5F5DC {
+    node "Nginx Reverse Proxy\n(Rate limiting | Security headers\n| HTTP-to-HTTPS redirect)" as nginx #FFE4B5
+
+    node "Storefront SSR\nAngular 20 + Node.js/Express\n:4000" as storefront_ssr #90EE90
+
+    node "Admin SPA\nAngular 20\n:80" as admin_spa #90EE90
+
+    package "Quarkus Backend (Java 21)" as quarkus #F5F5F5 {
+        component "api-storefront\nREST API | :8080\n(JWT auth | Rate limit)" as api_storefront #F0E68C
+        component "api-admin\nREST API | :8081\n(JWT auth | MFA)" as api_admin #F0E68C
+        component "web-common\n(JwtIssuer | JwtAuthFilter\n| PasswordHasher\n| GlobalExceptionMapper)" as web_common #E0FFFF
+    }
+
+    database "PostgreSQL 16\nDatabase: GCOMERCE\n(Flyway migrations)" as postgres #FFFFE0
+    database "MinIO / S3\n(media | invoices)" as minio #FFFFE0
+    database "Redis 7\n(rate-limit | leases)" as redis #FFFFE0
+    node "SMTP Relay\n(MailHog dev /\nprod SMTP)" as smtp #FFB6C1
+}
+
+customer --> cloudflare
+admin --> cloudflare
+gateway --> cloudflare : "Webhook callbacks\n(HMAC-signed)"
+
+cloudflare --> nginx : "Full-Strict TLS"
+nginx --> storefront_ssr : "www.gedaaistar.et"
+nginx --> admin_spa : "admin.gedaaistar.et"
+nginx --> api_storefront : "api.gedaaistar.et\n/api/storefront/v1"
+nginx --> api_admin : "api.gedaaistar.et\n/api/admin/v1"
+
+api_storefront ..> web_common : ""
+api_admin ..> web_common : ""
+api_storefront --> postgres : "JDBC"
+api_admin --> postgres : "JDBC"
+api_storefront --> minio : "S3 API"
+api_admin --> minio : "S3 API"
+api_storefront --> redis : "rate-limit\n(optional)"
+api_storefront --> smtp : "mailer"
+api_admin --> smtp : "mailer"
+api_storefront --> gateway : "HTTPS\n(hosted checkout)"
+api_admin --> gateway : "HTTPS\n(refunds REST API)"
+
+@enduml

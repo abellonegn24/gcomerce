@@ -1,0 +1,64 @@
+@startuml Customer Purchase Flow
+!theme plain
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontSize 12
+skinparam roundCorner 10
+skinparam shadowing false
+
+title Customer Purchase Flow (B2C) — Data Flow Diagram
+
+|External|
+start
+:Customer browses catalog;
+|Storefront SSR (Angular 20)|
+:Render product pages;
+|api-storefront (Quarkus :8080)|
+:GET /catalog/products;
+|PostgreSQL|
+:Query product, product_variant,\ninventory, price_list;
+|api-storefront (Quarkus :8080)|
+:Return product data (JSON);
+|Storefront SSR (Angular 20)|
+:Customer adds to cart;
+|api-storefront (Quarkus :8080)|
+:POST /cart/items;
+|PostgreSQL|
+:INSERT/UPDATE cart, cart_item;\nReserve inventory;
+|api-storefront (Quarkus :8080)|
+:Customer logs in / registers;
+:POST /auth/login or /auth/register;
+:Verify BCrypt password hash;
+:Issue JWT access (15min TTL)\n+ refresh token (30day TTL);
+|PostgreSQL|
+:Store refresh_token (SHA-256 hashed);
+|SMTP Relay|
+:Queue verification email;
+|api-storefront (Quarkus :8080)|
+:Customer proceeds to checkout;
+:POST /orders;
+|PostgreSQL|
+:INSERT checkout_order (PENDING_PAYMENT),\norder_item;\nReserve inventory;
+|api-storefront (Quarkus :8080)|
+:Build MPGS payment request\n(signed payload);
+:Return redirect to MPGS hosted checkout;
+|External|
+:Browser redirects to\nMPGS Hosted Checkout;
+:Customer enters card data\n(on MPGS page -\nnever on our servers);
+|Payment Gateway (MPGS)|
+:Process payment;
+:POST webhook callback\n(notification secret verified);
+|api-storefront (Quarkus :8080)|
+:POST /payment/mpgs/webhook;
+:Verify HMAC signature;
+|PostgreSQL|
+:UPDATE checkout_order\nstatus = PAID;
+|api-storefront (Quarkus :8080)|
+:Decrement inventory;
+|api-admin (Quarkus :8081)|
+:Admin picks / packs;
+:UPDATE order status\nFULFILLING -> SHIPPED -> DELIVERED;
+|SMTP Relay|
+:Send shipment notification email;
+stop
+
+@enduml

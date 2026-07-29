@@ -56,6 +56,19 @@ public final class OrderDtos {
             @Size(max = 500) String reason
     ) {}
 
+    /**
+     * Choose / change the payment method on a PENDING_PAYMENT order.
+     *
+     * <p>Used by the order-detail "Continue payment" flow — especially for
+     * orders created from a quote conversion, where no payment method was
+     * chosen at creation time. The customer picks a method here, the backend
+     * validates it against the configured gateways and (for MPGS) creates the
+     * checkout session, then the frontend fetches the payment payload.
+     */
+    public record SetPaymentMethodRequest(
+            @NotNull @Size(max = 20) String paymentMethod
+    ) {}
+
     // -------------------------------------------------------------------------
     // Response — line + event + summary + detail
     // -------------------------------------------------------------------------

@@ -126,6 +126,11 @@ export interface CancelOrderPayload {
   reason?: string;
 }
 
+/** Payload for setting/changing the payment method on a PENDING_PAYMENT order. */
+export interface SetPaymentMethodPayload {
+  paymentMethod: string;
+}
+
 /**
  * Payment payload returned by the backend. For CyberSource, this is a set
  * of signed form fields the browser POSTs to {@link gatewayUrl}. For MPGS,

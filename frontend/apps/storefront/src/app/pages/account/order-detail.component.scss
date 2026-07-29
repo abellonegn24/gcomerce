@@ -269,3 +269,62 @@
     color: #8a5300;
   }
 }
+
+// --- Payment method picker (for orders without a method, e.g. from quotes) -
+.gi-order-detail__hint {
+  color: var(--gi-text-secondary, #64748b);
+  font-size: 0.85rem;
+  margin: 0 0 0.75rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  .material-icons-round { font-size: 1rem; }
+}
+
+.gi-order-detail__payment-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.gi-order-detail__payment-method {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border: 2px solid var(--gi-navy-100, #e2e8f0);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  input[type="radio"] {
+    margin-top: 0.2rem;
+    accent-color: var(--gi-gold-600, #c8a44d);
+  }
+
+  &:hover {
+    border-color: var(--gi-gold-500, #d4af37);
+  }
+
+  &.is-selected {
+    border-color: var(--gi-gold-600, #c8a44d);
+    background: var(--gi-gold-50, #fdfbf3);
+  }
+}
+
+.gi-order-detail__payment-method-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+
+  strong {
+    font-size: 0.95rem;
+    color: var(--gi-navy-900);
+  }
+
+  span {
+    font-size: 0.85rem;
+    color: var(--gi-navy-500, #64748b);
+  }
+}

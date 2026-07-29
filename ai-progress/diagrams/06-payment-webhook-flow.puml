@@ -1,0 +1,50 @@
+@startuml Payment_Webhook_Flow
+!theme plain
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontSize 12
+skinparam roundCorner 10
+skinparam shadowing false
+
+title MPGS Payment Webhook - Notification Signature Verification Flow
+
+actor "MPGS Gateway" as mpgs
+participant "api-storefront\n(Quarkus :8080)" as api
+database "PostgreSQL" as db
+participant "OrderService" as os
+
+mpgs -> api : POST /payment/mpgs/webhook\n(JSON notification payload)
+api -> api : Parse notification JSON\n(orderId, transactionId, result,\ntype, gatewayResponse)
+api -> api : Verify notification secret\n(compare configured\nnotification secret)
+api -> api : Validate payload integrity\n(check required fields,\ntransaction status)
+
+alt Secret mismatch / invalid payload
+    api --> mpgs : 400 {code: INVALID_NOTIFICATION}\n(no body logged - defensive)
+else Notification valid
+    api -> db : Find order by\ninvoice_number = orderId
+    alt Order not found
+        api --> mpgs : 200 {status: unknown_order}
+    else Order found
+        api -> api : Check idempotency:\norder.status != PENDING_PAYMENT?
+        alt Already processed
+            api --> mpgs : 200 {status: already_processed}
+        else PENDING_PAYMENT
+            alt result = SUCCESS
+                api -> os : markPaid(order, transactionId, "MPGS")
+                os -> db : UPDATE checkout_order\nstatus = PAID
+                os -> db : INSERT order_status_event\n(PAID)
+                os -> db : Decrement inventory
+                api --> mpgs : 200 {status: paid, orderUuid}
+            else result = FAILURE / DECLINED / CANCELLED
+                api -> os : markPaymentFailed(order, reason)
+                os -> db : UPDATE checkout_order\nstatus = CANCELLED
+                os -> db : Release inventory reservation
+                api --> mpgs : 200 {status: cancelled, orderUuid}
+            else result = PENDING / unknown
+                api -> api : Log warning\n(indeterminate result)
+                api --> mpgs : 200 {status: pending_review}
+            end
+        end
+    end
+end
+
+@enduml

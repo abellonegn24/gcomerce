@@ -84,7 +84,7 @@ public class Quote extends BaseEntity {
     // -------------------------------------------------------------------------
 
     @PrePersist
-    void onCreate() {
+    void onQuoteCreate() {
         if (uuid == null || uuid.isBlank()) uuid = UUID.randomUUID().toString();
     }
 }
