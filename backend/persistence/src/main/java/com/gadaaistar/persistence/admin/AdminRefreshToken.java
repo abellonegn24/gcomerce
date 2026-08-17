@@ -35,6 +35,14 @@ public class AdminRefreshToken {
     @Column(name = "issued_at", nullable = false)
     public Instant issuedAt;
 
+    /**
+     * When the underlying admin session first started — carried forward across
+     * every rotation in a chain. Used to enforce an absolute session lifetime
+     * that a rotating refresh token can't circumvent.
+     */
+    @Column(name = "session_started_at", nullable = false)
+    public Instant sessionStartedAt;
+
     @Column(name = "expires_at", nullable = false)
     public Instant expiresAt;
 

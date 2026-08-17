@@ -14,6 +14,10 @@
     <h1 id="gi-login-title">Sign in</h1>
     <p class="gi-login__lead">Enter your admin credentials to continue.</p>
 
+    @if (noticeMessage(); as notice) {
+      <div class="gi-form__notice" role="status">{{ notice }}</div>
+    }
+
     <form [formGroup]="form" (ngSubmit)="submit()" class="gi-form" novalidate>
       @if (errorMessage(); as msg) {
         <div class="gi-form__error" role="alert">{{ msg }}</div>

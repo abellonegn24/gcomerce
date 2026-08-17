@@ -1,0 +1,1436 @@
+<!--
+  =====================================================================
+  Gadaa Istar — Our Story CMS page
+  ---------------------------------------------------------------------
+  How to use:
+    1. Sign in to the admin panel.
+    2. Open  Admin → CMS → Pages → "+ New page"  (or edit the existing
+       "about" page).
+    3. Fill in:
+         • Slug .............. about
+         • Title ............. Our Story
+         • SEO title ......... Our Story — Gadaa Istar Business Group
+         • SEO description ... The Gadaa Istar Business Group S.C.
+                               story — four sister companies, a
+                               100,000-job vision, and a founder
+                               building East Africa's next industrial
+                               giant from Addis Ababa.
+         • Status ............ Published
+         • Sort order ........ 10
+    4. Copy EVERYTHING BELOW THIS COMMENT BLOCK (from the <style> tag
+       to the closing </div> of .gi-story-cms) and paste it into the
+       "Body HTML" textarea.
+    5. Save. The storefront will render it at  /about  (which is
+       already routed to  /pages/about ).
+
+  All colours, fonts, spacing, and icons come from the storefront's
+  global design tokens & Material Icons — no external assets needed.
+  ===================================================================== -->
+
+<style>
+  /* -----------------------------------------------------------------
+     Break out of the .gi-cms-page__body max-width: 48rem constraint
+     and hide the auto-generated CMS header. Scoped so it only runs
+     when this page is on-screen.
+     ----------------------------------------------------------------- */
+  gi-cms-page:has(.gi-story-cms) .gi-cms-page__header { display: none; }
+  gi-cms-page:has(.gi-story-cms) .gi-cms-page__body {
+    max-width: none;
+    padding: 0;
+  }
+  gi-cms-page:has(.gi-story-cms) .gi-cms-page { padding: 0 0 4rem; }
+
+  .gi-story-cms {
+    --sx-red: var(--gi-red-600, #C93327);
+    --sx-red-500: var(--gi-red-500, #D63A2F);
+    --sx-red-100: var(--gi-red-100, #FBE4E1);
+    --sx-navy: var(--gi-navy-900, #0A0A0A);
+    --sx-navy-700: var(--gi-navy-700, #1A1A1A);
+    --sx-navy-500: var(--gi-navy-500, #333333);
+    --sx-navy-100: var(--gi-navy-100, #E8E8E8);
+    --sx-navy-50: var(--gi-navy-50, #F5F5F5);
+    --sx-gold: var(--gi-gold-500, #E9B44C);
+    --sx-cream: var(--gi-cream-50, #FAF6F0);
+    --sx-text: var(--gi-navy-900, #0A0A0A);
+    --sx-muted: var(--gi-text-secondary, #64748B);
+    --sx-border: var(--gi-border, #E2E8F0);
+    --sx-radius-lg: var(--gi-radius-lg, 16px);
+    --sx-radius-md: var(--gi-radius-md, 10px);
+    --sx-radius-sm: var(--gi-radius-sm, 6px);
+    --sx-shadow-sm: var(--gi-shadow-sm, 0 1px 2px rgba(18,41,74,0.06));
+    --sx-shadow-md: var(--gi-shadow-md, 0 2px 6px rgba(18,41,74,0.08));
+    --sx-shadow-lg: var(--gi-shadow-lg, 0 12px 32px rgba(18,41,74,0.12));
+    --sx-t: var(--gi-transition, 160ms cubic-bezier(0.4, 0, 0.2, 1));
+    --sx-max: var(--gi-content-max, 1200px);
+    --sx-display: var(--gi-font-display, 'Playfair Display', Georgia, serif);
+    --sx-body:    var(--gi-font-body, 'Inter', 'Segoe UI', system-ui, sans-serif);
+
+    color: var(--sx-text);
+    font-family: var(--sx-body);
+    line-height: 1.55;
+  }
+  .gi-story-cms *,
+  .gi-story-cms *::before,
+  .gi-story-cms *::after { box-sizing: border-box; }
+
+  .gi-story-cms .sx-container {
+    max-width: var(--sx-max);
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  /* ---------- Shared primitives ---------- */
+  .gi-story-cms .sx-eyebrow {
+    display: inline-block;
+    color: var(--sx-gold);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin: 0 0 1rem;
+  }
+  .gi-story-cms .sx-eyebrow--dark { color: var(--sx-red); }
+
+  .gi-story-cms .sx-section-title {
+    font-family: var(--sx-display);
+    font-size: clamp(1.7rem, 3vw, 2.4rem);
+    color: var(--sx-navy);
+    margin: 0;
+    text-align: center;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+  .gi-story-cms .sx-section-title--left { text-align: left; }
+  .gi-story-cms .sx-section-lead {
+    color: var(--sx-muted);
+    text-align: center;
+    margin: 0.6rem auto 2.5rem;
+    max-width: 44rem;
+    font-size: 1.02rem;
+    line-height: 1.65;
+  }
+  .gi-story-cms .sx-section-lead--left { text-align: left; margin-left: 0; margin-right: 0; }
+
+  .gi-story-cms .sx-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.4rem;
+    border-radius: var(--sx-radius-md);
+    font-weight: 600;
+    font-size: 0.95rem;
+    font-family: inherit;
+    border: 1px solid transparent;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1;
+    transition: transform var(--sx-t), background var(--sx-t),
+                color var(--sx-t), box-shadow var(--sx-t), border-color var(--sx-t);
+  }
+  .gi-story-cms .sx-btn .material-icons-round { font-size: 1.15rem; }
+  .gi-story-cms .sx-btn--primary { background: var(--sx-red); color: #fff; }
+  .gi-story-cms .sx-btn--primary:hover {
+    background: var(--sx-red-500);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px rgba(201, 51, 39, 0.35);
+  }
+  .gi-story-cms .sx-btn--ghost {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.35);
+  }
+  .gi-story-cms .sx-btn--ghost:hover {
+    background: rgba(255, 255, 255, 0.16);
+    transform: translateY(-1px);
+  }
+  .gi-story-cms .sx-btn--gold { background: var(--sx-gold); color: var(--sx-navy); }
+  .gi-story-cms .sx-btn--gold:hover {
+    background: #EDBF63;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(233, 180, 76, 0.35);
+  }
+  .gi-story-cms .sx-btn--outline {
+    background: transparent;
+    color: var(--sx-navy);
+    border-color: var(--sx-border);
+  }
+  .gi-story-cms .sx-btn--outline:hover {
+    background: var(--sx-navy-50);
+    border-color: var(--sx-navy-700);
+  }
+
+  /* =========================================================
+     HERO — navy panel with a diagonal cream wedge + dot pattern
+     ========================================================= */
+  .gi-story-cms .sx-hero {
+    position: relative;
+    color: #fff;
+    background:
+      radial-gradient(circle at 85% 20%, rgba(201, 51, 39, 0.28), transparent 55%),
+      linear-gradient(135deg, var(--sx-navy) 0%, var(--sx-navy-700) 100%);
+    padding: 5rem 0 6rem;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .gi-story-cms .sx-hero__wedge {
+    position: absolute;
+    top: -20%;
+    right: -15%;
+    width: 60%;
+    height: 140%;
+    background: linear-gradient(160deg, rgba(233, 180, 76, 0.12) 0%, rgba(233, 180, 76, 0.05) 100%);
+    clip-path: polygon(30% 0%, 100% 0%, 100% 100%, 60% 90%, 45% 50%);
+    z-index: 0;
+  }
+  .gi-story-cms .sx-hero__dots {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background-image: radial-gradient(rgba(255,255,255,0.35) 1.4px, transparent 1.6px);
+    background-size: 12px 12px;
+    z-index: 1;
+    opacity: 0.85;
+  }
+  .gi-story-cms .sx-hero__dots--tl { top: 2rem; left: 2rem; }
+  .gi-story-cms .sx-hero__dots--br { bottom: 2rem; right: 2rem; }
+
+  .gi-story-cms .sx-hero__inner {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: 3rem;
+    align-items: center;
+  }
+  .gi-story-cms .sx-hero__copy { max-width: 42rem; }
+  .gi-story-cms .sx-hero__title {
+    font-family: var(--sx-display);
+    font-size: clamp(2.1rem, 4.3vw, 3.4rem);
+    color: #fff;
+    line-height: 1.08;
+    margin: 0 0 1.5rem;
+    font-weight: 700;
+  }
+  .gi-story-cms .sx-hero__accent { color: var(--sx-red-500); font-style: italic; }
+  .gi-story-cms .sx-hero__lead {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0 0 2rem;
+    max-width: 36rem;
+  }
+  .gi-story-cms .sx-hero__ctas { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+  /* Founder card on the right of the hero */
+  .gi-story-cms .sx-founder {
+    background: #fff;
+    color: var(--sx-navy);
+    border-radius: var(--sx-radius-lg);
+    padding: 2rem 1.75rem;
+    box-shadow: 0 30px 60px rgba(10, 10, 10, 0.35), 0 2px 6px rgba(10, 10, 10, 0.2);
+    max-width: 400px;
+    justify-self: end;
+    width: 100%;
+    position: relative;
+  }
+  .gi-story-cms .sx-founder__avatar {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--sx-red) 0%, var(--sx-red-500) 100%);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--sx-display);
+    font-size: 1.9rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 1rem;
+    box-shadow: 0 10px 24px rgba(201, 51, 39, 0.35);
+    border: 4px solid #fff;
+  }
+  .gi-story-cms .sx-founder__kicker {
+    display: inline-block;
+    color: var(--sx-red);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+  }
+  .gi-story-cms .sx-founder__name {
+    font-family: var(--sx-display);
+    font-size: 1.5rem;
+    margin: 0 0 0.3rem;
+    color: var(--sx-navy);
+    font-weight: 700;
+  }
+  .gi-story-cms .sx-founder__role {
+    color: var(--sx-muted);
+    font-size: 0.92rem;
+    margin: 0 0 1rem;
+  }
+  .gi-story-cms .sx-founder__bio {
+    color: var(--sx-navy);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0;
+    padding-top: 1rem;
+    border-top: 1px solid var(--sx-border);
+  }
+  .gi-story-cms .sx-founder__quote {
+    display: block;
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--sx-navy-50);
+    border-left: 3px solid var(--sx-gold);
+    border-radius: var(--sx-radius-sm);
+    font-style: italic;
+    color: var(--sx-navy);
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 960px) {
+    .gi-story-cms .sx-hero { padding: 3.5rem 0 4.5rem; }
+    .gi-story-cms .sx-hero__inner { grid-template-columns: 1fr; gap: 2.5rem; }
+    .gi-story-cms .sx-hero__wedge { width: 90%; right: -30%; top: -30%; }
+    .gi-story-cms .sx-founder { justify-self: stretch; max-width: none; }
+    .gi-story-cms .sx-hero__dots { width: 70px; height: 70px; }
+  }
+
+  /* =========================================================
+     Stats strip
+     ========================================================= */
+  .gi-story-cms .sx-stats {
+    background: var(--sx-navy);
+    color: #fff;
+    padding: 2.5rem 0;
+  }
+  .gi-story-cms .sx-stats__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    text-align: center;
+  }
+  .gi-story-cms .sx-stat { display: flex; flex-direction: column; gap: 0.3rem; }
+  .gi-story-cms .sx-stat__num {
+    font-family: var(--sx-display);
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    font-weight: 700;
+    color: var(--sx-gold);
+    line-height: 1.1;
+  }
+  .gi-story-cms .sx-stat__label {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.75);
+    letter-spacing: 0.03em;
+  }
+  @media (max-width: 700px) {
+    .gi-story-cms .sx-stats__grid { grid-template-columns: repeat(2, 1fr); gap: 1.5rem 0.5rem; }
+  }
+
+  /* =========================================================
+     Sister companies (hexagonal-style cards)
+     ========================================================= */
+  .gi-story-cms .sx-sisters {
+    padding: 4.5rem 0;
+    background: var(--gi-bg-page, var(--sx-cream));
+    position: relative;
+    overflow: hidden;
+  }
+  .gi-story-cms .sx-sisters::before {
+    content: '';
+    position: absolute;
+    top: -80px;
+    right: -80px;
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(rgba(201, 51, 39, 0.12), transparent 70%);
+    z-index: 0;
+  }
+  .gi-story-cms .sx-sisters__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+    position: relative;
+    z-index: 1;
+  }
+  .gi-story-cms .sx-sister {
+    background: #fff;
+    border: 1px solid var(--sx-border);
+    border-radius: var(--sx-radius-lg);
+    padding: 1.75rem 1.5rem 1.6rem;
+    text-align: center;
+    box-shadow: var(--sx-shadow-sm);
+    transition: transform var(--sx-t), box-shadow var(--sx-t), border-color var(--sx-t);
+    position: relative;
+    overflow: hidden;
+  }
+  .gi-story-cms .sx-sister::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--sx-red) 0%, var(--sx-gold) 100%);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 300ms ease;
+  }
+  .gi-story-cms .sx-sister:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--sx-shadow-lg);
+    border-color: var(--sx-red-100);
+  }
+  .gi-story-cms .sx-sister:hover::before { transform: scaleX(1); }
+  .gi-story-cms .sx-sister__badge {
+    width: 68px;
+    height: 68px;
+    margin: 0 auto 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--sx-navy);
+    /* Hexagon shape via clip-path */
+    clip-path: polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%);
+    color: var(--sx-gold);
+  }
+  .gi-story-cms .sx-sister:nth-child(1) .sx-sister__badge { background: linear-gradient(135deg, var(--sx-red) 0%, #A9291F 100%); color: #fff; }
+  .gi-story-cms .sx-sister:nth-child(2) .sx-sister__badge { background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); color: #fff; }
+  .gi-story-cms .sx-sister:nth-child(3) .sx-sister__badge { background: linear-gradient(135deg, #558B2F 0%, #33691E 100%); color: #fff; }
+  .gi-story-cms .sx-sister:nth-child(4) .sx-sister__badge { background: linear-gradient(135deg, var(--sx-gold) 0%, #B98A2F 100%); color: var(--sx-navy); }
+  .gi-story-cms .sx-sister__badge .material-icons-round { font-size: 1.75rem; }
+  .gi-story-cms .sx-sister__name {
+    font-family: var(--sx-display);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--sx-navy);
+    margin: 0 0 0.2rem;
+    letter-spacing: 0.02em;
+  }
+  .gi-story-cms .sx-sister__unit {
+    display: block;
+    color: var(--sx-red);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 0.85rem;
+  }
+  .gi-story-cms .sx-sister__desc {
+    color: var(--sx-muted);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    margin: 0;
+  }
+  @media (max-width: 900px) {
+    .gi-story-cms .sx-sisters__grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 480px) {
+    .gi-story-cms .sx-sisters__grid { grid-template-columns: 1fr; }
+  }
+
+  /* =========================================================
+     Vision · Mission · Values (three-panel)
+     ========================================================= */
+  .gi-story-cms .sx-vmv {
+    padding: 4.5rem 0;
+    background: #fff;
+  }
+  .gi-story-cms .sx-vmv__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+  .gi-story-cms .sx-vmv-card {
+    background: #fff;
+    border: 1px solid var(--sx-border);
+    border-radius: var(--sx-radius-lg);
+    padding: 2rem 1.75rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform var(--sx-t), box-shadow var(--sx-t), border-color var(--sx-t);
+  }
+  .gi-story-cms .sx-vmv-card::after {
+    content: '';
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    background: var(--sx-red-100);
+    opacity: 0.6;
+    z-index: 0;
+  }
+  .gi-story-cms .sx-vmv-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--sx-shadow-lg);
+    border-color: var(--sx-red-100);
+  }
+  .gi-story-cms .sx-vmv-card__icon {
+    position: relative;
+    z-index: 1;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--sx-navy);
+    color: var(--sx-gold);
+    border-radius: 14px;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 8px 20px rgba(10, 10, 10, 0.15);
+  }
+  .gi-story-cms .sx-vmv-card__icon .material-icons-round { font-size: 1.6rem; }
+  .gi-story-cms .sx-vmv-card__kicker {
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+    color: var(--sx-red);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+  }
+  .gi-story-cms .sx-vmv-card__title {
+    position: relative;
+    z-index: 1;
+    font-family: var(--sx-display);
+    font-size: 1.4rem;
+    color: var(--sx-navy);
+    margin: 0 0 0.85rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .gi-story-cms .sx-vmv-card__body {
+    position: relative;
+    z-index: 1;
+    color: var(--sx-navy);
+    font-size: 0.95rem;
+    line-height: 1.65;
+    margin: 0;
+  }
+  .gi-story-cms .sx-vmv-card__list {
+    position: relative;
+    z-index: 1;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+  .gi-story-cms .sx-vmv-card__list li {
+    display: grid;
+    grid-template-columns: 18px 1fr;
+    gap: 0.6rem;
+    align-items: start;
+    font-size: 0.93rem;
+    color: var(--sx-navy);
+    line-height: 1.5;
+  }
+  .gi-story-cms .sx-vmv-card__list li .material-icons-round {
+    color: var(--sx-red);
+    font-size: 1.05rem;
+    margin-top: 2px;
+  }
+  @media (max-width: 900px) {
+    .gi-story-cms .sx-vmv__grid { grid-template-columns: 1fr; }
+  }
+
+  /* =========================================================
+     Core Values strip (icon row on navy)
+     ========================================================= */
+  .gi-story-cms .sx-values {
+    padding: 4rem 0;
+    background: linear-gradient(120deg, var(--sx-navy) 0%, var(--sx-navy-700) 100%);
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .gi-story-cms .sx-values::before,
+  .gi-story-cms .sx-values::after {
+    content: '';
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    z-index: 0;
+    opacity: 0.15;
+  }
+  .gi-story-cms .sx-values::before {
+    top: -80px;
+    left: -80px;
+    background: radial-gradient(var(--sx-gold), transparent 65%);
+  }
+  .gi-story-cms .sx-values::after {
+    bottom: -80px;
+    right: -80px;
+    background: radial-gradient(var(--sx-red), transparent 65%);
+  }
+  .gi-story-cms .sx-values .sx-container { position: relative; z-index: 1; }
+  .gi-story-cms .sx-values__title {
+    text-align: center;
+    color: #fff;
+    font-family: var(--sx-display);
+    font-size: clamp(1.7rem, 3vw, 2.4rem);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0 0 0.6rem;
+  }
+  .gi-story-cms .sx-values__lead {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.75);
+    max-width: 40rem;
+    margin: 0 auto 2.5rem;
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+  .gi-story-cms .sx-values__bar {
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+    margin: 0 auto 3rem;
+    max-width: 80%;
+  }
+  .gi-story-cms .sx-values__grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1.25rem;
+  }
+  .gi-story-cms .sx-value {
+    text-align: center;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .gi-story-cms .sx-value::before {
+    content: '';
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    width: 2px;
+    height: 22px;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateX(-50%);
+  }
+  .gi-story-cms .sx-value__icon {
+    width: 74px;
+    height: 74px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--sx-t), border-color var(--sx-t), transform var(--sx-t);
+  }
+  .gi-story-cms .sx-value:hover .sx-value__icon {
+    background: rgba(233, 180, 76, 0.18);
+    border-color: var(--sx-gold);
+    transform: translateY(-3px);
+  }
+  .gi-story-cms .sx-value__icon .material-icons-round { font-size: 2rem; color: var(--sx-gold); }
+  .gi-story-cms .sx-value__label {
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  @media (max-width: 900px) {
+    .gi-story-cms .sx-values__grid { grid-template-columns: repeat(3, 1fr); gap: 2rem 1rem; }
+  }
+  @media (max-width: 480px) {
+    .gi-story-cms .sx-values__grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* =========================================================
+     Deep-dive company sections (G-Plus, G-Jila)
+     ========================================================= */
+  .gi-story-cms .sx-deepdive {
+    padding: 4.5rem 0;
+    background: var(--gi-bg-page, var(--sx-cream));
+  }
+  .gi-story-cms .sx-deepdive + .sx-deepdive { padding-top: 0; }
+  .gi-story-cms .sx-deepdive__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+    gap: 2.5rem;
+    align-items: start;
+  }
+  .gi-story-cms .sx-deepdive--flip .sx-deepdive__grid { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+  .gi-story-cms .sx-deepdive--flip .sx-deepdive__aside { order: 2; }
+
+  .gi-story-cms .sx-deepdive__aside {
+    background: #fff;
+    border: 1px solid var(--sx-border);
+    border-radius: var(--sx-radius-lg);
+    padding: 2rem;
+    box-shadow: var(--sx-shadow-md);
+    position: sticky;
+    top: 1rem;
+  }
+  .gi-story-cms .sx-deepdive__badge {
+    width: 84px;
+    height: 84px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+    margin-bottom: 1.25rem;
+    color: #fff;
+    background: linear-gradient(135deg, var(--sx-red) 0%, #A9291F 100%);
+    box-shadow: 0 12px 24px rgba(201, 51, 39, 0.3);
+  }
+  .gi-story-cms .sx-deepdive__badge .material-icons-round { font-size: 2.4rem; }
+  .gi-story-cms .sx-deepdive__badge--green { background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%); box-shadow: 0 12px 24px rgba(27, 94, 32, 0.3); }
+  .gi-story-cms .sx-deepdive__brand {
+    font-family: var(--sx-display);
+    font-size: 2rem;
+    color: var(--sx-navy);
+    margin: 0 0 0.25rem;
+    font-weight: 700;
+  }
+  .gi-story-cms .sx-deepdive__unit {
+    display: block;
+    color: var(--sx-red);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .gi-story-cms .sx-deepdive__lead {
+    color: var(--sx-navy);
+    font-size: 0.98rem;
+    line-height: 1.7;
+    margin: 0 0 1.5rem;
+  }
+  .gi-story-cms .sx-metric-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    border-top: 1px solid var(--sx-border);
+    padding-top: 1rem;
+  }
+  .gi-story-cms .sx-metric-list li {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem;
+    align-items: baseline;
+    padding: 0.35rem 0;
+  }
+  .gi-story-cms .sx-metric-list li span:first-child {
+    color: var(--sx-muted);
+    font-size: 0.85rem;
+    letter-spacing: 0.03em;
+  }
+  .gi-story-cms .sx-metric-list li span:last-child {
+    font-family: var(--sx-display);
+    font-weight: 700;
+    color: var(--sx-navy);
+    font-size: 1rem;
+    text-align: right;
+  }
+
+  .gi-story-cms .sx-deepdive__blocks {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .gi-story-cms .sx-block {
+    background: #fff;
+    border: 1px solid var(--sx-border);
+    border-radius: var(--sx-radius-lg);
+    padding: 1.75rem 1.75rem 1.6rem;
+    box-shadow: var(--sx-shadow-sm);
+  }
+  .gi-story-cms .sx-block__head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 2px solid var(--sx-red-100);
+  }
+  .gi-story-cms .sx-block__head .material-icons-round {
+    color: var(--sx-red);
+    font-size: 1.5rem;
+  }
+  .gi-story-cms .sx-block__title {
+    font-family: var(--sx-display);
+    font-size: 1.25rem;
+    color: var(--sx-navy);
+    margin: 0;
+    font-weight: 700;
+  }
+  .gi-story-cms .sx-check-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+  .gi-story-cms .sx-check-list li {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 0.7rem;
+    align-items: start;
+    font-size: 0.95rem;
+    color: var(--sx-navy);
+    line-height: 1.55;
+  }
+  .gi-story-cms .sx-check-list li .material-icons-round {
+    color: var(--sx-red);
+    font-size: 1.15rem;
+    margin-top: 2px;
+  }
+  @media (max-width: 960px) {
+    .gi-story-cms .sx-deepdive__grid,
+    .gi-story-cms .sx-deepdive--flip .sx-deepdive__grid { grid-template-columns: 1fr; }
+    .gi-story-cms .sx-deepdive__aside { position: static; }
+    .gi-story-cms .sx-deepdive--flip .sx-deepdive__aside { order: 0; }
+  }
+
+  /* =========================================================
+     Gadaa Istar New City
+     ========================================================= */
+  .gi-story-cms .sx-city {
+    padding: 4.5rem 0;
+    background: linear-gradient(180deg, var(--gi-bg-page, var(--sx-cream)) 0%, #fff 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .gi-story-cms .sx-city__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    background: var(--sx-red-100);
+    color: var(--sx-red);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 0 auto 1rem;
+  }
+  .gi-story-cms .sx-city__label-wrap { text-align: center; }
+  .gi-story-cms .sx-city__zones {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-top: 2rem;
+  }
+  .gi-story-cms .sx-zone {
+    background: #fff;
+    border: 1px solid var(--sx-border);
+    border-radius: var(--sx-radius-lg);
+    padding: 1.75rem 1.6rem;
+    transition: transform var(--sx-t), box-shadow var(--sx-t), border-color var(--sx-t);
+    position: relative;
+    overflow: hidden;
+  }
+  .gi-story-cms .sx-zone:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--sx-shadow-lg);
+    border-color: var(--sx-red-100);
+  }
+  .gi-story-cms .sx-zone__icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--sx-red) 0%, #A9291F 100%);
+    color: #fff;
+    margin-bottom: 1rem;
+    box-shadow: 0 8px 20px rgba(201, 51, 39, 0.28);
+  }
+  .gi-story-cms .sx-zone__icon .material-icons-round { font-size: 1.5rem; }
+  .gi-story-cms .sx-zone__title {
+    font-family: var(--sx-display);
+    font-size: 1.15rem;
+    color: var(--sx-navy);
+    margin: 0 0 0.85rem;
+    font-weight: 700;
+  }
+  .gi-story-cms .sx-zone__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .gi-story-cms .sx-zone__list li {
+    color: var(--sx-navy);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    padding-left: 1rem;
+    position: relative;
+  }
+  .gi-story-cms .sx-zone__list li::before {
+    content: '';
+    position: absolute;
+    top: 0.55em;
+    left: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--sx-red);
+  }
+  @media (max-width: 900px) {
+    .gi-story-cms .sx-city__zones { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 560px) {
+    .gi-story-cms .sx-city__zones { grid-template-columns: 1fr; }
+  }
+
+  /* =========================================================
+     Final CTA
+     ========================================================= */
+  .gi-story-cms .sx-final {
+    padding: 4rem 0;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(233, 180, 76, 0.18), transparent 55%),
+      linear-gradient(120deg, var(--sx-navy) 0%, var(--sx-navy-700) 100%);
+    color: #fff;
+  }
+  .gi-story-cms .sx-final__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 2rem;
+    align-items: center;
+  }
+  .gi-story-cms .sx-final__inner h2 {
+    font-family: var(--sx-display);
+    font-size: clamp(1.5rem, 2.5vw, 2rem);
+    color: #fff;
+    margin: 0 0 0.5rem;
+    font-weight: 700;
+  }
+  .gi-story-cms .sx-final__inner p {
+    color: rgba(255, 255, 255, 0.85);
+    margin: 0;
+    line-height: 1.65;
+    font-size: 1rem;
+    max-width: 36rem;
+  }
+  .gi-story-cms .sx-final__ctas {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  @media (max-width: 820px) {
+    .gi-story-cms .sx-final__inner { grid-template-columns: 1fr; text-align: left; }
+    .gi-story-cms .sx-final__ctas { justify-content: flex-start; }
+  }
+</style>
+
+<div class="gi-story-cms">
+
+  <!-- ================================================================
+       HERO — navy panel with founder card + hero copy
+       ================================================================ -->
+  <section class="sx-hero" aria-labelledby="sx-hero-title">
+    <div class="sx-hero__wedge" aria-hidden="true"></div>
+    <div class="sx-hero__dots sx-hero__dots--tl" aria-hidden="true"></div>
+    <div class="sx-hero__dots sx-hero__dots--br" aria-hidden="true"></div>
+
+    <div class="sx-container">
+      <div class="sx-hero__inner">
+        <div class="sx-hero__copy">
+          <span class="sx-eyebrow">Our story</span>
+          <h1 id="sx-hero-title" class="sx-hero__title">
+            Four sister companies.<br />
+            <span class="sx-hero__accent">One Ethiopian vision.</span>
+          </h1>
+          <p class="sx-hero__lead">
+            Gadaa Istar Business Group Share Company is a conglomerate business
+            uniting four sister companies — <strong>G-Plus</strong>,
+            <strong>G-Jila</strong>, <strong>G-Farm</strong>, and
+            <strong>G-Empire</strong> — under one management team headquartered
+            in Addis Ababa. With a combined start-up investment of
+            <strong>28 billion Birr</strong>, an anticipated
+            <strong>ETB 64.7 billion</strong> in annual net profit, and roughly
+            <strong>100,000 new jobs</strong> on the horizon, we're building
+            East Africa's next industrial giant — one shipment, one hire, and
+            one community at a time.
+          </p>
+          <div class="sx-hero__ctas">
+            <a href="/shop" class="sx-btn sx-btn--primary">
+              <span class="material-icons-round">storefront</span>
+              Explore our products
+            </a>
+            <a href="/contact" class="sx-btn sx-btn--ghost">
+              <span class="material-icons-round">forum</span>
+              Talk to our team
+            </a>
+          </div>
+        </div>
+
+        <aside class="sx-founder" aria-label="About the founder">
+          <div class="sx-founder__avatar" aria-hidden="true">BH</div>
+          <span class="sx-founder__kicker">Founder &amp; Chairman</span>
+          <h2 class="sx-founder__name">Mr. Biniyam Hailu</h2>
+          <p class="sx-founder__role">Leather engineer · Garment manufacturer since 2010 E.C.</p>
+          <p class="sx-founder__bio">
+            A young visionary entrepreneur, Biniyam brings hands-on leather
+            engineering experience from both national and international
+            companies, and has owned a garment manufacturing business since
+            2010 E.C. — the industrial DNA that shapes every Gadaa Istar
+            sister company today.
+          </p>
+          <em class="sx-founder__quote">
+            "We are in you, you are in us."
+          </em>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       Stats strip
+       ================================================================ -->
+  <section class="sx-stats" aria-label="Group at a glance">
+    <div class="sx-container">
+      <div class="sx-stats__grid">
+        <div class="sx-stat">
+          <span class="sx-stat__num">28B ETB</span>
+          <span class="sx-stat__label">Group start-up investment</span>
+        </div>
+        <div class="sx-stat">
+          <span class="sx-stat__num">64.7B ETB</span>
+          <span class="sx-stat__label">Estimated annual net profit</span>
+        </div>
+        <div class="sx-stat">
+          <span class="sx-stat__num">~100,000</span>
+          <span class="sx-stat__label">Anticipated new jobs</span>
+        </div>
+        <div class="sx-stat">
+          <span class="sx-stat__num">4 + 1</span>
+          <span class="sx-stat__label">Sister companies · HQ Addis Ababa</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       Sister companies
+       ================================================================ -->
+  <section class="sx-sisters" aria-labelledby="sx-sisters-title">
+    <div class="sx-container">
+      <span class="sx-eyebrow sx-eyebrow--dark" style="display:block;text-align:center;">Sister companies</span>
+      <h2 id="sx-sisters-title" class="sx-section-title">One group. Four industries.</h2>
+      <p class="sx-section-lead">
+        Each Gadaa Istar sister company runs its own business unit and
+        management system — accountable to the group's HQ in Addis Ababa,
+        yet free to lead its industry from the front.
+      </p>
+
+      <div class="sx-sisters__grid">
+        <article class="sx-sister">
+          <span class="sx-sister__badge" aria-hidden="true">
+            <span class="material-icons-round">restaurant</span>
+          </span>
+          <h3 class="sx-sister__name">G-Plus</h3>
+          <span class="sx-sister__unit">Fast Food</span>
+          <p class="sx-sister__desc">
+            A fast-food producer &amp; distributor bringing high-quality
+            burgers to Ethiopia and neighbouring countries.
+          </p>
+        </article>
+
+        <article class="sx-sister">
+          <span class="sx-sister__badge" aria-hidden="true">
+            <span class="material-icons-round">checkroom</span>
+          </span>
+          <h3 class="sx-sister__name">G-Jila</h3>
+          <span class="sx-sister__unit">Garment &amp; Apparel Textile</span>
+          <p class="sx-sister__desc">
+            Polyester &amp; cotton-blend fabrics, denim, and finished
+            garments for the local and export markets.
+          </p>
+        </article>
+
+        <article class="sx-sister">
+          <span class="sx-sister__badge" aria-hidden="true">
+            <span class="material-icons-round">agriculture</span>
+          </span>
+          <h3 class="sx-sister__name">G-Farm</h3>
+          <span class="sx-sister__unit">Industrial Agriculture</span>
+          <p class="sx-sister__desc">
+            Modern, environmentally-friendly farming at industrial scale to
+            feed both our factories and East African tables.
+          </p>
+        </article>
+
+        <article class="sx-sister">
+          <span class="sx-sister__badge" aria-hidden="true">
+            <span class="material-icons-round">memory</span>
+          </span>
+          <h3 class="sx-sister__name">G-Empire</h3>
+          <span class="sx-sister__unit">Technology</span>
+          <p class="sx-sister__desc">
+            The digital backbone of the group — powering commerce,
+            supply-chain visibility, and customer experience.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       Vision · Mission · Values
+       ================================================================ -->
+  <section class="sx-vmv" aria-labelledby="sx-vmv-title">
+    <div class="sx-container">
+      <span class="sx-eyebrow sx-eyebrow--dark" style="display:block;text-align:center;">What drives us</span>
+      <h2 id="sx-vmv-title" class="sx-section-title">Vision, Mission &amp; Core Values</h2>
+      <p class="sx-section-lead">The compass that keeps every sister company pointed the same way.</p>
+
+      <div class="sx-vmv__grid">
+        <article class="sx-vmv-card">
+          <span class="sx-vmv-card__icon" aria-hidden="true">
+            <span class="material-icons-round">visibility</span>
+          </span>
+          <span class="sx-vmv-card__kicker">Vision</span>
+          <h3 class="sx-vmv-card__title">Leading East Africa by 2030</h3>
+          <p class="sx-vmv-card__body">
+            Gadaa Istar aspires to be a leading company in fast food, textile,
+            apparel &amp; leather production, and in modern farming across
+            East Africa by the end of 2030.
+          </p>
+        </article>
+
+        <article class="sx-vmv-card">
+          <span class="sx-vmv-card__icon" aria-hidden="true">
+            <span class="material-icons-round">rocket_launch</span>
+          </span>
+          <span class="sx-vmv-card__kicker">Mission</span>
+          <h3 class="sx-vmv-card__title">Value that lifts a community</h3>
+          <p class="sx-vmv-card__body">
+            We create customer value in East Africa through modern farming,
+            production &amp; distribution of fast food, leather, textile and
+            apparel — running environmentally-friendly businesses and staying
+            accountable to our community, stockholders, and employees. We
+            aim to be part of the solution to community problems, never
+            their cause.
+          </p>
+        </article>
+
+        <article class="sx-vmv-card">
+          <span class="sx-vmv-card__icon" aria-hidden="true">
+            <span class="material-icons-round">workspace_premium</span>
+          </span>
+          <span class="sx-vmv-card__kicker">Values</span>
+          <h3 class="sx-vmv-card__title">Five principles, one culture</h3>
+          <ul class="sx-vmv-card__list">
+            <li><span class="material-icons-round">check_circle</span><span>Innovation, synergy &amp; integrity</span></li>
+            <li><span class="material-icons-round">check_circle</span><span>Quality in everything we ship</span></li>
+            <li><span class="material-icons-round">check_circle</span><span>Efficiency &amp; affordable pricing</span></li>
+            <li><span class="material-icons-round">check_circle</span><span>Transparency &amp; accountability</span></li>
+            <li><span class="material-icons-round">check_circle</span><span>Environmentally-friendly operations</span></li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       Core Values strip
+       ================================================================ -->
+  <section class="sx-values" aria-labelledby="sx-values-title">
+    <div class="sx-container">
+      <h2 id="sx-values-title" class="sx-values__title">Core Values</h2>
+      <p class="sx-values__lead">Six principles our teams live by, every shift, in every sister company.</p>
+      <div class="sx-values__bar" aria-hidden="true"></div>
+
+      <div class="sx-values__grid">
+        <div class="sx-value">
+          <span class="sx-value__icon" aria-hidden="true"><span class="material-icons-round">lightbulb</span></span>
+          <span class="sx-value__label">Innovation</span>
+        </div>
+        <div class="sx-value">
+          <span class="sx-value__icon" aria-hidden="true"><span class="material-icons-round">track_changes</span></span>
+          <span class="sx-value__label">Goals</span>
+        </div>
+        <div class="sx-value">
+          <span class="sx-value__icon" aria-hidden="true"><span class="material-icons-round">extension</span></span>
+          <span class="sx-value__label">Teamwork</span>
+        </div>
+        <div class="sx-value">
+          <span class="sx-value__icon" aria-hidden="true"><span class="material-icons-round">insights</span></span>
+          <span class="sx-value__label">Commitment</span>
+        </div>
+        <div class="sx-value">
+          <span class="sx-value__icon" aria-hidden="true"><span class="material-icons-round">handshake</span></span>
+          <span class="sx-value__label">Synergy &amp; Integrity</span>
+        </div>
+        <div class="sx-value">
+          <span class="sx-value__icon" aria-hidden="true"><span class="material-icons-round">workspace_premium</span></span>
+          <span class="sx-value__label">Quality</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       G-Plus deep dive
+       ================================================================ -->
+  <section class="sx-deepdive" id="g-plus" aria-labelledby="sx-gplus-title">
+    <div class="sx-container">
+      <div class="sx-deepdive__grid">
+
+        <aside class="sx-deepdive__aside">
+          <div class="sx-deepdive__badge" aria-hidden="true">
+            <span class="material-icons-round">restaurant</span>
+          </div>
+          <span class="sx-deepdive__unit">Sister company · Fast Food</span>
+          <h2 id="sx-gplus-title" class="sx-deepdive__brand">G-Plus</h2>
+          <p class="sx-deepdive__lead">
+            A fast-food producer and distributor offering Ethiopia and its
+            neighbours various tastes of burgers and related items.
+            Headquartered in Addis Ababa with five production &amp;
+            distribution centres on the five gates of the city — serving
+            breakfast, lunch, and dinner, 7 days a week, at prices every
+            customer can enjoy.
+          </p>
+          <ul class="sx-metric-list">
+            <li><span>Daily burgers (year 1)</span><span>5 million</span></li>
+            <li><span>New production centres (by Y2)</span><span>5 cities</span></li>
+            <li><span>Youth jobs created</span><span>&gt; 5,000</span></li>
+            <li><span>Operating days per week</span><span>7</span></li>
+          </ul>
+        </aside>
+
+        <div class="sx-deepdive__blocks">
+          <article class="sx-block">
+            <header class="sx-block__head">
+              <span class="material-icons-round">flag</span>
+              <h3 class="sx-block__title">G-Plus objectives</h3>
+            </header>
+            <ul class="sx-check-list">
+              <li><span class="material-icons-round">check_circle</span><span>Produce and distribute <strong>five million burgers per day</strong> during the first year of operation.</span></li>
+              <li><span class="material-icons-round">check_circle</span><span>Establish <strong>five production &amp; distribution centres</strong> in Hawasa, Harar, Jimma, and Dessie by the end of year&nbsp;2.</span></li>
+              <li><span class="material-icons-round">check_circle</span><span>Become a <strong>market leader in Ethiopia</strong> within the first two years of operation.</span></li>
+              <li><span class="material-icons-round">check_circle</span><span>Create job opportunities for more than <strong>5,000 young Ethiopians</strong>.</span></li>
+              <li><span class="material-icons-round">check_circle</span><span>Generate <strong>foreign-currency income</strong> for the country.</span></li>
+              <li><span class="material-icons-round">check_circle</span><span>Operate in <strong>neighbouring countries</strong> through franchise.</span></li>
+              <li><span class="material-icons-round">check_circle</span><span>Grow into a <strong>multinational fast-food provider</strong>.</span></li>
+            </ul>
+          </article>
+
+          <article class="sx-block">
+            <header class="sx-block__head">
+              <span class="material-icons-round">key</span>
+              <h3 class="sx-block__title">Keys to G-Plus success</h3>
+            </header>
+            <ul class="sx-check-list">
+              <li><span class="material-icons-round">location_on</span><span>Presence on the <strong>five gates of Addis Ababa</strong> and distribution to other big cities and neighbouring countries.</span></li>
+              <li><span class="material-icons-round">precision_manufacturing</span><span>Sophisticated technology in preparing, transporting, reserving, and selling the burgers.</span></li>
+              <li><span class="material-icons-round">account_tree</span><span>Vertical integration across the supply chain.</span></li>
+              <li><span class="material-icons-round">balance</span><span>Support from the government and alignment with national priorities.</span></li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       G-Jila deep dive (flipped layout)
+       ================================================================ -->
+  <section class="sx-deepdive sx-deepdive--flip" id="g-jila" aria-labelledby="sx-gjila-title">
+    <div class="sx-container">
+      <div class="sx-deepdive__grid">
+
+        <div class="sx-deepdive__blocks">
+          <article class="sx-block">
+            <header class="sx-block__head">
+              <span class="material-icons-round">inventory_2</span>
+              <h3 class="sx-block__title">What we make at G-Jila</h3>
+            </header>
+            <ul class="sx-check-list">
+              <li><span class="material-icons-round">check_circle</span><span>Polyester and polyester-cotton <strong>blend fabrics</strong>.</span></li>
+              <li><span class="material-icons-round">check_circle</span><span><strong>Denim fabric</strong> in a range of weights and finishes.</span></li>
+              <li><span class="material-icons-round">check_circle</span><span>Finished garments — mainly <strong>polo shirts, T-shirts, shirts, and trousers</strong>.</span></li>
+            </ul>
+          </article>
+
+          <article class="sx-block">
+            <header class="sx-block__head">
+              <span class="material-icons-round">flag</span>
+              <h3 class="sx-block__title">G-Jila objectives</h3>
+            </header>
+            <ul class="sx-check-list">
+              <li><span class="material-icons-round">check_circle</span><span>Establish an integrated textile and garment industry producing <strong>polyester &amp; cotton-blend fabrics</strong>, including denim and finished garments, for local and export markets.</span></li>
+              <li><span class="material-icons-round">check_circle</span><span>Contribute to the <strong>structural transformation</strong> of the economy and create jobs for Ethiopia's growing youth population.</span></li>
+              <li><span class="material-icons-round">check_circle</span><span>Deliver export-grade quality that competes with the best on the continent.</span></li>
+            </ul>
+          </article>
+        </div>
+
+        <aside class="sx-deepdive__aside">
+          <div class="sx-deepdive__badge sx-deepdive__badge--green" aria-hidden="true">
+            <span class="material-icons-round">checkroom</span>
+          </div>
+          <span class="sx-deepdive__unit">Sister company · Garment &amp; Apparel Textile</span>
+          <h2 id="sx-gjila-title" class="sx-deepdive__brand">G-Jila</h2>
+          <p class="sx-deepdive__lead">
+            G-Jila is one of the sister companies of Gadaa Istar, primarily
+            focused on producing textile goods for clothing and other items —
+            from raw yarn all the way to finished garments ready for retail.
+          </p>
+          <ul class="sx-metric-list">
+            <li><span>Employment opportunity</span><span>&gt; 6,000 jobs</span></li>
+            <li><span>Fabric focus</span><span>Polyester · Cotton · Denim</span></li>
+            <li><span>Garment focus</span><span>Polo · T-shirt · Shirts · Trousers</span></li>
+            <li><span>Markets served</span><span>Local &amp; export</span></li>
+          </ul>
+        </aside>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       Gadaa Istar New City — spatial zones
+       ================================================================ -->
+  <section class="sx-city" aria-labelledby="sx-city-title">
+    <div class="sx-container">
+      <div class="sx-city__label-wrap">
+        <span class="sx-city__label"><span class="material-icons-round" style="font-size:1rem;">location_city</span>New master-planned development</span>
+      </div>
+      <h2 id="sx-city-title" class="sx-section-title">Gadaa Istar New City</h2>
+      <p class="sx-section-lead">
+        A master-planned community designed as the physical home of the
+        group's ambitions — organised into six functional zones that let
+        residents, workers, and visitors all thrive under one roof.
+      </p>
+
+      <div class="sx-city__zones">
+        <article class="sx-zone">
+          <span class="sx-zone__icon" aria-hidden="true"><span class="material-icons-round">home</span></span>
+          <h3 class="sx-zone__title">Residential Zone</h3>
+          <ul class="sx-zone__list">
+            <li>Housing complexes</li>
+            <li>Apartments</li>
+            <li>Community centres</li>
+            <li>Retail shops</li>
+            <li>Parks and open spaces</li>
+          </ul>
+        </article>
+
+        <article class="sx-zone">
+          <span class="sx-zone__icon" aria-hidden="true"><span class="material-icons-round">storefront</span></span>
+          <h3 class="sx-zone__title">Commercial Zone</h3>
+          <ul class="sx-zone__list">
+            <li>Retail &amp; office spaces</li>
+            <li>Restaurants &amp; cafés</li>
+            <li>Entertainment spaces</li>
+            <li>Hotels &amp; hospitality</li>
+            <li>Mixed-use developments</li>
+            <li>Service facilities</li>
+          </ul>
+        </article>
+
+        <article class="sx-zone">
+          <span class="sx-zone__icon" aria-hidden="true"><span class="material-icons-round">directions_bus</span></span>
+          <h3 class="sx-zone__title">Infrastructure &amp; Mobility</h3>
+          <ul class="sx-zone__list">
+            <li>Parking &amp; maintenance</li>
+            <li>Transportation networks</li>
+            <li>Public transportation</li>
+            <li>Utility infrastructure</li>
+            <li>Pedestrian &amp; bicycle infrastructure</li>
+          </ul>
+        </article>
+
+        <article class="sx-zone">
+          <span class="sx-zone__icon" aria-hidden="true"><span class="material-icons-round">apartment</span></span>
+          <h3 class="sx-zone__title">Administration Zone</h3>
+          <ul class="sx-zone__list">
+            <li>Information centres</li>
+            <li>Office spaces &amp; meeting rooms</li>
+            <li>Restaurants &amp; cafés</li>
+            <li>Administrative support services</li>
+            <li>Regulatory bodies</li>
+            <li>Government offices</li>
+          </ul>
+        </article>
+
+        <article class="sx-zone">
+          <span class="sx-zone__icon" aria-hidden="true"><span class="material-icons-round">factory</span></span>
+          <h3 class="sx-zone__title">Industrial Zone</h3>
+          <ul class="sx-zone__list">
+            <li>Industrial offices</li>
+            <li>Manufacturing facilities</li>
+            <li>Warehouses &amp; distribution centres</li>
+            <li>Industrial training centres</li>
+            <li>Indoor farming centres</li>
+            <li>Industrial research &amp; waste-treatment facilities</li>
+          </ul>
+        </article>
+
+        <article class="sx-zone">
+          <span class="sx-zone__icon" aria-hidden="true"><span class="material-icons-round">local_hospital</span></span>
+          <h3 class="sx-zone__title">Public Services Zone</h3>
+          <ul class="sx-zone__list">
+            <li>Healthcare facilities</li>
+            <li>Community centres &amp; gardens</li>
+            <li>Waste management facilities</li>
+            <li>Cultural &amp; educational institutions</li>
+            <li>Parks &amp; recreation facilities</li>
+            <li>Police, fire stations &amp; libraries</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       Final CTA
+       ================================================================ -->
+  <section class="sx-final">
+    <div class="sx-container">
+      <div class="sx-final__inner">
+        <div>
+          <h2>Want to be part of the story?</h2>
+          <p>
+            Shop direct from origin, request a wholesale quote, or talk to our
+            export desk in Addis Ababa — we reply within one business day.
+          </p>
+        </div>
+        <div class="sx-final__ctas">
+          <a href="/shop" class="sx-btn sx-btn--gold">
+            <span class="material-icons-round">storefront</span>
+            Shop the catalogue
+          </a>
+          <a href="/contact" class="sx-btn sx-btn--primary">
+            <span class="material-icons-round">forum</span>
+            Contact us
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
