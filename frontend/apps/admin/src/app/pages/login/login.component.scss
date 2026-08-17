@@ -203,6 +203,21 @@
 }
 
 // -----------------------------------------------------------------------------
+// Session-timeout notice — shown when the user was force-logged-out (idle,
+// refresh token expired, refresh call failed) and bounced back to /login.
+// -----------------------------------------------------------------------------
+.gi-form__notice {
+  background: rgba(233, 180, 76, 0.12);
+  border: 1px solid rgba(233, 180, 76, 0.45);
+  color: var(--gi-navy-900);
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--gi-radius-md);
+  font-size: 0.88rem;
+  line-height: 1.35;
+  margin-bottom: 1rem;
+}
+
+// -----------------------------------------------------------------------------
 // Info hint (e.g. "You'll be asked for a 6-digit code next")
 // -----------------------------------------------------------------------------
 .gi-login__hint {

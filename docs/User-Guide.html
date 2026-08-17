@@ -1,0 +1,1814 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Gadaa Istar — User Guide</title>
+<style>
+  /* ----------------------------------------------------------
+     Print layout — A4, 2cm margins, running header/footer
+     ---------------------------------------------------------- */
+  @page {
+    size: A4;
+    margin: 22mm 18mm 22mm 18mm;
+
+    @top-left  { content: "Gadaa Istar — User Guide"; font-family: Georgia, serif; font-size: 9pt; color: #6a6a6a; }
+    @top-right { content: "gedaaistar.et"; font-family: Georgia, serif; font-size: 9pt; color: #6a6a6a; }
+    @bottom-right { content: "Page " counter(page) " of " counter(pages); font-family: Georgia, serif; font-size: 9pt; color: #6a6a6a; }
+    @bottom-left  { content: "© Gadaa Istar Business Group S.C."; font-family: Georgia, serif; font-size: 9pt; color: #6a6a6a; }
+  }
+  @page :first {
+    margin: 0;
+    @top-left { content: ""; }
+    @top-right { content: ""; }
+    @bottom-left { content: ""; }
+    @bottom-right { content: ""; }
+  }
+
+  /* ----------------------------------------------------------
+     Brand palette (from Gadaa Istar logo)
+     Navy 900  #12294A   Navy 700 #1B3A6B
+     Red 600   #C93327   Gold 500 #E9B44C
+     Cream 50  #FAF6F0   Espresso #3B2A20
+     ---------------------------------------------------------- */
+  :root {
+    --navy-900: #12294A;
+    --navy-700: #1B3A6B;
+    --red-600:  #C93327;
+    --gold-500: #E9B44C;
+    --cream-50: #FAF6F0;
+    --espresso: #3B2A20;
+    --ink:      #1a1a1a;
+    --muted:    #666;
+    --line:     #d9d3c7;
+    --bg-soft:  #f6f2ea;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0; padding: 0;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+    font-size: 10.5pt;
+    line-height: 1.5;
+    background: white;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: Georgia, "Times New Roman", serif;
+    color: var(--navy-900);
+    line-height: 1.25;
+    page-break-after: avoid;
+  }
+
+  h1 { font-size: 22pt; margin: 0 0 6pt; }
+  h2 { font-size: 16pt; margin: 22pt 0 8pt; border-bottom: 1.5pt solid var(--gold-500); padding-bottom: 4pt; }
+  h3 { font-size: 12.5pt; margin: 14pt 0 4pt; color: var(--navy-700); }
+  h4 { font-size: 10.5pt; margin: 10pt 0 3pt; color: var(--red-600); text-transform: uppercase; letter-spacing: 0.5pt; }
+
+  p { margin: 6pt 0; }
+
+  a { color: var(--navy-700); text-decoration: none; }
+  code, kbd { font-family: "Consolas", "Courier New", monospace; font-size: 9.5pt; background: var(--bg-soft); padding: 1pt 3pt; border-radius: 2pt; }
+
+  ul, ol { margin: 6pt 0 6pt 18pt; padding: 0; }
+  li { margin: 2pt 0; }
+
+  table { width: 100%; border-collapse: collapse; margin: 8pt 0; font-size: 9.5pt; page-break-inside: avoid; }
+  th, td { border: 0.5pt solid var(--line); padding: 4pt 6pt; text-align: left; vertical-align: top; }
+  th { background: var(--navy-900); color: white; font-weight: 600; }
+  tbody tr:nth-child(even) td { background: var(--bg-soft); }
+
+  /* -------- Callouts -------- */
+  .callout {
+    border-left: 3pt solid var(--gold-500);
+    background: var(--bg-soft);
+    padding: 8pt 12pt;
+    margin: 10pt 0;
+    page-break-inside: avoid;
+  }
+  .callout .cotitle { font-weight: 700; color: var(--navy-900); text-transform: uppercase; letter-spacing: 0.5pt; font-size: 9pt; margin-bottom: 3pt; display: block; }
+  .callout.warn  { border-left-color: var(--red-600); }
+  .callout.warn  .cotitle { color: var(--red-600); }
+  .callout.risk  { border-left-color: #8B0000; background: #fdf1ee; }
+  .callout.risk  .cotitle { color: #8B0000; }
+  .callout.tip   { border-left-color: var(--navy-700); }
+  .callout.tip   .cotitle { color: var(--navy-700); }
+
+  /* -------- Title page -------- */
+  .cover {
+    height: 297mm; width: 210mm;
+    padding: 40mm 24mm 24mm;
+    background:
+      radial-gradient(circle at 90% 10%, rgba(233,180,76,0.18) 0%, transparent 55%),
+      radial-gradient(circle at 10% 90%, rgba(201,51,39,0.10) 0%, transparent 50%),
+      linear-gradient(180deg, #0d2141 0%, var(--navy-900) 60%, #0a1c38 100%);
+    color: #f5f0e2;
+    page-break-after: always;
+    position: relative;
+  }
+  .cover .eyebrow { color: var(--gold-500); text-transform: uppercase; letter-spacing: 3pt; font-size: 10pt; }
+  .cover h1 { color: #ffffff; font-size: 40pt; line-height: 1.15; margin: 12pt 0 6pt; }
+  .cover .sub { color: #e6dfcb; font-size: 14pt; margin-top: 6pt; }
+  .cover .rule { width: 80mm; height: 3pt; background: var(--gold-500); margin: 24pt 0; }
+  .cover .meta { position: absolute; bottom: 24mm; left: 24mm; right: 24mm; display: flex; justify-content: space-between; font-size: 10pt; color: #cfc5a6; border-top: 0.5pt solid #3a5688; padding-top: 10pt; }
+  .cover .meta .label { color: var(--gold-500); text-transform: uppercase; letter-spacing: 1.5pt; font-size: 8.5pt; display: block; }
+
+  /* -------- Section wrappers -------- */
+  .part-cover { page-break-before: always; page-break-after: always; padding-top: 40mm; }
+  .part-cover .part-eyebrow { color: var(--red-600); font-size: 10pt; letter-spacing: 3pt; text-transform: uppercase; }
+  .part-cover h1 { font-size: 30pt; margin-top: 6pt; }
+  .part-cover .part-blurb { font-size: 11pt; color: var(--muted); margin-top: 8pt; max-width: 130mm; }
+
+  .chapter { page-break-before: always; }
+
+  /* -------- TOC -------- */
+  .toc h1 { border-bottom: 2pt solid var(--red-600); padding-bottom: 6pt; }
+  .toc ol { list-style: none; margin-left: 0; padding-left: 0; counter-reset: toc; }
+  .toc ol > li { counter-increment: toc; margin: 4pt 0; padding-left: 22pt; position: relative; font-size: 10.5pt; }
+  .toc ol > li::before { content: counter(toc, upper-roman) "."; position: absolute; left: 0; color: var(--gold-500); font-weight: 700; }
+  .toc ol.sub { counter-reset: sub; margin-left: 8pt; margin-top: 3pt; }
+  .toc ol.sub > li { counter-increment: sub; padding-left: 20pt; font-size: 10pt; color: #333; }
+  .toc ol.sub > li::before { content: counter(sub) "."; color: var(--navy-700); font-weight: 600; }
+
+  /* -------- Utility -------- */
+  .small { font-size: 9pt; color: var(--muted); }
+  .badge { display: inline-block; padding: 1pt 6pt; border-radius: 10pt; font-size: 8.5pt; font-weight: 600; color: white; background: var(--navy-700); }
+  .badge.red  { background: var(--red-600); }
+  .badge.gold { background: var(--gold-500); color: var(--espresso); }
+  .badge.grey { background: #6a6a6a; }
+  .kbd { font-family: Consolas, monospace; background: #eee; border: 0.5pt solid #bbb; border-bottom-width: 1.5pt; border-radius: 3pt; padding: 0 4pt; font-size: 9pt; }
+  .pathline { font-family: Consolas, monospace; background: var(--bg-soft); padding: 4pt 8pt; border-left: 2pt solid var(--gold-500); font-size: 9.5pt; margin: 6pt 0; word-break: break-all; }
+  .no-break { page-break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     COVER PAGE
+     ============================================================ -->
+<section class="cover">
+  <div class="eyebrow">User Documentation</div>
+  <h1>Gadaa Istar Export<br/>E-Commerce Platform</h1>
+  <div class="sub">User Guide &mdash; Storefront &amp; Admin Back-Office</div>
+  <div class="rule"></div>
+  <p style="max-width:135mm; color:#e6dfcb; font-size:11pt;">
+    A practical guide to how the Gadaa Istar hybrid B2B + B2C platform is used
+    in day-to-day operations by shoppers, wholesale buyers, and back-office
+    staff. Includes an appendix on common misuse scenarios and user-related risks.
+  </p>
+
+  <div class="meta">
+    <div>
+      <span class="label">Document</span>
+      User Guide (v1.0)
+    </div>
+    <div>
+      <span class="label">Platform</span>
+      gedaaistar.et &middot; admin.gedaaistar.et
+    </div>
+    <div>
+      <span class="label">Issued</span>
+      August 2026
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     DOCUMENT INFO
+     ============================================================ -->
+<section class="chapter">
+  <h1>Document information</h1>
+
+  <table>
+    <tr><th style="width: 35%">Field</th><th>Value</th></tr>
+    <tr><td>Document title</td><td>Gadaa Istar &mdash; User Guide (Storefront &amp; Admin Back-Office)</td></tr>
+    <tr><td>Version</td><td>1.0</td></tr>
+    <tr><td>Issued</td><td>August 2026</td></tr>
+    <tr><td>Product</td><td>Gadaa Istar Export E-Commerce Platform</td></tr>
+    <tr><td>Operator</td><td>Gadaa Istar Business Group S.C.</td></tr>
+    <tr><td>Primary URL</td><td>https://gedaaistar.et/</td></tr>
+    <tr><td>Admin URL</td><td>https://admin.gedaaistar.et/</td></tr>
+    <tr><td>Payment processor</td><td>CyberSource Secure Acceptance Hosted Checkout &amp; Mastercard Payment Gateway Services (MPGS)</td></tr>
+    <tr><td>Compliance</td><td>PCI DSS SAQ-A, Ethiopian VAT (ERCA)</td></tr>
+    <tr><td>Audience</td><td>Retail shoppers (B2C), wholesale buyers (B2B), and administrative staff</td></tr>
+    <tr><td>Purpose</td><td>Describe how the system is used in practice; support the identification of misuse scenarios and user-related risks</td></tr>
+  </table>
+
+  <div class="callout tip no-break">
+    <span class="cotitle">How to read this guide</span>
+    This document is organised into two parts. <b>Part I</b> covers the public
+    storefront (gedaaistar.et) as used by customers. <b>Part II</b> covers
+    the admin back-office (admin.gedaaistar.et) as used by staff. The final
+    appendix summarises misuse scenarios and user-related risks that follow
+    from the workflows described earlier.
+  </div>
+</section>
+
+<!-- ============================================================
+     TABLE OF CONTENTS
+     ============================================================ -->
+<section class="chapter toc">
+  <h1>Table of contents</h1>
+
+  <ol>
+    <li>
+      About this guide
+      <ol class="sub">
+        <li>Purpose &amp; scope</li>
+        <li>Intended audience</li>
+        <li>Conventions used</li>
+      </ol>
+    </li>
+    <li>
+      Platform overview
+      <ol class="sub">
+        <li>What Gadaa Istar sells</li>
+        <li>User roles</li>
+        <li>Application URLs</li>
+        <li>Supported browsers &amp; devices</li>
+        <li>Languages &amp; currencies</li>
+      </ol>
+    </li>
+    <li>
+      Storefront user guide (customers)
+      <ol class="sub">
+        <li>Getting started &amp; global navigation</li>
+        <li>Home page</li>
+        <li>Browsing the catalog</li>
+        <li>Product details &amp; variants</li>
+        <li>Wishlist</li>
+        <li>Shopping cart</li>
+        <li>Creating an account (B2C and B2B)</li>
+        <li>Email verification</li>
+        <li>Signing in and out</li>
+        <li>Recovering your password</li>
+        <li>Your account portal</li>
+        <li>Checkout &amp; payment</li>
+        <li>After payment: return, retry, cancel</li>
+        <li>Requesting a quote (B2B)</li>
+        <li>Tracking an order (public)</li>
+        <li>Static pages (About, Contact, FAQ, Legal)</li>
+      </ol>
+    </li>
+    <li>
+      Admin back-office user guide (staff)
+      <ol class="sub">
+        <li>Signing in &amp; multi-factor authentication</li>
+        <li>Dashboard</li>
+        <li>Notifications</li>
+        <li>Products</li>
+        <li>Price lists</li>
+        <li>Shipping methods</li>
+        <li>Orders &amp; refunds</li>
+        <li>Quotes</li>
+        <li>Customers</li>
+        <li>Customer groups</li>
+        <li>Coupons</li>
+        <li>CMS pages &amp; banners</li>
+        <li>Admin users &amp; MFA reset</li>
+      </ol>
+    </li>
+    <li>
+      Appendix A &mdash; Misuse scenarios &amp; user-related risks
+    </li>
+    <li>
+      Appendix B &mdash; Glossary
+    </li>
+    <li>
+      Appendix C &mdash; URL &amp; keyboard reference
+    </li>
+  </ol>
+</section>
+
+<!-- ============================================================
+     CHAPTER 1 — ABOUT THIS GUIDE
+     ============================================================ -->
+<section class="chapter">
+  <h1>1. About this guide</h1>
+
+  <h3>1.1 Purpose &amp; scope</h3>
+  <p>
+    This document is a practical user guide for the Gadaa Istar Export
+    E-Commerce Platform. It describes how the deployed system at
+    <a href="https://gedaaistar.et/">gedaaistar.et</a> and the back-office at
+    <a href="https://admin.gedaaistar.et/">admin.gedaaistar.et</a> are used
+    in practice by end-users and staff.
+  </p>
+  <p>
+    The guide covers every user-facing feature that a customer or an
+    administrator can reach through the browser. It does <b>not</b> cover
+    developer topics such as source-code layout, deployment pipelines, or
+    infrastructure configuration &mdash; those live in the developer
+    <code>README.md</code> and the internal engineering plan.
+  </p>
+  <p>
+    A dedicated appendix at the end (Appendix&nbsp;A) enumerates common
+    misuse scenarios and user-related risks that follow from the workflows
+    described earlier. That appendix is intended to feed the platform's
+    risk register and privacy / security review.
+  </p>
+
+  <h3>1.2 Intended audience</h3>
+  <ul>
+    <li><b>Retail (B2C) customers</b> browsing gedaaistar.et and placing personal orders.</li>
+    <li><b>Wholesale (B2B) buyers</b> from businesses that hold an approved account and use tiered pricing and quote requests.</li>
+    <li><b>Customer-service staff</b> and <b>fulfilment staff</b> using the admin back-office to manage orders, quotes, refunds, and customers.</li>
+    <li><b>Catalog managers</b> and <b>marketing staff</b> managing products, pricing, coupons, and CMS content.</li>
+    <li><b>Super-administrators</b> managing admin accounts, MFA, and system-level controls.</li>
+    <li><b>Auditors and risk / compliance reviewers</b> using the misuse-scenarios appendix.</li>
+  </ul>
+
+  <h3>1.3 Conventions used</h3>
+  <ul>
+    <li><code>Monospace</code> is used for URLs, file names, field values, and error codes.</li>
+    <li><span class="kbd">Enter</span> and other keys are shown in a boxed style.</li>
+    <li>Verbatim UI text is written in "quotes" to match the button or label the user actually sees.</li>
+    <li>Callout boxes appear throughout:
+      <ul>
+        <li><b>Tip</b> &mdash; navy border, non-critical usage hints.</li>
+        <li><b>Warning</b> &mdash; red border, actions with wider impact.</li>
+        <li><b>Risk</b> &mdash; dark-red border, misuse and abuse indicators.</li>
+      </ul>
+    </li>
+    <li>Storefront routes are shown as paths under <code>gedaaistar.et</code> (e.g.&nbsp;<code>/checkout</code>). Admin routes are shown as paths under <code>admin.gedaaistar.et</code> (e.g.&nbsp;<code>/orders</code>).</li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     CHAPTER 2 — PLATFORM OVERVIEW
+     ============================================================ -->
+<section class="chapter">
+  <h1>2. Platform overview</h1>
+
+  <h3>2.1 What Gadaa Istar sells</h3>
+  <p>
+    Gadaa Istar is a hybrid <b>B2B + B2C</b> export platform for Ethiopian
+    coffee (raw and processed) and specialty agricultural products. The
+    catalog is organised into seven categories:
+  </p>
+  <ul>
+    <li>Raw Green Coffee</li>
+    <li>Roasted Coffee</li>
+    <li>White Products (e.g. white sesame, pulses)</li>
+    <li>Spicy Products (chili, spices)</li>
+    <li>Oil Seed</li>
+    <li>Livestock</li>
+    <li>Mining</li>
+  </ul>
+
+  <h3>2.2 User roles</h3>
+  <p>The platform recognises the following user categories:</p>
+
+  <table>
+    <tr>
+      <th style="width: 24%">Role</th>
+      <th style="width: 24%">Where they log in</th>
+      <th>What they can do</th>
+    </tr>
+    <tr>
+      <td><b>Guest visitor</b></td>
+      <td>&mdash; (no login)</td>
+      <td>Browse catalog, add to cart, add to wishlist, look up an order using invoice + email.</td>
+    </tr>
+    <tr>
+      <td><b>B2C customer</b><br/><span class="small">"Retail" (RETAIL group)</span></td>
+      <td>gedaaistar.et &raquo; Sign in</td>
+      <td>Everything a guest can do, plus place orders, save addresses, view order history.</td>
+    </tr>
+    <tr>
+      <td><b>B2B customer</b><br/><span class="small">Wholesale (WHOLESALE_T1, WHOLESALE_T2, VIP)</span></td>
+      <td>gedaaistar.et &raquo; Sign in (after admin approval)</td>
+      <td>Everything a B2C customer can do, plus request quotes, buy at tiered wholesale prices with MOQ multipliers.</td>
+    </tr>
+    <tr>
+      <td><b>ADMIN</b><br/><span class="small">Back-office staff</span></td>
+      <td>admin.gedaaistar.et</td>
+      <td>Manage products, orders, quotes, customers, price lists, shipping, coupons, CMS. Most read/write endpoints require this role.</td>
+    </tr>
+    <tr>
+      <td><b>SUPERADMIN</b></td>
+      <td>admin.gedaaistar.et</td>
+      <td>Everything an ADMIN can do, plus create / disable other admin accounts, reset another admin's MFA secret, and delete customer groups.</td>
+    </tr>
+  </table>
+
+  <h3>2.3 Application URLs</h3>
+  <table>
+    <tr><th style="width: 30%">Environment</th><th>Storefront</th><th>Admin</th></tr>
+    <tr>
+      <td>Production</td>
+      <td><code>https://gedaaistar.et/</code></td>
+      <td><code>https://admin.gedaaistar.et/</code></td>
+    </tr>
+  </table>
+
+  <h3>2.4 Supported browsers &amp; devices</h3>
+  <p>
+    The storefront is built as a modern responsive application (Angular
+    with server-side rendering) and is intended to work on:
+  </p>
+  <ul>
+    <li>The latest two versions of Chrome, Edge, Firefox, and Safari.</li>
+    <li>Mobile Safari on iOS 15+ and Chrome on Android 11+.</li>
+  </ul>
+  <p>
+    The admin back-office is intended for desktop use in a modern browser.
+    JavaScript and cookies (for session state) must be enabled. A stable
+    internet connection is required.
+  </p>
+
+  <h3>2.5 Languages &amp; currencies</h3>
+  <p>The storefront supports three interface languages, selectable from the header:</p>
+  <ul>
+    <li><b>English</b> &mdash; default</li>
+    <li><b>Amharic</b> (አማርኛ)</li>
+    <li><b>Afaan Oromoo</b></li>
+  </ul>
+  <p>Prices can be displayed in <b>USD</b> (default for English) or <b>ETB</b> (default for Amharic / Afaan Oromoo). The user's choice is saved in the browser so it persists across visits.</p>
+
+  <div class="callout tip">
+    <span class="cotitle">Where preferences live</span>
+    Language, currency, wishlist contents, and the guest-cart session key
+    are all stored in the browser's local storage. Clearing browser data
+    will reset them.
+  </div>
+</section>
+
+<!-- ============================================================
+     PART I — STOREFRONT USER GUIDE
+     ============================================================ -->
+<section class="part-cover">
+  <div class="part-eyebrow">Part I</div>
+  <h1>Storefront user guide</h1>
+  <p class="part-blurb">
+    How retail (B2C) shoppers and wholesale (B2B) buyers use
+    gedaaistar.et &mdash; from first visit to placed order to quote
+    negotiation.
+  </p>
+</section>
+
+<!-- ---------- 3.1 GLOBAL NAV ---------- -->
+<section class="chapter">
+  <h1>3. Storefront &mdash; getting started</h1>
+
+  <h3>3.1 Global navigation</h3>
+  <p>Every page on the storefront shares the same header and footer.</p>
+
+  <h4>Header</h4>
+  <ul>
+    <li><b>Brand block:</b> Gadaa Istar logo, wordmark, and the tagline "Business Group S.C.". Clicking it returns to the home page.</li>
+    <li><b>Search box:</b> "Search products&hellip;". Pressing <span class="kbd">Enter</span> submits and routes to <code>/shop?q=&hellip;</code>.</li>
+    <li><b>Language switcher:</b> dropdown with English (default), Amharic, and Afaan Oromoo.</li>
+    <li><b>Currency toggle:</b> two buttons, <b>USD</b> and <b>ETB</b>.</li>
+    <li><b>Sign in / Sign up</b> buttons when signed-out; a greeting chip ("Hi, <i>name</i>") and a "Sign out" button when signed-in.</li>
+    <li><b>Wishlist</b> heart icon with a live count badge.</li>
+    <li><b>Cart</b> icon with a live count badge.</li>
+  </ul>
+
+  <h4>Primary navigation bar</h4>
+  <p>Under the header there is a row of category links (Raw Coffee, Roasted Coffee, White Products, Spicy Products, Oil Seed, Livestock, Mining) plus <b>Our Story</b> (/about), <b>Contact Us</b> (/contact), and <b>Track Order</b> (/track-order).</p>
+
+  <h4>Footer</h4>
+  <ul>
+    <li><b>Column 1 &mdash; Gadaa Istar:</b> short description and motto "We are in you, you are in us."</li>
+    <li><b>Column 2 &mdash; Shop:</b> the seven category links.</li>
+    <li><b>Column 3 &mdash; Company:</b> About, Contact, Track Order, Wishlist, FAQ, and any published CMS pages.</li>
+    <li><b>Column 4 &mdash; Legal:</b> Terms of Service, Privacy Policy, Shipping &amp; Returns.</li>
+    <li><b>Bottom bar:</b> copyright, "All rights reserved.", and card-scheme badges (VISA, MASTERCARD, AMEX, JCB).</li>
+  </ul>
+
+  <div class="callout tip">
+    <span class="cotitle">Tip &mdash; keyboard-friendly search</span>
+    You can search from anywhere on the site by clicking the search box
+    at the top and typing a keyword; press <span class="kbd">Enter</span> to open the shop with that filter applied.
+  </div>
+</section>
+
+<!-- ---------- 3.2 HOME ---------- -->
+<section>
+  <h2>4. Home page</h2>
+  <p>URL: <code>/</code></p>
+
+  <p>The home page opens with the following blocks (top to bottom):</p>
+
+  <ol>
+    <li><b>Marketing banners.</b> A rotating strip of banners maintained by the marketing team through the admin back-office. Each banner is optionally clickable.</li>
+    <li>
+      <b>Hero section.</b> Fixed content:
+      <ul>
+        <li>Eyebrow: "Direct from origin &middot; Ethiopia"</li>
+        <li>Headline: "From Ethiopian highlands to the world's table."</li>
+        <li>Two calls to action: "Explore products" (opens <code>/shop/raw-coffee</code>) and "Contact &amp; export inquiries" (opens <code>/contact</code>).</li>
+        <li>Trust badges: Organic-ready, Fairtrade-friendly, PCI DSS secure checkout, Multi-currency (USD &middot; EUR &middot; GBP).</li>
+      </ul>
+    </li>
+    <li><b>Stats strip.</b> Static facts: 7 product categories, 100% traceable origin, 30+ destination countries, Addis Ababa quality-check facility.</li>
+    <li><b>Featured products carousel.</b> Auto-advances every 5 seconds. Each card shows an image, name, short description, price, and an "In stock" or "Sold out" badge. A "View all" link opens the full catalog.</li>
+    <li><b>Category tiles.</b> Seven clickable tiles &mdash; one per category &mdash; that jump to <code>/shop/&lt;category&gt;</code>.</li>
+    <li><b>Trust section.</b> Four reassurance blocks: PCI DSS SAQ A payments, global shipping (DHL &amp; FedEx retail), VAT-compliant invoicing, and B2B / B2C accounts.</li>
+  </ol>
+</section>
+
+<!-- ---------- 3.3 CATALOG ---------- -->
+<section>
+  <h2>5. Browsing the catalog</h2>
+  <p>URL: <code>/shop</code> or <code>/shop/&lt;category&gt;</code></p>
+
+  <h3>5.1 Filtering and searching</h3>
+  <ul>
+    <li>The search bar at the top of the shop is debounced &mdash; typing pauses for 300 ms before the results refresh.</li>
+    <li>An X button clears the current search.</li>
+    <li>The <b>category rail</b> below the header lets you switch between All and any of the seven categories.</li>
+    <li>The URL updates as you filter, so the filtered page is bookmarkable and shareable.</li>
+  </ul>
+
+  <h3>5.2 The product grid</h3>
+  <p>Each card in the grid shows:</p>
+  <ul>
+    <li>Primary product image (or a placeholder icon).</li>
+    <li>Category label.</li>
+    <li>Product name.</li>
+    <li>Short description.</li>
+    <li>Price. A strikethrough original price is shown when a discount applies, along with a "Save X%" badge.</li>
+    <li>An "Out of stock" badge if the item is unavailable.</li>
+  </ul>
+
+  <p>The grid paginates 12 items at a time. "Previous" and "Next" buttons and a "Page X of Y" indicator sit under the grid.</p>
+
+  <div class="callout tip">
+    <span class="cotitle">Empty results</span>
+    If no products match, the shop shows either "No results found" (when a
+    search term is active) or "No products yet" (for an empty category).
+    If the API cannot be reached, the shop shows "Could not load the
+    catalog. Please try again." with a retry button.
+  </div>
+</section>
+
+<!-- ---------- 3.4 PRODUCT DETAIL ---------- -->
+<section>
+  <h2>6. Product details</h2>
+  <p>URL: <code>/products/&lt;slug&gt;</code></p>
+
+  <h3>6.1 Layout</h3>
+  <ol>
+    <li><b>Breadcrumb</b>: Home &raquo; Shop &raquo; Category &raquo; Product name.</li>
+    <li><b>Media gallery</b>: a hero image plus a thumbnail strip. Sale and Out-of-stock badges overlay the hero.</li>
+    <li><b>Product info</b>: category, name, short description, and the resolved price (with strikethrough if a discount / tier price applies).</li>
+    <li><b>Variant selector</b>: a radio list of variants, each showing its attributes, stock ("X available" or "Out of stock"), and price override if different.</li>
+    <li><b>Product facts</b>: origin country (displayed as "Ethiopia" when the ISO code is ET), unit weight, HS code, and minimum order quantity.</li>
+    <li><b>Quantity + Add to cart</b> panel.</li>
+    <li><b>Wholesale price ladder</b> &mdash; for B2B accounts only. A table of "Order at least" and "Unit price".</li>
+    <li><b>About this product</b>: full description.</li>
+    <li><b>Packaging</b>: packaging notes if the product ships in a specific pack.</li>
+  </ol>
+
+  <h3>6.2 Adding to cart</h3>
+  <ol>
+    <li>If the product has variants, choose one first. If you don't, the site shows: "Please select a variant first."</li>
+    <li>Adjust the quantity with the &minus; and + buttons. The minimum is set by the product's minimum order quantity (MOQ), and B2B customers may see a larger effective MOQ because of their group multiplier.</li>
+    <li>Click <b>Add to cart</b>. While the request is in flight the button shows "Adding&hellip;". A green confirmation flash "Added to cart" appears for 3 seconds.</li>
+    <li>The heart icon at the top-right of the panel toggles the product in your wishlist.</li>
+  </ol>
+
+  <div class="callout warn no-break">
+    <span class="cotitle">Server-side validation</span>
+    Backend errors are shown verbatim: <code>INSUFFICIENT_STOCK</code>
+    (someone else bought the last units first), <code>MIN_ORDER_QUANTITY</code>
+    (quantity below the effective MOQ), or <code>PRODUCT_NOT_PURCHASABLE</code>
+    (draft or archived product). Adjust the quantity or variant and try again.
+  </div>
+</section>
+
+<!-- ---------- 3.5 WISHLIST ---------- -->
+<section>
+  <h2>7. Wishlist</h2>
+  <p>URL: <code>/wishlist</code></p>
+
+  <p>
+    The wishlist is a purely client-side feature that stores product
+    slugs in your browser's local storage. It works without signing in
+    and persists across visits on the same browser.
+  </p>
+
+  <h3>7.1 What you see</h3>
+  <ul>
+    <li>Header: "Your wishlist" with an item count.</li>
+    <li>Product cards showing the image, name, SKU, price, an "Out of stock" badge when applicable, an <b>Add to cart</b> button (disabled if out of stock), and a remove-heart button.</li>
+    <li>If a saved item has been removed from the catalog, the card is replaced with "Product unavailable" and a "Remove" button.</li>
+    <li>Empty state: "No saved items yet. Tap the heart icon on any product to save it for later."</li>
+  </ul>
+
+  <div class="callout tip">
+    <span class="cotitle">The wishlist does not sync between devices</span>
+    Wishlists live only in the local browser. Signing in does not migrate
+    them, and clearing browser data will empty the wishlist.
+  </div>
+</section>
+
+<!-- ---------- 3.6 CART ---------- -->
+<section>
+  <h2>8. Shopping cart</h2>
+  <p>URL: <code>/cart</code></p>
+
+  <h3>8.1 Cart contents</h3>
+  <p>Each line in the cart shows:</p>
+  <ul>
+    <li>Product thumbnail and name (link back to the product page).</li>
+    <li>Variant name and SKU.</li>
+    <li>Unit price. When the storefront detects that the catalog price has changed since the item was added, a "Price updated" note appears.</li>
+    <li>An "Only X in stock" warning if the requested quantity exceeds available stock.</li>
+    <li>A quantity stepper (&minus; and +) and a live line total.</li>
+    <li>A <b>Remove</b> button.</li>
+  </ul>
+
+  <h3>8.2 Order summary</h3>
+  <ul>
+    <li>Item count (number of SKUs and total units).</li>
+    <li>Subtotal.</li>
+    <li>Tax and Shipping shown as "Calculated at checkout".</li>
+    <li><b>Proceed to checkout</b> button. If the user is a guest, this redirects to <code>/login?next=/checkout</code>.</li>
+    <li><b>Request a quote</b> button &mdash; visible only if the user is signed in and the cart is non-empty. Recommended for B2B buyers who want to negotiate.</li>
+    <li>The reassurance line "Secure payment via CyberSource".</li>
+  </ul>
+
+  <h3>8.3 Empty cart</h3>
+  <p>An empty cart shows a friendly empty state and a link back to the catalog. Clicking "Empty cart" asks for confirmation before removing everything.</p>
+
+  <div class="callout tip">
+    <span class="cotitle">Guest carts are preserved on sign-in</span>
+    When a guest signs in or registers, any items already in the guest
+    cart are merged into the customer's cart automatically. The guest
+    session key lives in local storage under <code>gi-guest-session-key</code>.
+  </div>
+</section>
+
+<!-- ---------- 3.7 REGISTER ---------- -->
+<section>
+  <h2>9. Creating an account</h2>
+  <p>URL: <code>/register</code></p>
+
+  <h3>9.1 Choosing an account type</h3>
+  <p>Registration opens with a big radio choice:</p>
+  <ul>
+    <li><b>Personal (retail)</b> &mdash; "Shop retail packs; instant checkout."</li>
+    <li><b>Business (wholesale)</b> &mdash; "Tiered pricing for bulk orders."</li>
+  </ul>
+
+  <h3>9.2 Registration fields</h3>
+  <table>
+    <tr><th>Field</th><th>Required</th><th>Rules</th></tr>
+    <tr><td>First name</td><td>Yes</td><td>Max 120 characters.</td></tr>
+    <tr><td>Last name</td><td>Yes</td><td>Max 120 characters.</td></tr>
+    <tr><td>Company name</td><td>Only for B2B</td><td>Max 255 characters.</td></tr>
+    <tr><td>Company TIN</td><td>Optional (recommended for B2B)</td><td>Needed for VAT-compliant invoices.</td></tr>
+    <tr><td>Email</td><td>Yes</td><td>Valid email format; must not already exist.</td></tr>
+    <tr><td>Password</td><td>Yes</td><td>Minimum 8 characters.</td></tr>
+    <tr><td>Phone</td><td>Optional</td><td>&mdash;</td></tr>
+    <tr><td>Preferred currency</td><td>Yes</td><td>USD or ETB.</td></tr>
+  </table>
+
+  <h3>9.3 Common errors</h3>
+  <ul>
+    <li>"Company name is required for business accounts."</li>
+    <li>"Please enter a valid email."</li>
+    <li>"Password must be at least 8 characters."</li>
+    <li>"An account with this email already exists. Try signing in instead."</li>
+  </ul>
+
+  <div class="callout warn">
+    <span class="cotitle">B2B accounts are not active immediately</span>
+    Choosing <b>Business (wholesale)</b> creates the account in
+    <b>Pending B2B approval</b> status. The buyer must wait for an
+    admin to verify the business licence out-of-band and approve the
+    account before wholesale pricing and quotes are available.
+  </div>
+</section>
+
+<!-- ---------- 3.8 VERIFY EMAIL ---------- -->
+<section>
+  <h2>10. Email verification</h2>
+
+  <h3>10.1 "Check your inbox" page</h3>
+  <p>URL: <code>/verify-email/pending</code></p>
+  <p>
+    After registration, the storefront shows the "Check your inbox"
+    page: "We've sent a confirmation link to <i>your email</i>. Click it
+    to activate your account. The link expires in 60 minutes." Two
+    actions are available: <b>Resend the email</b> and <b>Back to home</b>.
+  </p>
+
+  <h3>10.2 Confirming the token</h3>
+  <p>URL: <code>/verify-email/&lt;token&gt;</code></p>
+  <p>Clicking the link from the email opens a page that goes through three states:</p>
+  <ul>
+    <li><b>Verifying</b> &mdash; a spinner and "Confirming your email&hellip;".</li>
+    <li><b>Success</b> &mdash; "Email confirmed" and two buttons, <b>Start shopping</b> and <b>Go to my account</b>.</li>
+    <li><b>Error</b> &mdash; "We couldn't verify your email" with the reason ("Missing verification token in the URL.", "That verification link is invalid or has already been used.", or "That link is no longer valid &mdash; request a new one."). A <b>Request a new link</b> action is offered.</li>
+  </ul>
+</section>
+
+<!-- ---------- 3.9 SIGN IN / OUT ---------- -->
+<section>
+  <h2>11. Signing in and out</h2>
+
+  <h3>11.1 Sign in</h3>
+  <p>URL: <code>/login</code></p>
+  <ul>
+    <li>Fields: Email (required, valid format), Password (required, min 8 characters).</li>
+    <li>Button: "Sign in". While loading it shows "Signing in&hellip;".</li>
+    <li>Links: "Forgot your password?" and "New to Gadaa Istar? Create an account".</li>
+    <li>If the URL contains <code>?reset=1</code> or <code>?passwordChanged=1</code>, a green banner confirms the earlier action.</li>
+    <li>Error messages are explicit: "The email or password you entered is incorrect.", "Your account has been suspended. Please contact support.", "Your B2B account is still awaiting approval.", "Could not reach the server. Please check your connection."</li>
+    <li>On success the browser is redirected to <code>?next=</code> (if present) or <code>/account</code>.</li>
+  </ul>
+
+  <h3>11.2 Sign out</h3>
+  <p>
+    Click "Sign out" in the top bar. This clears the session on the
+    server (revokes tokens) and locally. You are returned to the
+    home page.
+  </p>
+
+  <div class="callout warn">
+    <span class="cotitle">Changing a password signs out every device</span>
+    Using the "Change password" flow (below) invalidates every active
+    session on every browser and device you are signed in on.
+  </div>
+</section>
+
+<!-- ---------- 3.10 PASSWORD RESET ---------- -->
+<section>
+  <h2>12. Recovering your password</h2>
+
+  <h3>12.1 Forgot password</h3>
+  <p>URL: <code>/forgot-password</code></p>
+  <p>
+    Enter the email address on your account and click <b>Email me a reset link</b>. The screen always shows the same reassurance message
+    ("If <i>email</i> matches an account, we've just sent a reset link.
+    It's valid for the next 30 minutes.") whether or not the address is
+    on file &mdash; this prevents enumeration of registered emails.
+  </p>
+
+  <h3>12.2 Reset password</h3>
+  <p>URL: <code>/reset-password/&lt;token&gt;</code></p>
+  <ul>
+    <li>Enter and confirm a new password (8&ndash;128 characters).</li>
+    <li>Click <b>Save new password</b>.</li>
+    <li>On success you see "Password updated" and after 2.5 seconds you are redirected to <code>/login?reset=1</code>. All other sessions have been revoked.</li>
+    <li>Errors: "Password must be 8&ndash;128 characters.", "Both passwords must match.", "That reset link is invalid or has already been used. Request a new one.", "That reset link is no longer valid &mdash; request a new one."</li>
+  </ul>
+</section>
+
+<!-- ---------- 3.11 ACCOUNT PORTAL ---------- -->
+<section class="chapter">
+  <h1>13. Your account portal</h1>
+  <p>URL: <code>/account</code> (sign-in required)</p>
+
+  <p>The customer portal is organised into tabs down the side or across the top:</p>
+  <ul>
+    <li>Profile</li>
+    <li>Addresses</li>
+    <li>Orders</li>
+    <li>Transactions (visible only to select accounts)</li>
+    <li>Quotes</li>
+  </ul>
+
+  <h3>13.1 Profile</h3>
+  <p>URL: <code>/account</code> (default tab)</p>
+  <p>The Profile tab has three modes:</p>
+
+  <h4>View mode</h4>
+  <ul>
+    <li>Avatar, full name, email address, and a status badge: <b>Verified</b> (green) or <b>Pending verification</b> (yellow).</li>
+    <li>Account type tag: <b>Business account</b> or <b>Retail account</b>.</li>
+    <li>Read-only fields: Email, First name, Last name, Phone, Company (B2B), Tax ID (B2B), Preferred currency.</li>
+    <li>Two actions: <b>Edit profile</b> and <b>Change password</b>.</li>
+  </ul>
+
+  <h4>Edit mode</h4>
+  <ul>
+    <li>Editable fields: First name, Last name, Phone, Preferred currency. B2B users additionally see Company name, Tax ID (TIN), VAT number.</li>
+    <li>Hint: "Leave a field blank to keep its current value."</li>
+    <li>Buttons: <b>Save changes</b> or <b>Cancel</b>.</li>
+    <li>On success: "Profile updated."</li>
+  </ul>
+
+  <h4>Change password mode</h4>
+  <ul>
+    <li>Fields: Current password, New password (8&ndash;128), Confirm password.</li>
+    <li>Warning: "Changing your password signs you out of every device. You'll return to the sign-in page after we save the change."</li>
+    <li>Errors: "Current password is incorrect.", "New password and confirmation do not match.", "Too many attempts. Please wait a few minutes before trying again."</li>
+  </ul>
+
+  <h3>13.2 Address book</h3>
+  <p>URL: <code>/account/addresses</code></p>
+
+  <p>The address book lists every saved shipping and billing address. Each card shows:</p>
+  <ul>
+    <li>Address type label: "Shipping &amp; Billing", "Shipping only", or "Billing only".</li>
+    <li>A "Default" star badge on the default address.</li>
+    <li>Full name, company, address lines, and phone.</li>
+    <li>Actions: <b>Make default</b> (if not already default), <b>Edit</b>, <b>Delete</b>.</li>
+  </ul>
+
+  <p>The <b>Add address</b> / <b>Edit</b> form asks for:</p>
+  <table>
+    <tr><th>Field</th><th>Required</th><th>Rules</th></tr>
+    <tr><td>Full name</td><td>Recommended</td><td>Max 200 characters.</td></tr>
+    <tr><td>Company</td><td>Optional</td><td>Max 255 characters.</td></tr>
+    <tr><td>Street address</td><td>Yes</td><td>Max 255 characters.</td></tr>
+    <tr><td>Apt / floor / unit</td><td>Optional</td><td>Max 255 characters.</td></tr>
+    <tr><td>City</td><td>Yes</td><td>Max 120 characters.</td></tr>
+    <tr><td>Region / state</td><td>Optional</td><td>Max 120 characters.</td></tr>
+    <tr><td>Postal code</td><td>Optional</td><td>Max 32 characters.</td></tr>
+    <tr><td>Country code</td><td>Yes</td><td>Two-letter ISO code (uppercase), e.g. <code>ET</code>, <code>DE</code>, <code>US</code>.</td></tr>
+    <tr><td>Phone</td><td>Optional</td><td>Max 64 characters.</td></tr>
+    <tr><td>Use for</td><td>Yes</td><td>Shipping &amp; Billing, Shipping only, or Billing only.</td></tr>
+    <tr><td>Default</td><td>Optional</td><td>Set as my default &lt;type&gt; address.</td></tr>
+  </table>
+
+  <h3>13.3 Orders</h3>
+  <p>URL: <code>/account/orders</code></p>
+  <p>Each row shows the invoice number (link), the placement date and item count, a colour-coded status badge, and the grand total. The list paginates (20 orders per page) with a <b>Load more</b> button.</p>
+
+  <h4>Order detail</h4>
+  <p>URL: <code>/account/orders/&lt;uuid&gt;</code></p>
+  <ul>
+    <li><b>Header:</b> invoice number, "Order details", placement date, status badge.</li>
+    <li><b>Payment gateway warning</b>: shown only when the payment gateway is not configured in this environment.</li>
+    <li><b>Items:</b> thumbnails, names, SKUs, quantities, unit prices, and line totals.</li>
+    <li><b>Totals:</b> Subtotal, Discount (with the applied coupon code), Tax, Shipping (with the method's name), and Total.</li>
+    <li><b>Addresses:</b> "Ship to" and "Bill to" cards.</li>
+    <li><b>Status timeline:</b> a chronological list of status changes with source (webhook / api) and any admin notes attached to the transition.</li>
+    <li><b>Actions when the order is Pending payment:</b> a payment-method selector, "Continue payment" (redirects to CyberSource / MPGS), "I've paid &mdash; refresh status", and <b>Cancel order</b> (with confirmation).</li>
+  </ul>
+
+  <h3>13.4 Transactions</h3>
+  <p>URL: <code>/account/transactions</code></p>
+  <p>Available to a specific superuser account only. Lists every transaction across orders in one long paginated table. Ordinary customers do not see this tab.</p>
+
+  <h3>13.5 Quotes</h3>
+  <p>URL: <code>/account/quotes</code></p>
+  <p>Same layout as the Orders list, but shows quote requests with a quote number and a "Valid until" date when applicable.</p>
+
+  <h4>Quote detail</h4>
+  <p>URL: <code>/account/quotes/&lt;uuid&gt;</code></p>
+  <p>The page shows the proposed pricing supplied by the sales team, plus any messages ("Message from our team:"). Depending on the quote's status, an <b>Accept quote</b> button appears. Status banners cover all end states:</p>
+  <ul>
+    <li>"You've accepted this quote. Our team will convert it to an order shortly."</li>
+    <li>"This quote has been converted to an order."</li>
+    <li>"This quote request was rejected."</li>
+    <li>"This quote has expired."</li>
+  </ul>
+</section>
+
+<!-- ---------- 3.12 CHECKOUT ---------- -->
+<section class="chapter">
+  <h1>14. Checkout &amp; payment</h1>
+  <p>URL: <code>/checkout</code> (sign-in required)</p>
+
+  <p>Checkout is a single page composed of five stacked panels. Every step keeps its state as the user scrolls up and down.</p>
+
+  <h3>14.1 Ship to</h3>
+  <ul>
+    <li>Saved addresses appear as radio-selectable cards. The default address is preselected.</li>
+    <li>A <b>Default</b> badge marks the current default.</li>
+    <li>Clicking <b>Add a new address</b> opens the inline address form (same field set as in <a href="#">Section 13.2</a>).</li>
+    <li>Country code is validated: "Use a 2-letter code, e.g. ET, US, DE."</li>
+  </ul>
+
+  <h3>14.2 Shipping method</h3>
+  <ul>
+    <li>While shipping options load: "Calculating shipping options for your cart&hellip;".</li>
+    <li>Once loaded, each option shows its name, description, ETA ("min&ndash;max business days"), and cost.</li>
+    <li>The current weight the price is based on is shown as "Priced for your cart (X kg)".</li>
+    <li>If no options exist for the destination, checkout still allows placement but shipping is billed at zero.</li>
+  </ul>
+
+  <h3>14.3 Coupon code</h3>
+  <ul>
+    <li>Enter a code (max 64 characters) and click <b>Apply</b>.</li>
+    <li>An applied coupon shows the code, description, discount (percentage or amount), and any "free shipping" flag. A <b>Remove</b> button clears it.</li>
+    <li>The discount preview line updates immediately on the summary.</li>
+  </ul>
+
+  <h3>14.4 Payment method</h3>
+  <p>A radio list of payment methods offered by the platform. The default is Mastercard Payment Gateway (MPGS). Each option shows a name and a short description.</p>
+
+  <h3>14.5 Notes</h3>
+  <p>An optional free-text field (max 1000 characters) for the fulfilment team.</p>
+
+  <h3>14.6 Order summary and placement</h3>
+  <p>The right-hand summary shows every cart line with thumbnails, quantities and prices, and the running totals: Subtotal, Tax ("Applied at payment"), Shipping (with method name), Discount (with the coupon code), and an estimated total. The button reads <b>Continue to secure payment</b>. Underneath the button: "You'll be redirected to Mastercard / CyberSource".</p>
+
+  <div class="callout warn no-break">
+    <span class="cotitle">What happens when you click "Continue to secure payment"</span>
+    The platform creates the order in <b>Pending payment</b> status and
+    submits an auto-post form that hands the browser to CyberSource or
+    MPGS. Card details are entered on the payment processor's page &mdash;
+    the storefront never receives them. This is what makes the platform
+    PCI DSS SAQ-A compliant.
+  </div>
+</section>
+
+<!-- ---------- 3.13 CHECKOUT RETURN / CANCEL ---------- -->
+<section>
+  <h2>15. After payment</h2>
+
+  <h3>15.1 "Payment confirmed" page</h3>
+  <p>URL: <code>/checkout/return</code></p>
+  <p>Depending on the gateway's response the page shows one of several states:</p>
+  <ul>
+    <li><b>Loading:</b> "Finalising your payment&hellip;".</li>
+    <li><b>Pending:</b> "Waiting for your bank to confirm&hellip;". The page automatically re-checks the order status every 3 seconds for up to 30 seconds.</li>
+    <li><b>Success:</b> "Thank you &mdash; your order is confirmed!" with the invoice number, status, total, and paid date. Two actions: <b>View order details</b> and <b>Keep shopping</b>.</li>
+    <li><b>Cancelled:</b> "Payment didn't go through" &mdash; order cancelled, no charge.</li>
+  </ul>
+
+  <h3>15.2 "Payment cancelled" page</h3>
+  <p>URL: <code>/checkout/cancel</code></p>
+  <ul>
+    <li><b>If the order is still Pending payment</b> the page shows "Payment paused" with two buttons: <b>Retry payment</b> (auto-posts to the gateway again) and <b>Cancel this order</b> (asks for confirmation, releases the reserved stock).</li>
+    <li><b>If the order is already Cancelled</b> the page shows "Order cancelled" and offers <b>Keep shopping</b> or <b>View order</b>.</li>
+  </ul>
+</section>
+
+<!-- ---------- 3.14 QUOTES (B2B) ---------- -->
+<section>
+  <h2>16. Requesting a quote (B2B)</h2>
+
+  <p>Wholesale buyers can turn their cart into a quote request instead of placing an order.</p>
+
+  <ol>
+    <li>Add products to the cart the normal way, respecting the tier's MOQ multiplier.</li>
+    <li>Open <code>/cart</code>.</li>
+    <li>Click <b>Request a quote</b> in the summary panel. The button is only visible if you are signed in and the cart is non-empty.</li>
+    <li>You are redirected to the new quote's detail page under <code>/account/quotes/&lt;uuid&gt;</code>. The quote is now in <code>SUBMITTED</code> status; the sales team is notified.</li>
+    <li>Later, the customer returns to <code>/account/quotes</code>, opens the quote once the status is <code>SENT</code>, reviews the proposed pricing and validity, and clicks <b>Accept quote</b>. The sales team then converts the accepted quote into a live order (paid separately).</li>
+  </ol>
+
+  <div class="callout tip no-break">
+    <span class="cotitle">Quote lifecycle at a glance</span>
+    <code>DRAFT</code> &rarr; <code>SUBMITTED</code> &rarr;
+    <code>UNDER_REVIEW</code> &rarr; <code>SENT</code> &rarr;
+    <code>ACCEPTED</code> &rarr; <code>CONVERTED</code>.
+    A quote can be <code>REJECTED</code> from <code>SUBMITTED</code>
+    or <code>UNDER_REVIEW</code>, or <code>EXPIRED</code> if it passes
+    its validity window.
+  </div>
+</section>
+
+<!-- ---------- 3.15 TRACK ORDER ---------- -->
+<section>
+  <h2>17. Tracking an order (public)</h2>
+  <p>URL: <code>/track-order</code></p>
+
+  <p>Any visitor &mdash; signed in or not &mdash; can look up an order:</p>
+  <ol>
+    <li>Enter the order reference (e.g. <code>GI-2026-00003</code>) or its UUID.</li>
+    <li>Enter the email that was used at checkout.</li>
+    <li>Click <b>Track order</b>.</li>
+  </ol>
+
+  <p>
+    When the email matches the order the page reveals the invoice, placed
+    and paid timestamps, shipping method, item list, grand total, and a
+    status history. If nothing matches, the friendly message
+    <i>"No matching order found. Check that the order reference and email
+    are correct. If you placed the order as a guest, use the email you
+    entered at checkout."</i> is shown.
+  </p>
+
+  <div class="callout risk no-break">
+    <span class="cotitle">Risk &mdash; enumeration attempts</span>
+    Because the tracking endpoint accepts any invoice number, malicious
+    users may attempt to guess order references. The platform only
+    reveals order details when both the reference <b>and</b> the correct
+    email are supplied, so no confidential information leaks &mdash; but
+    repeated failed lookups may still indicate scraping and should be
+    monitored via server logs.
+  </div>
+</section>
+
+<!-- ---------- 3.16 STATIC PAGES ---------- -->
+<section>
+  <h2>18. Static pages</h2>
+  <p>URL: <code>/pages/&lt;slug&gt;</code> (shortcuts: <code>/about</code>, <code>/contact</code>)</p>
+  <p>
+    Content pages such as About Us, Contact, FAQ, Terms of Service,
+    Privacy Policy, and Shipping &amp; Returns are managed as CMS
+    entries in the back-office. If a slug does not resolve, the page
+    shows "Page not found." with a "Back to home" link.
+  </p>
+</section>
+
+<!-- ============================================================
+     PART II — ADMIN BACK-OFFICE
+     ============================================================ -->
+<section class="part-cover">
+  <div class="part-eyebrow">Part II</div>
+  <h1>Admin back-office user guide</h1>
+  <p class="part-blurb">
+    How back-office staff use admin.gedaaistar.et &mdash; sign-in,
+    catalog management, order and quote handling, customer approvals,
+    coupons, CMS content, and admin user administration.
+  </p>
+</section>
+
+<!-- ---------- 4.1 ADMIN SIGN IN + MFA ---------- -->
+<section class="chapter">
+  <h1>19. Signing in to the back-office</h1>
+  <p>URL: <code>https://admin.gedaaistar.et/login</code></p>
+
+  <p>Every admin session begins with a two-step sign-in:</p>
+  <ol>
+    <li>Email and password on the login page.</li>
+    <li>A time-based one-time code (TOTP) on the MFA page.</li>
+  </ol>
+
+  <h3>19.1 Login</h3>
+  <ul>
+    <li>Fields: Email (required), Password (required, min 8, show/hide toggle).</li>
+    <li>Helper text: "You'll be asked for a 6-digit code from your authenticator app after this step."</li>
+    <li>Button: "Continue" (shows "Signing in&hellip;" while loading).</li>
+    <li>Link: "Forgot password?"</li>
+  </ul>
+
+  <p>Common error messages:</p>
+  <ul>
+    <li>"That email or password is incorrect. Please try again."</li>
+    <li>"This admin account is disabled. Contact a super-admin."</li>
+    <li>"Please check the highlighted fields and try again."</li>
+  </ul>
+
+  <h3>19.2 Multi-factor authentication (MFA)</h3>
+  <p>URL: <code>/verify-mfa</code></p>
+
+  <h4>First sign-in &mdash; enrolment</h4>
+  <p>The first time an admin signs in, the page shows:</p>
+  <ul>
+    <li>Heading: "Set up two-factor authentication".</li>
+    <li>Explanation: "This is your first sign-in as <i>email</i>. Scan the QR code below with an authenticator app (Google Authenticator, Authy, 1Password, &hellip;), then enter the 6-digit code to finish."</li>
+    <li>A 220&times;220 px QR code generated client-side.</li>
+    <li>An "Or enter the code manually:" block with the Base32 secret, issuer, and account name.</li>
+    <li>Algorithm info: "SHA-1 &middot; 6 digits &middot; 30-second window".</li>
+    <li>Input: "Authentication code" (6 digits).</li>
+    <li>Buttons: <b>Finish setup</b> and <b>Cancel and sign in again</b>.</li>
+  </ul>
+
+  <h4>Returning sign-ins</h4>
+  <ul>
+    <li>Heading: "Enter your 6-digit code".</li>
+    <li>Message: "Signed in as <i>email</i>. Open your authenticator app and enter the current code to continue."</li>
+    <li>Input + button: "Verify &amp; sign in".</li>
+  </ul>
+
+  <p>Common MFA errors:</p>
+  <ul>
+    <li><code>MFA_INVALID_CODE</code>: "That code was not accepted. Try the current 6-digit code from your authenticator."</li>
+    <li><code>INVALID_TOKEN</code> / <code>TOKEN_EXPIRED</code>: "Your sign-in window expired. Please sign in again."</li>
+    <li><code>MFA_NOT_INITIALIZED</code>: "No MFA secret on file. Please sign in again to start enrollment."</li>
+  </ul>
+
+  <div class="callout warn">
+    <span class="cotitle">Do not skip MFA enrolment</span>
+    Once you finish MFA setup, save a copy of the recovery information
+    (secret or the app's export) in a secure location. If you lose your
+    authenticator device, only a super-admin can reset your MFA.
+  </div>
+</section>
+
+<!-- ---------- 4.2 DASHBOARD ---------- -->
+<section class="chapter">
+  <h1>20. Dashboard</h1>
+  <p>URL: <code>/dashboard</code></p>
+
+  <p>The dashboard is the landing page for every admin after sign-in. It provides real-time operational visibility.</p>
+
+  <h3>20.1 KPI tiles</h3>
+  <table>
+    <tr><th>Tile</th><th>Meaning</th></tr>
+    <tr><td>Open orders</td><td>Orders awaiting fulfilment.</td></tr>
+    <tr><td>Pending B2B approvals</td><td>New wholesale accounts waiting for review.</td></tr>
+    <tr><td>Products live</td><td>Products in the storefront catalog.</td></tr>
+    <tr><td>Revenue this month</td><td>Paid orders in the current calendar month.</td></tr>
+    <tr><td>Low-stock items</td><td>Products at or below their restock threshold.</td></tr>
+    <tr><td>Active coupons</td><td>Currently redeemable coupons.</td></tr>
+    <tr><td>Abandoned orders</td><td>Orders that were pending payment for more than one hour.</td></tr>
+    <tr><td>Revenue today</td><td>Today's revenue plus the day's order count.</td></tr>
+  </table>
+
+  <h3>20.2 Other blocks</h3>
+  <ul>
+    <li><b>Revenue trend card</b> &mdash; today's revenue vs yesterday, this month vs the previous 30 days, plus a 7-day bar chart.</li>
+    <li><b>Order status breakdown</b> &mdash; horizontal bar chart showing count and percentage per status.</li>
+    <li><b>Recent orders</b> &mdash; the last handful of orders (Invoice, Customer, Status, Items, Total, Date). Rows link straight to the order detail.</li>
+    <li><b>Low-stock alerts</b> &mdash; product name, variant, SKU, available quantity, and restock threshold.</li>
+  </ul>
+
+  <div class="callout tip">
+    <span class="cotitle">Recovery from errors</span>
+    If any block fails to load the dashboard shows "Could not load
+    dashboard stats." A "Last updated <i>timestamp</i>" footer confirms
+    when the numbers were last refreshed.
+  </div>
+</section>
+
+<!-- ---------- 4.3 NOTIFICATIONS ---------- -->
+<section>
+  <h2>21. Notifications</h2>
+
+  <p>
+    The bell icon in the top-right of every admin page shows a badge
+    with the total number of items needing attention. Clicking it opens
+    a dropdown with three shortcuts:
+  </p>
+  <ul>
+    <li><b>Open orders</b> &rarr; jumps to <code>/orders</code>.</li>
+    <li><b>Low stock items</b> &rarr; jumps to <code>/products</code>.</li>
+    <li><b>Pending B2B approvals</b> &rarr; jumps to <code>/customers</code>.</li>
+  </ul>
+  <p>The counts refresh automatically every 60 seconds.</p>
+</section>
+
+<!-- ---------- 4.4 PRODUCTS ---------- -->
+<section class="chapter">
+  <h1>22. Products</h1>
+  <p>URL: <code>/products</code></p>
+
+  <h3>22.1 Product list</h3>
+  <ul>
+    <li><b>Filters</b>: a "Search by SKU, name, or slug&hellip;" box; category chips (All, Raw Coffee, Roasted, White Products, Spicy Products, Oil Seed, Livestock, Mining); a status dropdown (Any status, Draft, Active, Archived).</li>
+    <li><b>Table columns</b>: thumbnail, Name (with slug), SKU, Category, Status (pill), Base price, Available, Updated.</li>
+    <li><b>Empty state</b>: "No products match your filters. Try clearing filters or check that the product exists in the database."</li>
+    <li><b>New product</b> button opens the creation form.</li>
+  </ul>
+
+  <h3>22.2 Product editor</h3>
+  <p>URL: <code>/products/&lt;id&gt;/details</code></p>
+  <p>The editor is organised into five tabs.</p>
+
+  <h4>Details</h4>
+  <table>
+    <tr><th>Field</th><th>Rules</th></tr>
+    <tr><td>SKU</td><td>Uppercase letters, digits, dot, dash, underscore. Max 64. Cannot be changed after creation.</td></tr>
+    <tr><td>Slug</td><td>Lowercase kebab-case, max 200 (e.g. <code>yirgacheffe-green-500g</code>).</td></tr>
+    <tr><td>Name</td><td>Required. Max 255.</td></tr>
+    <tr><td>Short description</td><td>Max 500.</td></tr>
+    <tr><td>Description</td><td>Long text.</td></tr>
+    <tr><td>Category</td><td>Required. One of the seven categories.</td></tr>
+    <tr><td>Status</td><td>DRAFT, ACTIVE, or ARCHIVED.</td></tr>
+    <tr><td>HS code</td><td>Max 32.</td></tr>
+    <tr><td>Origin country</td><td>ISO-2 code. Default ET.</td></tr>
+    <tr><td>Base currency</td><td>ISO-3 code. Default USD.</td></tr>
+    <tr><td>Base price</td><td>Up to 4 decimal places.</td></tr>
+    <tr><td>Cost price</td><td>Admin-only. Up to 4 decimal places.</td></tr>
+    <tr><td>Minimum order quantity</td><td>The retail MOQ; B2B group multiplier is applied on top.</td></tr>
+    <tr><td>Weight (kg)</td><td>Used for shipping calculations.</td></tr>
+    <tr><td>Packaging notes</td><td>Max 500.</td></tr>
+    <tr><td>Product image</td><td>Drag-and-drop or click-to-upload primary image.</td></tr>
+  </table>
+
+  <h4>Media</h4>
+  <p>Upload additional images and set alt text, sort order, and the primary image. Actions per row: <b>Promote to primary</b> and <b>Remove</b>. Confirmations: "Remove this media entry? <i>url</i>", "Media attached.", "Primary image updated."</p>
+
+  <h4>Inventory</h4>
+  <ul>
+    <li><b>Current state</b>: On hand, Reserved by cart / order, Available for new orders, Restock threshold, Last updated.</li>
+    <li><b>Adjust (signed delta)</b>: enter a positive or negative number ("+50" for restock, "-3" for loss) and an optional reason. Click <b>Apply adjustment</b>.</li>
+    <li><b>Overwrite (stock take)</b>: set the on-hand quantity and restock threshold outright. A confirmation warns "Overwrite on-hand quantity to <i>N</i>? This affects live sellable stock."</li>
+  </ul>
+
+  <h4>Pricing</h4>
+  <p>Manages per-price-list tiers.</p>
+  <ul>
+    <li>Existing tiers are grouped by price list and show currency, INACTIVE flag if applicable, minimum quantity, and unit price.</li>
+    <li>Under "Add / update tier" pick a price list, minimum quantity, and unit price. "Submitting a tier with an existing min-quantity replaces its price."</li>
+    <li>The <b>Remove</b> action asks "Remove tier <i>min</i>+ @ <i>price</i> from <i>list</i>?"</li>
+  </ul>
+
+  <h4>Variants</h4>
+  <p>Each variant has its own SKU, name, optional price override, optional weight override, active flag, sort order, and an arbitrary set of attributes (key-value pairs). Actions: <b>Edit</b>, <b>Delete</b>, <b>Adjust inventory</b> (opens a small modal). Deletion is guarded by "Delete variant \"<i>name</i>\" (<i>sku</i>)? This removes the variant, its attributes, and its inventory row. This cannot be undone."</p>
+
+  <h3>22.3 Archive</h3>
+  <p>From the editor header, an <b>Archive</b> button changes the status to ARCHIVED. Confirmation: "Archive product \"<i>name</i>\"? It will disappear from the storefront (status &rarr; ARCHIVED). Historical orders keep working."</p>
+
+  <div class="callout warn">
+    <span class="cotitle">Read vs write</span>
+    Every admin can read product data. Write operations (create,
+    update, archive, price tiers, variants) are restricted server-side
+    to super-admins and product managers.
+  </div>
+</section>
+
+<!-- ---------- 4.5 PRICE LISTS ---------- -->
+<section>
+  <h2>23. Price lists</h2>
+  <p>URL: <code>/price-lists</code></p>
+
+  <p>
+    Price lists bind wholesale pricing to a customer group and currency.
+    Each price list owns a set of (product &times; minimum quantity &rarr; unit
+    price) entries. Retail customers without a group fall back to the
+    base price.
+  </p>
+
+  <h3>23.1 Creating a price list</h3>
+  <ul>
+    <li>Customer group (dropdown).</li>
+    <li>Currency (ISO-3).</li>
+    <li>Name.</li>
+    <li>Effective from / Effective to (optional dates).</li>
+    <li>"Active &mdash; customers in this group receive these prices." checkbox.</li>
+  </ul>
+
+  <h3>23.2 Editing</h3>
+  <p>Editing is inline. The customer-group binding cannot be changed &mdash; the hint reads: "Bound to <i>code</i> &mdash; the customer group cannot be changed. If you need a different tier, delete and recreate."</p>
+
+  <h3>23.3 Deleting</h3>
+  <p>Confirmation: "Delete price list \"<i>name</i>\"? This will also remove all its entries. This cannot be undone."</p>
+</section>
+
+<!-- ---------- 4.6 SHIPPING METHODS ---------- -->
+<section>
+  <h2>24. Shipping methods</h2>
+  <p>URL: <code>/shipping-methods</code></p>
+
+  <p>Every rate card the storefront offers at checkout is stored here. The final price at checkout is calculated as:</p>
+  <div class="pathline">shipping_cost = base_cost + per_kg_rate &times; cart_total_weight</div>
+
+  <h3>24.1 Fields</h3>
+  <ul>
+    <li><b>Code</b>: <code>UPPER_SNAKE_CASE</code>, unique per currency.</li>
+    <li><b>Currency</b>: ISO-3.</li>
+    <li><b>Customer-facing name</b> and optional description.</li>
+    <li><b>Base cost</b> and <b>Per-kg rate</b>.</li>
+    <li><b>Min / Max transit days</b>.</li>
+    <li><b>Sort order</b>: lower shows first on the picker.</li>
+    <li>"Active &mdash; offered to storefront customers." checkbox.</li>
+  </ul>
+
+  <div class="callout tip no-break">
+    <span class="cotitle">Editing does not rewrite history</span>
+    "Historical orders that already used this method keep the snapshot
+    at their placement time &mdash; changes here only affect quotes from
+    now on."
+  </div>
+</section>
+
+<!-- ---------- 4.7 ORDERS ---------- -->
+<section class="chapter">
+  <h1>25. Orders &amp; refunds</h1>
+  <p>URL: <code>/orders</code></p>
+
+  <h3>25.1 Orders list</h3>
+  <ul>
+    <li><b>Filters</b>: "Search by invoice number, email, or company&hellip;" and a status dropdown (All, Draft, Pending payment, Paid, Fulfilling, Shipped, Delivered, Cancelled, Partially refunded, Refunded).</li>
+    <li><b>Columns</b>: Invoice, Customer (name + email), Items count, Status (colour-coded pill), Total, Placed.</li>
+  </ul>
+
+  <h3>25.2 Order detail</h3>
+  <p>URL: <code>/orders/&lt;uuid&gt;</code></p>
+  <ul>
+    <li><b>Header</b>: invoice number, placed / paid / cancelled timestamps, status badge.</li>
+    <li><b>Line items</b>: product name, SKU, variant, quantity, unit price, line total.</li>
+    <li><b>Totals</b>: Subtotal, Discount ("&mdash; <i>code</i>"), Tax, Shipping ("&mdash; <i>name</i> (<i>code</i>)"), Refunded, Total.</li>
+    <li><b>Customer</b>: name, email, company, phone.</li>
+    <li><b>Addresses</b>: Ship to and Bill to.</li>
+    <li><b>Notes</b>: customer notes and internal notes.</li>
+    <li><b>Move status</b> panel (see below).</li>
+    <li><b>Refund</b> panel (see below).</li>
+    <li><b>Status timeline</b> and <b>Refund history</b>.</li>
+  </ul>
+
+  <h3>25.3 Order-status state machine</h3>
+  <p>Admins can only move an order along legal transitions:</p>
+  <table>
+    <tr><th>From</th><th>To</th></tr>
+    <tr><td>DRAFT</td><td>PENDING_PAYMENT, CANCELLED</td></tr>
+    <tr><td>PENDING_PAYMENT</td><td>PAID, CANCELLED</td></tr>
+    <tr><td>PAID</td><td>FULFILLING, REFUNDED, CANCELLED</td></tr>
+    <tr><td>FULFILLING</td><td>SHIPPED, CANCELLED, REFUNDED</td></tr>
+    <tr><td>SHIPPED</td><td>DELIVERED, REFUNDED</td></tr>
+    <tr><td>DELIVERED</td><td>&mdash; (terminal)</td></tr>
+    <tr><td>CANCELLED, PARTIALLY_REFUNDED, REFUNDED</td><td>&mdash; (terminal)</td></tr>
+  </table>
+
+  <p>The "Move status" panel exposes:</p>
+  <ul>
+    <li>Target status dropdown &mdash; only lists legal transitions.</li>
+    <li>Note field &mdash; required when moving to CANCELLED or REFUNDED ("A note is required when moving an order to <i>status</i>.").</li>
+    <li><b>Move status</b> button (shows "Moving&hellip;" while in flight).</li>
+    <li>Terminal-state lock message: "This order is in a terminal state (<i>status</i>) &mdash; no further transitions are allowed."</li>
+  </ul>
+
+  <h3>25.4 Refunds</h3>
+  <p>Refunds are available on orders in PAID, FULFILLING, SHIPPED, DELIVERED, or PARTIALLY_REFUNDED.</p>
+  <ul>
+    <li><b>Refund amount</b> &mdash; pre-filled with the remaining refundable balance.</li>
+    <li><b>Reason</b> &mdash; required, minimum 3 characters ("Please provide a reason (3+ chars) &mdash; it goes on the audit log.").</li>
+    <li><b>Manual refund</b> &mdash; checkbox that bypasses the payment gateway (only used when the money was already refunded out-of-band, e.g. by bank transfer).</li>
+    <li><b>Issue refund</b> &mdash; runs the refund; on success the message reads "Refunded <i>amount</i> &mdash; <i>gateway</i>." On gateway failure: "Refund attempt recorded, but the gateway rejected it: <i>error</i>."</li>
+  </ul>
+
+  <div class="callout risk no-break">
+    <span class="cotitle">Risk &mdash; manual refunds</span>
+    "Manual refund (bypass gateway)" is powerful and must be reserved for
+    reconciled, out-of-band refunds. It writes to the audit log but does
+    not move any real money on its own.
+  </div>
+</section>
+
+<!-- ---------- 4.8 QUOTES ---------- -->
+<section>
+  <h2>26. Quotes</h2>
+  <p>URL: <code>/quotes</code></p>
+
+  <h3>26.1 Quotes list</h3>
+  <p>Filter by status (All, Draft, Submitted, Under review, Sent, Accepted, Converted, Rejected, Expired). Columns: Quote #, Customer, Items count, Status, Total, Created date.</p>
+
+  <h3>26.2 Reviewing and sending a quote</h3>
+  <p>URL: <code>/quotes/&lt;uuid&gt;</code></p>
+  <ol>
+    <li>The header shows the quote number, created date, and (once set) the "valid until" date.</li>
+    <li>Line items are listed with the customer's requested quantity and the currently-proposed unit price. Click the price to edit inline: "Enter a valid non-negative price."</li>
+    <li>Click <b>Start review</b> from the Review panel. The quote status becomes <code>UNDER_REVIEW</code>.</li>
+    <li>Use the <b>Send quote</b> panel to enter Shipping total, Tax total, "Valid for (days)" (default 30), and free-text "Notes to customer".</li>
+    <li>Click <b>Send to customer</b>. The status becomes <code>SENT</code> and the customer receives an email.</li>
+  </ol>
+
+  <h3>26.3 Rejecting</h3>
+  <p>The <b>Reject</b> panel is available from <code>SUBMITTED</code> or <code>UNDER_REVIEW</code>. Enter a "Reason (sent to customer)" and click <b>Reject quote</b>.</p>
+
+  <h3>26.4 Converting to an order</h3>
+  <p>Once the customer accepts (status <code>ACCEPTED</code>), the <b>Convert to order</b> panel opens: select a shipping address and a shipping method and click <b>Convert</b>. The message on success is "Converted to order <i>invoice</i> (<i>total</i> <i>currency</i>)."</p>
+</section>
+
+<!-- ---------- 4.9 CUSTOMERS ---------- -->
+<section class="chapter">
+  <h1>27. Customers</h1>
+  <p>URL: <code>/customers</code></p>
+
+  <h3>27.1 Customer list</h3>
+  <ul>
+    <li>Search: "Search by email, first / last name, or company&hellip;".</li>
+    <li>Type filter: B2C + B2B, B2C (retail), B2B (wholesale).</li>
+    <li>Status filter: Any status, Pending email verification, Pending B2B approval, Active, Suspended, Deactivated.</li>
+    <li><b>Reset</b> button clears all filters.</li>
+    <li>Columns: Customer (display name + email, with an UNVERIFIED flag), Type, Status, Group, Currency, Signed up, Last login.</li>
+  </ul>
+
+  <h3>27.2 Customer detail</h3>
+  <p>URL: <code>/customers/&lt;id&gt;</code></p>
+  <p>The detail page pulls together everything about the account:</p>
+  <ul>
+    <li><b>Identity</b>: customer ID, signed-up date, last login, email verification date, preferred currency and locale, orders placed.</li>
+    <li><b>Business profile</b> (B2B): company name, contact name, TIN, VAT number, and a link to the uploaded business licence file.</li>
+    <li><b>Addresses</b>: every address the customer has saved, with default markers.</li>
+    <li><b>Admin actions</b> panel.</li>
+  </ul>
+
+  <h3>27.3 Admin actions on a customer</h3>
+
+  <h4>Approving a B2B application</h4>
+  <p>
+    For a customer with Pending B2B approval status, a highlighted panel
+    reads: "Verify the business licence out-of-band, then approve to
+    flip this account to ACTIVE." Clicking <b>Approve B2B</b> asks for
+    confirmation: "Approve B2B application for <i>company</i>? Account
+    will be flipped to ACTIVE and email verification force-completed."
+  </p>
+
+  <h4>Move status</h4>
+  <p>
+    A target-status dropdown lists only legal transitions
+    (PENDING_VERIFICATION &rarr; ACTIVE, ACTIVE &rarr; SUSPENDED /
+    DEACTIVATED, etc.). Confirmation before submitting: "Move
+    <i>email</i> to \"<i>label</i>\"? This logs them out of all devices
+    (for SUSPENDED / DEACTIVATED)."
+  </p>
+
+  <h4>Assign customer group</h4>
+  <p>Choose a group from the dropdown and click <b>Save group</b>. Confirmation: "Move <i>email</i> to <i>group</i>?"</p>
+
+  <h4>Session &amp; recovery tools</h4>
+  <ul>
+    <li><b>Force verify email</b> &mdash; "Force-mark <i>email</i> as verified? Use this only when you've verified the address out-of-band."</li>
+    <li><b>Revoke all sessions</b> &mdash; "Revoke every live session for <i>email</i>? They'll be logged out on every device and must sign in again."</li>
+    <li><b>Send password reset</b> &mdash; "Email a password-reset link to <i>email</i>? Any previous reset links are invalidated, all live sessions are revoked, and the customer completes the reset themselves on the storefront."</li>
+  </ul>
+
+  <div class="callout risk no-break">
+    <span class="cotitle">Risk &mdash; "force verify" bypasses email possession</span>
+    Force-verifying an email address bypasses the normal proof-of-email
+    step. Only use it after independently confirming the address in a
+    channel outside the platform (phone call, in-person, official
+    business document). All actions are recorded in the audit log.
+  </div>
+</section>
+
+<!-- ---------- 4.10 CUSTOMER GROUPS ---------- -->
+<section>
+  <h2>28. Customer groups</h2>
+  <p>URL: <code>/customer-groups</code></p>
+
+  <p>Customer groups drive B2B pricing tiers and per-tier minimum-order multipliers.</p>
+
+  <h3>28.1 Fields</h3>
+  <ul>
+    <li><b>Code</b>: <code>UPPER_SNAKE_CASE</code>, unique.</li>
+    <li><b>Price tier</b>: RETAIL, WHOLESALE_T1, WHOLESALE_T2, VIP.</li>
+    <li><b>Display name</b>.</li>
+    <li><b>Description</b> (optional).</li>
+    <li><b>MOQ multiplier</b>: "1.000 = retail MOQ. 5.000 = 5&times; retail MOQ."</li>
+    <li>Active checkbox &mdash; "new customers can be assigned to this group."</li>
+  </ul>
+
+  <h3>28.2 Deletion guardrail</h3>
+  <p>A group cannot be deleted while customers are assigned: "\"<i>name</i>\" still has <i>N</i> customer(s) assigned. Reassign them to another group before deleting."</p>
+
+  <div class="callout tip">
+    <span class="cotitle">Retroactivity</span>
+    "Changes take effect on the next cart-add. Existing cart lines below
+    the new effective MOQ are not retroactively rejected; the next
+    add/update to that line will enforce the new rule."
+  </div>
+</section>
+
+<!-- ---------- 4.11 COUPONS ---------- -->
+<section>
+  <h2>29. Coupons</h2>
+  <p>URL: <code>/coupons</code></p>
+
+  <h3>29.1 Fields</h3>
+  <ul>
+    <li><b>Code</b>: uppercase alphanumeric, max 64.</li>
+    <li><b>Discount type</b>: Percentage or Fixed amount.</li>
+    <li><b>Discount value</b> and <b>Currency</b> (ISO-3).</li>
+    <li><b>Min. subtotal</b>.</li>
+    <li><b>Free shipping</b> checkbox.</li>
+    <li><b>Max redemptions</b> (overall) and <b>Max per customer</b>.</li>
+    <li><b>Active</b> checkbox.</li>
+    <li><b>Starts at</b> and <b>Expires at</b> (datetime).</li>
+    <li>Optional description.</li>
+  </ul>
+
+  <h3>29.2 List columns</h3>
+  <p>Code, Discount (formatted), Currency, Min. subtotal, Free ship, Limits, Redeemed count, Active pill, Actions.</p>
+
+  <h3>29.3 Deletion</h3>
+  <p>Confirmation: "Delete coupon \"<i>code</i>\"? This cannot be undone."</p>
+</section>
+
+<!-- ---------- 4.12 CMS ---------- -->
+<section>
+  <h2>30. CMS &mdash; pages &amp; banners</h2>
+
+  <h3>30.1 CMS pages</h3>
+  <p>URL: <code>/cms/pages</code></p>
+  <ul>
+    <li>Fields: Slug (kebab-case, max 120), Title (max 200), Body HTML, SEO title, SEO description, Status (Draft / Published), Sort order.</li>
+    <li>Rows show Slug, Title, Status pill (Draft / Published), Sort order, Updated timestamp.</li>
+    <li>Deletion asks "Delete page \"<i>title</i>\" (<i>slug</i>)? This cannot be undone."</li>
+    <li>Published pages appear on the storefront under <code>/pages/&lt;slug&gt;</code>.</li>
+  </ul>
+
+  <h3>30.2 CMS banners</h3>
+  <p>URL: <code>/cms/banners</code></p>
+  <ul>
+    <li>Fields: Placement (default <code>HOMEPAGE_HERO</code>, max 40), Title, Image URL (required, max 500), Alt text, Link URL, Active from / to (datetime), Sort order, Active checkbox.</li>
+    <li>Rows show Placement, Title, a 60&times;30 thumbnail, Active / Off badge, Sort order.</li>
+    <li>Deletion asks "Delete banner \"<i>title</i>\"? This cannot be undone."</li>
+  </ul>
+
+  <div class="callout warn no-break">
+    <span class="cotitle">Body HTML is rendered as-is</span>
+    CMS Body HTML is sanitised on the storefront but any embedded
+    third-party scripts, iframes, and links are still visible to
+    customers. Review edits carefully before publishing.
+  </div>
+</section>
+
+<!-- ---------- 4.13 ADMIN USERS ---------- -->
+<section>
+  <h2>31. Admin users</h2>
+  <p>URL: <code>/admin-users</code></p>
+
+  <p>This screen lists every account with back-office access.</p>
+
+  <h3>31.1 Table columns</h3>
+  <p>Email (with a "you" badge for the current user), Full name, Role pill, Status (ACTIVE / other), MFA (Enrolled / Pending), Last sign-in, Actions.</p>
+
+  <h3>31.2 Reset MFA</h3>
+  <p>
+    Only a <span class="badge">SUPERADMIN</span> can reset another
+    admin's MFA. Attempting to reset your own MFA is blocked with:
+    "You can't reset your own MFA. Sign out and use the enrollment flow
+    instead."
+  </p>
+  <p>Confirmation for the reset:</p>
+  <div class="pathline">
+    Reset MFA for <i>email</i>?
+
+    This wipes their TOTP secret and revokes every active session for
+    that admin. They will be forced to re-enroll on their next sign-in.
+  </div>
+
+  <div class="callout risk">
+    <span class="cotitle">Risk &mdash; MFA reset abuse</span>
+    Resetting MFA on someone else's account is a privileged action.
+    Ensure the request is legitimate (typically an out-of-band call with
+    the account owner) before performing it. Every reset is written to
+    the audit log with the initiating super-admin's identity.
+  </div>
+</section>
+
+<!-- ============================================================
+     APPENDIX A — RISKS
+     ============================================================ -->
+<section class="part-cover">
+  <div class="part-eyebrow">Appendix A</div>
+  <h1>Misuse scenarios &amp; user-related risks</h1>
+  <p class="part-blurb">
+    A short catalogue of misuse patterns that follow from the
+    workflows described in this guide, with the controls the
+    platform already provides and the operational guidance staff
+    should follow.
+  </p>
+</section>
+
+<section class="chapter">
+  <h1>Appendix A &mdash; Misuse scenarios &amp; user-related risks</h1>
+
+  <p>
+    This appendix summarises the most relevant misuse scenarios and
+    user-related risks for the Gadaa Istar platform. It is intentionally
+    kept short and is designed to feed the platform's risk register and
+    the periodic security &amp; compliance review. Each row lists the
+    <b>actor</b>, the <b>scenario</b>, the <b>potential impact</b>, and
+    the <b>controls / mitigations</b> that are either already in place
+    or should be enforced operationally.
+  </p>
+
+  <h3>A.1 Storefront (customer-facing) risks</h3>
+
+  <table>
+    <tr>
+      <th style="width: 14%">Actor</th>
+      <th style="width: 26%">Scenario</th>
+      <th style="width: 30%">Impact</th>
+      <th>Controls / mitigations</th>
+    </tr>
+    <tr>
+      <td>Guest / attacker</td>
+      <td>Account-enumeration via login, forgot-password, or registration forms.</td>
+      <td>Discovery of registered email addresses (privacy leak).</td>
+      <td>Login errors are generic ("The email or password you entered is incorrect."). Forgot-password always returns success. Registration returns "already exists" &mdash; rate-limiting and reCAPTCHA recommended if abuse is observed.</td>
+    </tr>
+    <tr>
+      <td>Guest / attacker</td>
+      <td>Credential-stuffing against <code>/login</code>.</td>
+      <td>Account takeover.</td>
+      <td>8-character password minimum, per-account rate-limiting server-side, MFA on admin side only. Operational: monitor bulk 401 responses and enable IP-level throttling.</td>
+    </tr>
+    <tr>
+      <td>Guest / attacker</td>
+      <td>Order-reference enumeration on <code>/track-order</code>.</td>
+      <td>Attempted disclosure of order details.</td>
+      <td>Lookup requires both invoice number and matching email. Monitor failed lookups by IP.</td>
+    </tr>
+    <tr>
+      <td>Customer</td>
+      <td>Repeatedly abandoning checkouts to lock stock ("stock hoarding").</td>
+      <td>Legitimate buyers see items as unavailable; false low-stock alerts.</td>
+      <td>Reservations are released on order cancellation. Dashboard exposes "Abandoned orders" (&gt; 1 hour) for review.</td>
+    </tr>
+    <tr>
+      <td>Customer</td>
+      <td>Coupon-code brute force at checkout.</td>
+      <td>Discovery of active promotional codes.</td>
+      <td>Coupon "Max redemptions" and "Max per customer" caps enforce natural limits. Consider rate-limiting apply-coupon calls at the gateway level.</td>
+    </tr>
+    <tr>
+      <td>B2C customer posing as B2B</td>
+      <td>Registering as a business with false company data to obtain wholesale pricing.</td>
+      <td>Revenue loss; misrepresentation.</td>
+      <td>B2B accounts start in Pending B2B approval and cannot buy at tier prices until an admin verifies the business licence out-of-band before clicking <b>Approve B2B</b>.</td>
+    </tr>
+    <tr>
+      <td>Customer</td>
+      <td>Chargeback fraud &mdash; disputing a legitimate paid order.</td>
+      <td>Financial loss; card-scheme penalties.</td>
+      <td>Payment is processed by CyberSource / MPGS (PCI DSS SAQ-A). Order status timeline, IP and address records feed dispute responses; use refund panel's Manual refund only when the money has already moved out-of-band.</td>
+    </tr>
+    <tr>
+      <td>Customer</td>
+      <td>Sharing a single account between many buyers of the same company.</td>
+      <td>Weak accountability; wholesale abuse.</td>
+      <td>Discourage in onboarding. Address book &amp; order history are per-account. Session revoke on password change enforces re-authentication.</td>
+    </tr>
+    <tr>
+      <td>Attacker with a stolen token</td>
+      <td>Reusing a leaked password-reset or verify-email link.</td>
+      <td>Account takeover.</td>
+      <td>Reset links expire in 30 minutes and are single-use; verification links expire in 60 minutes. Using a reset revokes all sessions.</td>
+    </tr>
+    <tr>
+      <td>Customer</td>
+      <td>Weak, reused, or shared password.</td>
+      <td>Account takeover.</td>
+      <td>8&ndash;128 character range enforced. Recommend adding password-breach checking and a strong-password policy in a future release.</td>
+    </tr>
+    <tr>
+      <td>Attacker (XSS)</td>
+      <td>Injecting HTML through free-text fields such as address, notes, or profile.</td>
+      <td>Session hijack; defacement.</td>
+      <td>Angular auto-escapes template bindings; CMS body HTML is sanitised. Do not disable sanitisation. Review any admin-authored CMS body before publishing.</td>
+    </tr>
+    <tr>
+      <td>Guest</td>
+      <td>Shared / public device leaves an active session behind.</td>
+      <td>Account takeover on the same device.</td>
+      <td>Session stored in <code>localStorage</code>. Encourage users to sign out on shared devices; password change revokes all sessions.</td>
+    </tr>
+  </table>
+
+  <h3>A.2 Back-office (admin-facing) risks</h3>
+
+  <table>
+    <tr>
+      <th style="width: 14%">Actor</th>
+      <th style="width: 26%">Scenario</th>
+      <th style="width: 30%">Impact</th>
+      <th>Controls / mitigations</th>
+    </tr>
+    <tr>
+      <td>Malicious insider</td>
+      <td>Approving a fraudulent B2B account without verifying the licence.</td>
+      <td>Revenue loss; opens the door for wholesale-price fraud.</td>
+      <td>The "Approve B2B" confirmation reminds staff to verify the business licence out-of-band. Every approval is written to the audit log with the actor identity.</td>
+    </tr>
+    <tr>
+      <td>Malicious insider</td>
+      <td>Issuing "Manual refund (bypass gateway)" without the money actually moving.</td>
+      <td>Direct financial loss.</td>
+      <td>Reason required (min 3 chars) and audit-logged. Restrict Refund permission to trusted roles. Reconcile refunds daily against gateway statements.</td>
+    </tr>
+    <tr>
+      <td>Malicious insider</td>
+      <td>Editing prices, coupons, or shipping costs to favour a specific buyer.</td>
+      <td>Revenue leakage.</td>
+      <td>Historical orders keep the price snapshot at placement time. All price / coupon / shipping-method changes are audit-logged.</td>
+    </tr>
+    <tr>
+      <td>Malicious insider</td>
+      <td>Force-verifying a customer email without confirmation.</td>
+      <td>Account takeover of that customer email.</td>
+      <td>Explicit confirmation dialog and audit-log entry per action. Restrict the customer-detail write actions to authorised staff.</td>
+    </tr>
+    <tr>
+      <td>SUPERADMIN abusing MFA reset</td>
+      <td>Resetting another admin's MFA to impersonate them.</td>
+      <td>Full compromise of a peer admin account.</td>
+      <td>Only <code>SUPERADMIN</code> can reset another admin. Every reset is audit-logged and revokes the target's sessions immediately. Require two-person approval for MFA reset operationally.</td>
+    </tr>
+    <tr>
+      <td>Attacker</td>
+      <td>Phishing an admin's password + TOTP in real time.</td>
+      <td>Full back-office access.</td>
+      <td>MFA (SHA-1, 6 digits, 30 s window) mitigates static-password theft. Recommend FIDO2 for the future. Train staff to visit admin.gedaaistar.et directly (never via email links).</td>
+    </tr>
+    <tr>
+      <td>Attacker</td>
+      <td>Shoulder-surfing or session theft on shared workstations.</td>
+      <td>Order tampering, customer-data exposure.</td>
+      <td>Sign-out button in the top bar; every write operation is audit-logged. Enforce workstation lock policies operationally.</td>
+    </tr>
+    <tr>
+      <td>Admin</td>
+      <td>Publishing CMS Body HTML that contains third-party trackers or invisible content.</td>
+      <td>Legal risk (privacy), brand risk.</td>
+      <td>Body HTML is sanitised on the storefront but not stripped of tracking pixels; peer-review any CMS change before publishing.</td>
+    </tr>
+    <tr>
+      <td>Terminated employee</td>
+      <td>Continued admin access after termination.</td>
+      <td>Data exfiltration, order tampering.</td>
+      <td>Deactivate the admin user promptly (Admin users screen). Session tokens can be revoked out-of-band by resetting MFA.</td>
+    </tr>
+  </table>
+
+  <h3>A.3 Operational recommendations</h3>
+  <ol>
+    <li>Enable server-side rate-limiting on <code>/login</code>, <code>/forgot-password</code>, <code>/track-order</code>, <code>/coupons/apply</code>, and the guest cart endpoints.</li>
+    <li>Alert on any burst of failed <code>MFA_INVALID_CODE</code> or <code>INVALID_CREDENTIALS</code> errors from a single IP or account.</li>
+    <li>Require two-person approval for any <b>Reset MFA</b>, <b>Force verify email</b>, or <b>Manual refund</b> action &mdash; operationally, not just technically.</li>
+    <li>Review admin audit logs weekly for out-of-hours activity, refunds, price changes, and CMS publishing.</li>
+    <li>Reconcile refunds daily against the CyberSource / MPGS statements.</li>
+    <li>Provide staff with dedicated MFA devices and never share TOTP secrets.</li>
+    <li>Roll out password-breach checking and stronger password policy on the storefront in a future release.</li>
+    <li>Encourage retail customers to sign out on shared devices; consider a session-timeout banner.</li>
+  </ol>
+</section>
+
+<!-- ============================================================
+     APPENDIX B — GLOSSARY
+     ============================================================ -->
+<section class="chapter">
+  <h1>Appendix B &mdash; Glossary</h1>
+
+  <table>
+    <tr><th style="width: 25%">Term</th><th>Meaning</th></tr>
+    <tr><td>B2B</td><td>Business-to-Business. Wholesale buyers with tier pricing and MOQ multipliers.</td></tr>
+    <tr><td>B2C</td><td>Business-to-Consumer. Retail shoppers on the RETAIL group.</td></tr>
+    <tr><td>MOQ</td><td>Minimum Order Quantity &mdash; the smallest quantity that can be added to the cart for a product. Multiplied by the customer's group multiplier for B2B tiers.</td></tr>
+    <tr><td>Price list</td><td>A named collection of per-product minimum-quantity &rarr; price entries, tied to a customer group and currency.</td></tr>
+    <tr><td>Customer group</td><td>The category assigned to a customer (RETAIL, WHOLESALE_T1, WHOLESALE_T2, VIP). Drives which price list applies and the MOQ multiplier.</td></tr>
+    <tr><td>TOTP</td><td>Time-based One-Time Password. The 6-digit code generated by an authenticator app (Google Authenticator, Authy, 1Password). SHA-1 with a 30-second window.</td></tr>
+    <tr><td>MFA</td><td>Multi-Factor Authentication. Required for every admin session on Gadaa Istar.</td></tr>
+    <tr><td>SAQ-A</td><td>PCI DSS Self-Assessment Questionnaire A &mdash; the compliance level applicable when card data is handled entirely by a third-party (CyberSource / MPGS).</td></tr>
+    <tr><td>CyberSource</td><td>Third-party payment gateway operated by Visa. Handles card entry on its own page.</td></tr>
+    <tr><td>MPGS</td><td>Mastercard Payment Gateway Services. Alternate payment gateway used at checkout.</td></tr>
+    <tr><td>HS code</td><td>Harmonised System code &mdash; international customs classification.</td></tr>
+    <tr><td>TIN</td><td>Tax Identification Number, used on B2B accounts for VAT-compliant invoicing.</td></tr>
+    <tr><td>VAT</td><td>Value Added Tax. Ethiopian VAT (ERCA) rules apply to Ethiopian buyers.</td></tr>
+    <tr><td>SKU</td><td>Stock Keeping Unit. Uppercase identifier for a product or variant.</td></tr>
+    <tr><td>PDP</td><td>Product Detail Page &mdash; <code>/products/&lt;slug&gt;</code>.</td></tr>
+    <tr><td>Quote</td><td>A B2B negotiation record. Moves from DRAFT &rarr; SUBMITTED &rarr; UNDER_REVIEW &rarr; SENT &rarr; ACCEPTED &rarr; CONVERTED.</td></tr>
+    <tr><td>Terminal state</td><td>A status from which no further transitions are allowed (DELIVERED, CANCELLED, REFUNDED, PARTIALLY_REFUNDED).</td></tr>
+  </table>
+</section>
+
+<!-- ============================================================
+     APPENDIX C — URL REFERENCE
+     ============================================================ -->
+<section class="chapter">
+  <h1>Appendix C &mdash; URL &amp; keyboard reference</h1>
+
+  <h3>C.1 Storefront routes (gedaaistar.et)</h3>
+  <table>
+    <tr><th>Path</th><th>Purpose</th><th>Access</th></tr>
+    <tr><td><code>/</code></td><td>Home page</td><td>Public</td></tr>
+    <tr><td><code>/shop</code></td><td>Catalog list</td><td>Public</td></tr>
+    <tr><td><code>/shop/&lt;category&gt;</code></td><td>Category-filtered catalog</td><td>Public</td></tr>
+    <tr><td><code>/products/&lt;slug&gt;</code></td><td>Product detail</td><td>Public</td></tr>
+    <tr><td><code>/cart</code></td><td>Shopping cart</td><td>Public (guest cart supported)</td></tr>
+    <tr><td><code>/wishlist</code></td><td>Wishlist (browser-local)</td><td>Public</td></tr>
+    <tr><td><code>/track-order</code></td><td>Public order tracking</td><td>Public</td></tr>
+    <tr><td><code>/login</code></td><td>Sign in</td><td>Guest only</td></tr>
+    <tr><td><code>/register</code></td><td>Registration (B2C / B2B)</td><td>Guest only</td></tr>
+    <tr><td><code>/forgot-password</code></td><td>Request password reset</td><td>Public</td></tr>
+    <tr><td><code>/reset-password/&lt;token&gt;</code></td><td>Complete password reset</td><td>Public (token-bound)</td></tr>
+    <tr><td><code>/verify-email/pending</code></td><td>"Check your inbox"</td><td>Public</td></tr>
+    <tr><td><code>/verify-email/&lt;token&gt;</code></td><td>Confirm email address</td><td>Public (token-bound)</td></tr>
+    <tr><td><code>/account</code></td><td>Profile</td><td>Signed-in customer</td></tr>
+    <tr><td><code>/account/addresses</code></td><td>Address book</td><td>Signed-in customer</td></tr>
+    <tr><td><code>/account/orders</code></td><td>Order history</td><td>Signed-in customer</td></tr>
+    <tr><td><code>/account/orders/&lt;uuid&gt;</code></td><td>Order detail</td><td>Signed-in customer</td></tr>
+    <tr><td><code>/account/quotes</code></td><td>Quote history</td><td>Signed-in customer</td></tr>
+    <tr><td><code>/account/quotes/&lt;uuid&gt;</code></td><td>Quote detail</td><td>Signed-in customer</td></tr>
+    <tr><td><code>/checkout</code></td><td>Checkout page</td><td>Signed-in customer</td></tr>
+    <tr><td><code>/checkout/return</code></td><td>Payment success / pending</td><td>Signed-in customer</td></tr>
+    <tr><td><code>/checkout/cancel</code></td><td>Payment cancelled / retry</td><td>Signed-in customer</td></tr>
+    <tr><td><code>/about</code>, <code>/contact</code></td><td>Shortcuts to CMS pages</td><td>Public</td></tr>
+    <tr><td><code>/pages/&lt;slug&gt;</code></td><td>CMS static page</td><td>Public</td></tr>
+  </table>
+
+  <h3>C.2 Admin routes (admin.gedaaistar.et)</h3>
+  <table>
+    <tr><th>Path</th><th>Purpose</th><th>Access</th></tr>
+    <tr><td><code>/login</code></td><td>Admin sign-in</td><td>Guest admin only</td></tr>
+    <tr><td><code>/verify-mfa</code></td><td>TOTP setup / verification</td><td>MFA challenge</td></tr>
+    <tr><td><code>/dashboard</code></td><td>KPIs, low stock, recent orders</td><td>Any admin</td></tr>
+    <tr><td><code>/products</code></td><td>Product list</td><td>Any admin (read)</td></tr>
+    <tr><td><code>/products/new</code></td><td>Create product</td><td>SUPERADMIN / product manager</td></tr>
+    <tr><td><code>/products/&lt;id&gt;/details</code>&hellip;<code>/variants</code></td><td>Product editor tabs</td><td>SUPERADMIN / product manager</td></tr>
+    <tr><td><code>/price-lists</code></td><td>Wholesale price lists</td><td>Any admin (read); write per role</td></tr>
+    <tr><td><code>/shipping-methods</code></td><td>Rate cards</td><td>Any admin</td></tr>
+    <tr><td><code>/orders</code>, <code>/orders/&lt;uuid&gt;</code></td><td>Order management &amp; refunds</td><td>Any admin</td></tr>
+    <tr><td><code>/quotes</code>, <code>/quotes/&lt;uuid&gt;</code></td><td>Quote management</td><td>Any admin</td></tr>
+    <tr><td><code>/customers</code>, <code>/customers/&lt;id&gt;</code></td><td>Customer management</td><td>Any admin; some writes require role</td></tr>
+    <tr><td><code>/customer-groups</code></td><td>Price groups &amp; MOQ multipliers</td><td>Any admin</td></tr>
+    <tr><td><code>/coupons</code></td><td>Discount codes</td><td>Any admin</td></tr>
+    <tr><td><code>/cms/pages</code>, <code>/cms/banners</code></td><td>CMS content</td><td>Any admin</td></tr>
+    <tr><td><code>/admin-users</code></td><td>Admin accounts, MFA status</td><td>Any admin (view); SUPERADMIN to reset MFA</td></tr>
+  </table>
+
+  <h3>C.3 Keyboard hints</h3>
+  <ul>
+    <li><span class="kbd">Enter</span> submits the storefront search box from anywhere in the header.</li>
+    <li><span class="kbd">Tab</span> / <span class="kbd">Shift</span>+<span class="kbd">Tab</span> cycles through form fields in the checkout, address book, and admin forms.</li>
+    <li><span class="kbd">Esc</span> closes admin modals such as the refund dialog and variant editor.</li>
+  </ul>
+
+  <div class="callout tip no-break">
+    <span class="cotitle">Feedback</span>
+    Please send suggestions for improving this guide to the operations
+    team. Every misuse scenario reported by a real user makes the
+    platform safer.
+  </div>
+</section>
+
+</body>
+</html>

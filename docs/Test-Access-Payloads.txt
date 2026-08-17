@@ -1,0 +1,1399 @@
+================================================================================
+  GADAA ISTAR EXPORT E-COMMERCE PLATFORM
+  TEST CREDENTIALS & TEST PAYLOADS
+  Cyber Audit Reference Document
+================================================================================
+
+  Document title    : Test Credentials & Test Payloads (INSA Cyber Audit)
+  Version           : 1.0
+  Issued            : August 2026
+  Classification    : CONFIDENTIAL - Audit use only
+  Prepared for      : Information Network Security Administration (INSA)
+  Operator          : Gadaa Istar Business Group S.C.
+  Storefront        : https://gedaaistar.et
+  Storefront API    : https://api.gedaaistar.et/api/storefront/v1
+  Admin web         : https://admin.gedaaistar.et
+  Admin API         : https://api.gedaaistar.et/api/admin/v1
+
+  Related documents:
+    - User Guide (docs/User-Guide.pdf)
+
+
+  IMPORTANT NOTES
+  --------------------------------------------------------------------------
+  1. All account passwords, API secrets, DB credentials, and access keys
+     in this document are shown as placeholders in the form
+     "<TO_BE_PROVIDED>" and MUST be filled in by the Gadaa Istar operations
+     team before this document is handed to the auditors.
+  2. Test accounts are DEDICATED audit accounts. They are separate from
+     any development seed accounts. Do NOT reuse or repurpose any
+     production or seed credentials.
+  3. All test credentials MUST be rotated and the accounts deactivated
+     within 24 hours after the audit's official end date.
+  4. Item 5 (MPGS Webhook Endpoint) is intentionally omitted from this
+     document. Webhook payloads, notification secret, and HMAC signing
+     details will be handed over out-of-band via a separate encrypted
+     channel.
+
+
+================================================================================
+  TABLE OF CONTENTS
+================================================================================
+
+  1.  Rules of Engagement (RoE)
+  2.  Scope Matrix
+  3.  Test Credentials (per scope item)
+        3.1  Item 1  - Storefront (public web)
+        3.2  Item 2  - Storefront API
+        3.3  Item 3  - Admin Back-Office (web)
+        3.4  Item 4  - Admin API
+        3.5  Item 5  - MPGS Webhook (deferred, out-of-band)
+        3.6  Item 6  - Storefront SSR origin (internal)
+        3.7  Item 7  - Admin SPA origin (internal)
+        3.8  Item 8  - api-storefront origin (internal)
+        3.9  Item 9  - api-admin origin (internal)
+        3.10 Item 10 - PostgreSQL database (read-only)
+        3.11 Item 11 - MinIO / S3 object storage
+  4.  Storefront API - Test Payloads (curl)
+  5.  Admin API - Test Payloads (curl)
+  6.  Cross-cutting concerns (rate limits, CORS, headers, error format)
+  7.  Reporting & escalation
+  Appendix A - Error codes reference
+  Appendix B - Placeholder legend
+
+
+================================================================================
+  1. RULES OF ENGAGEMENT (RoE)
+================================================================================
+
+  1.1  Testing window
+  --------------------------------------------------------------------------
+       Start (UTC+3, Addis Ababa) : 12/08/2026
+       End   (UTC+3, Addis Ababa) : 30/08/2026
+       Blackout windows            : Daily 22:00-02:00 (batch jobs).
+
+  1.2  In scope
+  --------------------------------------------------------------------------
+       Items 1 through 11 in the scope matrix (Section 2). Testing is
+       authorised only against the exact hosts, IPs, and ports listed in
+       Section 2 for the duration of the testing window.
+
+  1.3  Out of scope / prohibited actions
+  --------------------------------------------------------------------------
+       - Testing against any host, subdomain, or IP not listed in
+         Section 2.
+       - Real card payments through CyberSource / MPGS live endpoints.
+         Use only the sandbox card numbers listed in Section 3.2.7.
+       - Sustained volumetric / DoS attacks (>5 requests / second per
+         endpoint) without prior written approval.
+       - Social engineering of Gadaa Istar staff or customers.
+       - Any test that would trigger real customer notifications
+         (production email/SMS). Auditors must use only accounts provided
+         in Section 3 - those accounts are wired to a controlled mailbox.
+       - Data destruction: DROP, TRUNCATE, mass DELETE. The dedicated
+         DB user (Section 3.10) is read-only; do not attempt privilege
+         escalation.
+       - Public disclosure of any finding before the debrief meeting.
+
+  1.4  Data-handling requirements
+  --------------------------------------------------------------------------
+       - All findings, screenshots, HTTP captures, and DB samples must
+         be stored on encrypted media by the audit team.
+       - Any PII observed during testing (customer names, emails, phone,
+         business licences) must not leave the audit team's custody and
+         must be redacted in the final report.
+       - The audit team must return or destroy all copies of collected
+         data within 30 days after the debrief.
+
+  1.5  Contact - operations team
+  --------------------------------------------------------------------------
+       Primary   :  Name  : Abel Tadesse
+                    Email : abellonegn@gmail.com
+                    Phone : 0912616913
+       Secondary :  Name  : Biniam Hailu
+                    Email : hailu.biniam@gmail.com
+                    Phone : 0954252872
+       Emergency ("stop test") : Shemsu Juhar 0912426696
+
+  1.6  Escalation on live incidents observed during testing
+  --------------------------------------------------------------------------
+       If the audit team observes what appears to be a live security
+       incident (e.g. an active attack, data exfiltration in progress),
+       stop testing immediately and phone the emergency contact.
+
+
+================================================================================
+  2. SCOPE MATRIX
+================================================================================
+
+  # | Component                        | Host / URL                             | Auth / access
+  --+----------------------------------+----------------------------------------+-----------------------------------
+  1 | Storefront (public web)          | https://gedaaistar.et                  | None; B2C test account (Sec 3.1)
+  2 | Storefront API                   | https://api.gedaaistar.et/api/         | JWT; B2C + B2B accounts
+    |                                  |   storefront/v1                        |   (Sec 3.2)
+  3 | Admin Back-Office (web)          | https://admin.gedaaistar.et            | Password + MFA (Sec 3.3)
+  4 | Admin API                        | https://api.gedaaistar.et/api/admin/v1 | Password + MFA -> JWT (Sec 3.4)
+  5 | MPGS webhook endpoint            | https://api.gedaaistar.et/api/         | HMAC-verified; secret + payload
+    |                                  |   storefront/v1/payment/mpgs/webhook   |   supplied OUT-OF-BAND
+  6 | Storefront SSR (origin)          | 10.0.1.20:4000 , 10.0.1.21:4000        | Internal LAN; Host header req.
+  7 | Admin SPA (origin)               | 10.0.1.30:80                           | Internal LAN; Host header req.
+  8 | api-storefront (origin)          | 10.0.1.10:8080 , 10.0.1.11:8080        | Internal LAN; JWT
+  9 | api-admin (origin)               | 10.0.1.10:8081                         | Internal LAN; JWT + MFA
+  10 | PostgreSQL database              | 10.0.1.<host>:5432 (DB: GCOMERCE)      | Read-only DB user (Sec 3.10)
+  11 | MinIO / S3 object storage        | 10.0.1.<host>:9000                     | Access key + secret (Sec 3.11)
+
+
+================================================================================
+  3. TEST CREDENTIALS
+================================================================================
+
+--------------------------------------------------------------------------------
+  3.1  ITEM 1 - STOREFRONT (PUBLIC WEB)   -   https://gedaaistar.et
+--------------------------------------------------------------------------------
+
+  Access type   : Public browsing (no login required) plus one dedicated
+                  B2C test account for authenticated flows.
+
+  B2C test account
+  ----------------
+    Email            : abellonegn@gmail.comt        [dedicated audit mailbox]
+    Password         : !QAZxsw22312
+    Customer type    : B2C  (group: RETAIL)
+    Status           : ACTIVE
+    Email verified   : yes  (pre-verified by ops team)
+    Preferred curr.  : USD
+    Address on file  : one shipping+billing address, default = true
+
+  Notes
+  -----
+    - The account owns a small order history (2-3 completed orders) so
+      the auditors can exercise /account/orders and /track-order flows.
+    - The mailbox is monitored by the ops team; do NOT change the
+      password from the storefront UI - it will lock the auditors out.
+
+
+--------------------------------------------------------------------------------
+  3.2  ITEM 2 - STOREFRONT API   -   https://api.gedaaistar.et/api/storefront/v1
+--------------------------------------------------------------------------------
+
+  Authentication model
+  --------------------
+    - JWT bearer token in "Authorization: Bearer <accessToken>".
+    - Algorithm: HS256.  Access-token TTL: 15 minutes.
+      Refresh-token TTL: 30 days (rotating; each /auth/refresh returns
+      a new refresh token and revokes the old one).
+    - Guest cart operations use header "X-Guest-Session-Key: <UUID>"
+      (client-generated UUID kept in localStorage on the SPA).
+
+  Test accounts
+  -------------
+    B2C test account
+      Email            : abellonegn@gmail.com
+      Password         : !QAZxsw22312
+      Customer type    : B2C  (group: RETAIL)
+      Status           : ACTIVE
+      Currency         : USD
+
+    B2B test account (wholesale)
+      Email            : abellonegn@gmail.com
+      Password         : !QAZxsw22312
+      Customer type    : B2B  (group: WHOLESALE_T1)
+      Status           : ACTIVE  (pre-approved by ops team)
+      Company          : Audit Bulk Buyer Co.
+      TIN              : <TO_BE_PROVIDED>
+      Currency         : USD
+
+    Guest cart
+      No login; auditor generates a fresh UUID and uses it as
+      "X-Guest-Session-Key" for all guest-cart calls.
+
+  Payment sandbox
+  ---------------
+    Provider           : CyberSource Secure Acceptance (sandbox tenant)
+    Sandbox card       : 4111 1111 1111 1111 (Visa, any future exp,
+                         CVV 123)
+    Sandbox merchant   : Configured on order placement; auditors do NOT
+                         need to touch CyberSource credentials directly.
+
+  Rate limits applicable to this base URL (per client IP)
+  -------------------------------------------------------
+    POST /auth/register                :  5  / 600 s
+    POST /auth/login                   : 10  /  60 s
+    POST /auth/forgot-password         :  3  / 600 s
+    POST /auth/resend-verification     :  3  / 600 s
+    POST /auth/reset-password          : 10  / 600 s
+    POST /auth/me/change-password      :  5  / 600 s
+    (cart mutations, per session/user) : 60  /  60 s
+    POST /me/orders                    :  6  /  60 s
+    POST /me/quotes                    :  5  / 300 s
+    GET  /track-order                  : 20  /  60 s
+
+  Sample payloads and curl commands for this API are in Section 4.
+
+
+--------------------------------------------------------------------------------
+  3.3  ITEM 3 - ADMIN BACK-OFFICE (WEB)   -   https://admin.gedaaistar.et
+--------------------------------------------------------------------------------
+
+  Access type   : Internal web portal. Sign-in is password + TOTP (MFA).
+
+  Admin test account
+  ------------------
+    Email            : admin@gadaaistar.com      [dedicated mailbox]
+    Password         : ChangeMe-Admin-2026!
+    Role             : SUPERADMIN
+                       (SUPERADMIN is granted so auditors can exercise
+                       every screen; a second lower-privilege account is
+                       available on request - see below.)
+    Status           : ACTIVE
+    MFA seed         : Pre-enrolled with a TOTP secret whose Base32
+                       value is <TO_BE_PROVIDED>.
+                       Compatible with Google Authenticator / Authy /
+                       1Password. Algorithm SHA-1, 6 digits, 30 s.
+                       Auditors may load the secret into their own
+                       authenticator app.
+
+
+  Notes
+  -----
+    - The primary and secondary accounts are strictly for audit use.
+    - MFA reset actions (Section 5.15) are logged; do not reset the
+      MFA of any account other than the two dedicated audit accounts.
+
+
+--------------------------------------------------------------------------------
+  3.4  ITEM 4 - ADMIN API   -   https://api.gedaaistar.et/api/admin/v1
+--------------------------------------------------------------------------------
+
+  Authentication model - TWO STEPS
+  --------------------------------
+    Step 1  POST /auth/login             body: { email, password }
+            Response contains a short-lived MFA challenge token
+            (JOSE typ = "mfa-challenge", TTL 300 s) and either
+            state = "MFA_REQUIRED" (token already enrolled) or
+            state = "MFA_ENROLLMENT_REQUIRED" (first login, response
+            also contains { setup.secretBase32, otpauthUri, issuer }
+            for QR-code enrolment).
+
+    Step 2  POST /auth/verify-mfa        body: { challengeToken, code }
+            Response is the final { accessToken, refreshToken,
+            accessTokenExpiresAt, refreshTokenExpiresAt, admin } .
+
+  Bearer JWT for admin
+  --------------------
+    Algorithm       : HS256
+    aud             : "admin"
+    aud_type        : "ADMIN"
+    Access TTL      : 15 minutes
+    Refresh TTL     : 30 days (rotating)
+    Roles claim     : "roles" array; possible values
+                       SUPERADMIN, PRODUCT_MANAGER, ORDER_MANAGER,
+                       CUSTOMER_MANAGER
+
+  Test account
+  ------------
+    Same audit-admin@gedaaistar.et account as Item 3. Auditors may use
+    it against the Admin API through curl.
+
+  Sample payloads and curl commands for this API are in Section 5.
+
+
+--------------------------------------------------------------------------------
+  3.5  ITEM 5 - MPGS WEBHOOK ENDPOINT
+--------------------------------------------------------------------------------
+
+  Deferred, handed over out-of-band. This section is intentionally
+  minimal in this document per audit-team decision.
+
+  URL             : https://api.gedaaistar.et/api/storefront/v1/payment/
+                    mpgs/webhook
+  Auth            : No user account; the endpoint verifies a
+                    notification secret embedded in the JSON payload.
+  Sample payload  : To be provided out-of-band.
+  Notification    : To be provided out-of-band via encrypted channel.
+   secret
+  Signing scheme  : Refer to MPGS integrator documentation. Details
+                    included in the out-of-band package.
+
+
+--------------------------------------------------------------------------------
+  3.6  ITEM 6 - STOREFRONT SSR ORIGIN (INTERNAL)
+--------------------------------------------------------------------------------
+
+  Origins         : 10.0.1.20:4000  (SSR node A)
+                    10.0.1.21:4000  (SSR node B)
+  Access          : Reachable only from the audit test VLAN (see 3.10).
+  Auth            : No application-layer auth on the origin; requests
+                    without a valid "Host: gedaaistar.et" header are
+                    rejected by the SSR router.
+
+  Example - directly hitting the origin, bypassing Cloudflare/edge:
+     curl -H "Host: gedaaistar.et" -H "X-Forwarded-Proto: https" \
+          http://10.0.1.20:4000/ -v
+
+  Purpose         : Allow auditors to test for host-header injection,
+                    SSR-side rendering issues, and origin exposure.
+
+
+--------------------------------------------------------------------------------
+  3.7  ITEM 7 - ADMIN SPA ORIGIN (INTERNAL)
+--------------------------------------------------------------------------------
+
+  Origin          : 10.0.1.30:80
+  Access          : Internal VLAN.
+  Auth            : Static SPA bundle only; no server-side login. The
+                    SPA itself calls the Admin API (item 4) once loaded.
+
+  Example - fetch the SPA index directly:
+     curl -H "Host: admin.gedaaistar.et" http://10.0.1.30:80/ -v
+
+  Purpose         : Verify no debug / sourcemap leakage, correct
+                    Content-Security-Policy headers, no directory
+                    listing on /assets/.
+
+
+--------------------------------------------------------------------------------
+  3.8  ITEM 8 - api-storefront ORIGIN (INTERNAL)
+--------------------------------------------------------------------------------
+
+  Origins         : 10.0.1.10:8080  (api-storefront node A)
+                    10.0.1.11:8080  (api-storefront node B)
+  Access          : Internal VLAN.
+  Auth            : Same as Section 3.2 (JWT bearer). Same test accounts.
+
+  Example - login directly against origin (skipping edge):
+     curl -X POST \
+          -H "Host: api.gedaaistar.et" \
+          -H "Content-Type: application/json" \
+          -d '{"email":"audit-b2c@gedaaistar.et","password":"<TO_BE_PROVIDED>"}' \
+          http://10.0.1.10:8080/api/storefront/v1/auth/login
+
+  Purpose         : Origin-header validation, TLS-termination bypass
+                    tests, per-node consistency checks.
+
+
+--------------------------------------------------------------------------------
+  3.9  ITEM 9 - api-admin ORIGIN (INTERNAL)
+--------------------------------------------------------------------------------
+
+  Origin          : 10.0.1.10:8081
+  Access          : Internal VLAN.
+  Auth            : Same as Section 3.4 (JWT + MFA). Same admin account.
+
+  Example - login directly against origin:
+     curl -X POST \
+          -H "Host: api.gedaaistar.et" \
+          -H "Content-Type: application/json" \
+          -d '{"email":"audit-admin@gedaaistar.et","password":"<TO_BE_PROVIDED>"}' \
+          http://10.0.1.10:8081/api/admin/v1/auth/login
+
+
+--------------------------------------------------------------------------------
+  3.10 ITEM 10 - POSTGRESQL DATABASE (READ-ONLY)
+--------------------------------------------------------------------------------
+
+  Purpose         : Schema review; ensure no PII in indexes; verify
+                    that sensitive columns (password_hash, mfa_secret,
+                    refresh-token hashes, business licence URLs) are
+                    protected. NOT for data exfiltration.
+
+  Instance        : 10.0.1.<host>:5432
+  Database        : GCOMERCE
+  Read-only user  : audit_readonly
+  Password        : <TO_BE_PROVIDED>
+  Grants          : USAGE on schema public;
+                    SELECT on ALL TABLES in schema public;
+                    NO INSERT / UPDATE / DELETE / TRUNCATE / ALTER;
+                    NO access to pg_catalog beyond default reader
+                    privileges.
+  Network         : Restricted to audit-team subnet by pg_hba.conf
+                    entry (rotated back to "deny" after the audit).
+  Encryption      : Connections MUST use sslmode=require. The server
+                    presents a certificate signed by the Gadaa Istar
+                    internal CA; auditors may accept it after fingerprint
+                    verification against <TO_BE_PROVIDED>.
+
+  Sample psql invocation (Windows PowerShell):
+     $env:PGPASSWORD='<TO_BE_PROVIDED>'; `
+     psql "host=10.0.1.X port=5432 dbname=GCOMERCE user=audit_readonly sslmode=require" `
+          -c "\dt"
+
+  Sensitive tables the auditors should be aware of
+  -------------------------------------------------
+    customer                 email, phone, password_hash (BCrypt cost 12)
+    admin_user               email, password_hash, mfa_secret (Base32)
+    customer_refresh_token   token_hash (SHA-256 hash at rest, never
+                             the raw token)
+    admin_refresh_token      token_hash (SHA-256 hash at rest)
+    customer_business_profile company_name, tin, vat_number,
+                             business_licence_url
+    address                  full name, street, phone
+    order_header             invoice, shipping/billing address snapshot
+    order_status_event       status transitions with actor + note
+    order_refund             refund attempts with amount + reason + actor
+
+
+--------------------------------------------------------------------------------
+  3.11 ITEM 11 - MINIO / S3 OBJECT STORAGE
+--------------------------------------------------------------------------------
+
+  Purpose         : Storage for product images, CMS banners, and
+                    (B2B) uploaded business licence files.
+
+  Endpoint (internal) : http://10.0.1.<host>:9000
+  Region              : us-east-1  (MinIO default; API compatible with
+                        AWS SDK v4 signature).
+  Buckets
+    gi-media          : Product images, CMS banners. Public-read.
+    gi-media-thumbs   : Auto-generated thumbnails. Public-read.
+    gi-licences       : B2B business licences.  PRIVATE.  Access via
+                        pre-signed URLs from the Admin API.
+
+  Read-only audit access key
+     Access key       : audit-readonly
+     Secret key       : <TO_BE_PROVIDED>
+     Permissions      : s3:GetObject on gi-media, gi-media-thumbs,
+                        gi-licences ONLY.  No s3:PutObject.
+                        No s3:DeleteObject.  No s3:ListAllMyBuckets.
+     Signing          : SigV4 (aws4_request).
+
+  Example - list bucket contents using aws-cli:
+     aws --endpoint-url http://10.0.1.X:9000 \
+         --profile gi-audit \
+         s3 ls s3://gi-media/products/
+
+  Example - verify a private licence file is NOT publicly reachable:
+     curl -o /dev/null -w "%{http_code}\n" \
+          http://10.0.1.X:9000/gi-licences/some-file.pdf
+     # Expected: 403 (AccessDenied)  -  a 200 here is a finding.
+
+  Notes
+  -----
+    - The pre-signed URLs that the Admin API generates expire in 300 s
+      by default.  Auditors may test URL replay after expiry to confirm
+      rejection.
+
+
+================================================================================
+  4. STOREFRONT API - TEST PAYLOADS  (base: /api/storefront/v1)
+================================================================================
+
+  In every curl example below, replace the placeholder values (shown as
+  <PLACEHOLDER>) with your test-account values or with values captured
+  from earlier requests (e.g. <ACCESS_TOKEN>, <REFRESH_TOKEN>,
+  <ORDER_UUID>, <PRODUCT_ID>).
+
+  API base
+     export API=https://api.gedaaistar.et/api/storefront/v1
+
+
+--------------------------------------------------------------------------------
+  4.1  Auth - Register (B2C)
+--------------------------------------------------------------------------------
+
+  POST /auth/register       [rate: 5 / 600 s]
+
+  Body
+    {
+      "email": "audit-b2c@gedaaistar.et",
+      "password": "<STRONG_PW>",
+      "firstName": "Audit",
+      "lastName": "Buyer",
+      "customerType": "B2C",
+      "phone": "+251900000000",
+      "preferredCurrency": "USD",
+      "preferredLocale": "en"
+    }
+
+  curl
+     curl -X POST "$API/auth/register" \
+          -H "Content-Type: application/json" \
+          -d '{
+                "email": "audit-b2c@gedaaistar.et",
+                "password": "<STRONG_PW>",
+                "firstName": "Audit",
+                "lastName": "Buyer",
+                "customerType": "B2C",
+                "preferredCurrency": "USD"
+              }'
+
+  Expected 200 : { accessToken, refreshToken, customer }
+  Errors       : 400 VALIDATION_ERROR, 409 EMAIL_EXISTS
+
+
+--------------------------------------------------------------------------------
+  4.2  Auth - Register (B2B)
+--------------------------------------------------------------------------------
+
+  POST /auth/register       [rate: 5 / 600 s]
+
+  Body (companyName is required when customerType = "B2B")
+    {
+      "email": "audit-b2b@gedaaistar.et",
+      "password": "<STRONG_PW>",
+      "firstName": "Audit",
+      "lastName": "Wholesale",
+      "customerType": "B2B",
+      "companyName": "Audit Bulk Buyer Co.",
+      "companyTin": "TIN-12345678",
+      "phone": "+251911000000",
+      "preferredCurrency": "USD"
+    }
+
+  curl : same as 4.1 with the body above.
+
+  Notes
+    - B2B accounts land in PENDING_APPROVAL status. They cannot use
+      quote / wholesale features until an admin approves them
+      (Section 5.11.2).
+
+
+--------------------------------------------------------------------------------
+  4.3  Auth - Login
+--------------------------------------------------------------------------------
+
+  POST /auth/login          [rate: 10 / 60 s]
+
+  Body
+    {
+      "email": "audit-b2c@gedaaistar.et",
+      "password": "<TO_BE_PROVIDED>"
+    }
+
+  curl
+     curl -X POST "$API/auth/login" \
+          -H "Content-Type: application/json" \
+          -d '{"email":"audit-b2c@gedaaistar.et","password":"<TO_BE_PROVIDED>"}'
+
+  Expected 200 : { accessToken, refreshToken,
+                   accessTokenExpiresAt, refreshTokenExpiresAt,
+                   customer: {...} }
+  Errors       : 401 INVALID_CREDENTIALS,
+                 403 ACCOUNT_SUSPENDED / ACCOUNT_DEACTIVATED,
+                 400 VALIDATION_ERROR
+
+
+--------------------------------------------------------------------------------
+  4.4  Auth - Refresh
+--------------------------------------------------------------------------------
+
+  POST /auth/refresh
+
+  Body
+    { "refreshToken": "<REFRESH_TOKEN>" }
+
+  curl
+     curl -X POST "$API/auth/refresh" \
+          -H "Content-Type: application/json" \
+          -d '{"refreshToken":"<REFRESH_TOKEN>"}'
+
+  Notes
+    - Refresh tokens are ROTATED. The old refresh token is revoked and
+      the response contains a new pair. Reusing an old refresh token
+      MUST fail with 401.
+
+
+--------------------------------------------------------------------------------
+  4.5  Auth - Logout / Forgot / Reset / Verify / Resend
+--------------------------------------------------------------------------------
+
+  POST /auth/logout
+     Body : { "refreshToken": "<REFRESH_TOKEN>" }
+     Returns 204 regardless of token validity.
+
+  POST /auth/forgot-password             [rate: 3 / 600 s]
+     Body : { "email": "audit-b2c@gedaaistar.et" }
+     Always returns 202 (prevents email enumeration).
+
+  POST /auth/reset-password              [rate: 10 / 600 s]
+     Body : { "token": "<RESET_TOKEN_FROM_EMAIL>",
+              "newPassword": "<STRONG_PW>" }
+     Returns 204.  All existing sessions are revoked.
+
+  POST /auth/verify-email
+     Body : { "token": "<VERIFY_TOKEN_FROM_EMAIL>" }
+     Returns CustomerDto.  Token is single-use and expires after 60 min.
+
+  POST /auth/resend-verification         [rate: 3 / 600 s]
+     Body : { "email": "audit-b2c@gedaaistar.et" }
+     Always returns 202.
+
+
+--------------------------------------------------------------------------------
+  4.6  Profile - GET /me, PATCH /me, change password
+--------------------------------------------------------------------------------
+
+  GET /auth/me
+     curl -H "Authorization: Bearer <ACCESS_TOKEN>" "$API/auth/me"
+
+  PATCH /auth/me
+     Body (blank / null keeps existing value)
+       {
+         "firstName": "Audit",
+         "lastName":  "Buyer",
+         "phone":     "+251912345678",
+         "preferredCurrency": "USD"
+       }
+     curl -X PATCH -H "Authorization: Bearer <ACCESS_TOKEN>" \
+                    -H "Content-Type: application/json" \
+                    -d '{"firstName":"Audit","lastName":"Buyer"}' \
+                    "$API/auth/me"
+
+  POST /auth/me/change-password            [rate: 5 / 600 s]
+     Body : { "currentPassword": "<OLD>", "newPassword": "<NEW>" }
+     Returns 204.  All sessions are revoked.
+
+
+--------------------------------------------------------------------------------
+  4.7  Catalog and CMS (public - no token)
+--------------------------------------------------------------------------------
+
+  GET  /catalog/products?page=0&size=12
+  GET  /catalog/products?category=RAW_COFFEE&page=0&size=12
+  GET  /catalog/products/search?q=yirgacheffe&page=0&size=12
+  GET  /catalog/products/<slug>
+       e.g. GET /catalog/products/yirgacheffe-green-500g
+
+  GET  /cms/pages
+  GET  /cms/pages/<slug>          e.g. /cms/pages/about-us
+  GET  /cms/banners?placement=HOMEPAGE_HERO
+
+  GET  /system/hello              (health / version)
+  GET  /seo/robots.txt
+  GET  /seo/sitemap.xml
+  GET  /tax/rules/<COUNTRY_CODE>  e.g. /tax/rules/ET
+
+
+--------------------------------------------------------------------------------
+  4.8  Cart - Guest (X-Guest-Session-Key header)
+--------------------------------------------------------------------------------
+
+  Generate a session key on the client side (any UUID works):
+     export GK=$(uuidgen)
+
+  GET /guest-cart
+     curl -H "X-Guest-Session-Key: $GK" "$API/guest-cart"
+
+  POST /guest-cart/items                  [rate: 60 / 60 s]
+     Body : { "productId": <PRODUCT_ID>, "variantId": null,
+              "quantity": 2.0 }
+
+  PATCH /guest-cart/items/<PRODUCT_ID>?variantId=<VAR_ID>
+     Body : { "quantity": 3.0 }             (quantity 0 removes)
+
+  DELETE /guest-cart/items/<PRODUCT_ID>?variantId=<VAR_ID>
+  DELETE /guest-cart                         (clear)
+
+  Notes
+    - Guest carts are keyed by X-Guest-Session-Key. Any UUID works.
+    - Guest carts merge into the customer cart on login/register via
+      POST /cart/merge (see 4.9).
+
+
+--------------------------------------------------------------------------------
+  4.9  Cart - Authenticated
+--------------------------------------------------------------------------------
+
+  GET /cart
+     curl -H "Authorization: Bearer <ACCESS_TOKEN>" "$API/cart"
+
+  POST /cart/items                        [rate: 60 / 60 s]
+     Body : { "productId": <PRODUCT_ID>, "variantId": null,
+              "quantity": 2.0 }
+
+  PATCH /cart/items/<PRODUCT_ID>?variantId=<VAR_ID>
+     Body : { "quantity": 3.0 }
+
+  DELETE /cart/items/<PRODUCT_ID>?variantId=<VAR_ID>
+  DELETE /cart                             (clear)
+
+  POST /cart/merge                         (merge guest -> customer)
+     Header : X-Guest-Session-Key: <GK>
+     Header : Authorization: Bearer <ACCESS_TOKEN>
+
+
+--------------------------------------------------------------------------------
+  4.10 Addresses
+--------------------------------------------------------------------------------
+
+  GET  /me/addresses
+  GET  /me/addresses/<ID>
+
+  POST /me/addresses
+     Body
+       {
+         "addressType": "SHIPPING",
+         "isDefault":   true,
+         "fullName":    "Audit Buyer",
+         "streetLine1": "P.O. Box 100",
+         "city":        "Addis Ababa",
+         "region":      "Addis Ababa",
+         "postalCode":  "1000",
+         "countryCode": "ET",
+         "phone":       "+251912345678"
+       }
+
+  PATCH /me/addresses/<ID>        (partial; same fields)
+  DELETE /me/addresses/<ID>
+
+
+--------------------------------------------------------------------------------
+  4.11 Shipping quotes  and  coupon preview
+--------------------------------------------------------------------------------
+
+  GET /me/shipping/quotes?countryCode=ET
+     Response contains: currency, totalWeightKg, quotes[
+        { id, code, name, description, cost, minDays, maxDays } ]
+
+  GET /me/coupon-preview?code=SAVE20
+     Response contains: code, description, discountType, discountValue,
+                        discountAmount, freeShipping, subtotal,
+                        discountedSubtotal
+
+
+--------------------------------------------------------------------------------
+  4.12 Orders - place / read / payment / cancel
+--------------------------------------------------------------------------------
+
+  POST /me/orders                          [rate: 6 / 60 s]
+     Body
+       {
+         "shipToAddressId":  <ADDRESS_ID>,
+         "billToAddressId":  null,
+         "shippingMethodId": <SHIPPING_METHOD_ID>,
+         "couponCode":       null,
+         "customerNotes":    "Audit test order",
+         "paymentMethod":    "CYBERSOURCE"
+       }
+     Returns 201 OrderDetail.
+
+  GET /me/orders?page=0&size=20
+  GET /me/orders/<ORDER_UUID>
+
+  GET /me/orders/<ORDER_UUID>/payment-payload
+     Returns { provider, gatewayUrl, fields{...} } for the auto-post
+     form to CyberSource / MPGS.
+
+  POST /me/orders/<ORDER_UUID>/payment-method
+     Body : { "paymentMethod": "MPGS" }
+
+  POST /me/orders/<ORDER_UUID>/confirm-mpgs
+     Pull-based MPGS status check.  No body.  Returns updated order.
+
+  POST /me/orders/<ORDER_UUID>/cancel
+     Body : { "reason": "Audit test - cancelled" }
+
+  GET /me/payment-methods
+     Returns the list of enabled payment methods.
+
+
+--------------------------------------------------------------------------------
+  4.13 Public order tracking (guest-visible)
+--------------------------------------------------------------------------------
+
+  GET /track-order?uuid=<ORDER_UUID>&email=<CUSTOMER_EMAIL>
+                                          [rate: 20 / 60 s]
+
+  Example
+     curl "$API/track-order?uuid=<ORDER_UUID>&email=audit-b2c%40gedaaistar.et"
+
+  Notes for audit
+    - Endpoint MUST return 404 when the (uuid, email) pair does not
+      match, without leaking whether the invoice/uuid exists.
+    - Auditors should verify no order details are returned when the
+      email is empty or mismatched.
+
+
+--------------------------------------------------------------------------------
+  4.14 Quotes (B2B)
+--------------------------------------------------------------------------------
+
+  POST /me/quotes                          [rate: 5 / 300 s]
+     Body : { "customerNotes": "Audit test - 100kg wholesale" }
+     Turns the current cart into a QuoteRequest (status = SUBMITTED).
+
+  GET /me/quotes?page=0&size=20
+  GET /me/quotes/<QUOTE_UUID>
+
+  POST /me/quotes/<QUOTE_UUID>/accept
+     Accepts a quote sent by the sales team.  Status -> ACCEPTED.
+
+  Notes
+    - Only B2B accounts can create quotes.  A B2C caller receives
+      403 FORBIDDEN (business-rule violation, not 401).
+
+
+================================================================================
+  5. ADMIN API - TEST PAYLOADS  (base: /api/admin/v1)
+================================================================================
+
+  API base
+     export API=https://api.gedaaistar.et/api/admin/v1
+
+
+--------------------------------------------------------------------------------
+  5.1  Two-step admin login  (password + TOTP)
+--------------------------------------------------------------------------------
+
+  Step 1 : POST /auth/login
+     Body : { "email":"audit-admin@gedaaistar.et",
+              "password":"<TO_BE_PROVIDED>" }
+
+     Response (already enrolled)
+       {
+         "state": "MFA_REQUIRED",
+         "challengeToken":       "eyJhbGciOiJIUzI1NiIs...",
+         "challengeExpiresAt":   "2026-08-11T10:35:00Z",
+         "setup": null
+       }
+
+     Response (first-time enrolment)
+       {
+         "state": "MFA_ENROLLMENT_REQUIRED",
+         "challengeToken":       "eyJhbGciOiJIUzI1NiIs...",
+         "challengeExpiresAt":   "2026-08-11T10:35:00Z",
+         "setup": {
+           "secretBase32": "JBSWY3DPEHPK3PXP",
+           "otpauthUri":   "otpauth://totp/GadaaIstar:audit-admin%40...",
+           "issuer":       "Gadaa Istar Admin"
+         }
+       }
+
+     Error codes : INVALID_CREDENTIALS, ACCOUNT_INACTIVE,
+                   ACCOUNT_SUSPENDED, ACCOUNT_DEACTIVATED.
+
+  Step 2 : POST /auth/verify-mfa
+     Body : { "challengeToken":"<CHALLENGE_FROM_STEP_1>",
+              "code":"<6_DIGIT_TOTP>" }
+
+     Response
+       {
+         "accessToken":            "eyJhbGciOiJIUzI1NiIs...",
+         "accessTokenExpiresAt":   "2026-08-11T11:00:00Z",
+         "refreshToken":           "eyJhbGciOiJIUzI1NiIs...",
+         "refreshTokenExpiresAt":  "2026-09-10T11:00:00Z",
+         "admin": {
+           "id": 1, "email": "audit-admin@gedaaistar.et",
+           "fullName": "Audit Admin", "role": "SUPERADMIN",
+           "status": "ACTIVE", "mfaEnrolled": true,
+           "lastLoginAt": "2026-08-11T10:30:00Z"
+         }
+       }
+
+     Error codes : MFA_INVALID_CODE, MFA_NOT_INITIALIZED,
+                   INVALID_TOKEN, TOKEN_EXPIRED.
+
+  curl for both steps
+     # Step 1
+     curl -X POST "$API/auth/login" \
+          -H "Content-Type: application/json" \
+          -d '{"email":"audit-admin@gedaaistar.et","password":"<TO_BE_PROVIDED>"}'
+
+     # Step 2  (paste challengeToken and current 6-digit code)
+     curl -X POST "$API/auth/verify-mfa" \
+          -H "Content-Type: application/json" \
+          -d '{"challengeToken":"<CT>","code":"123456"}'
+
+
+--------------------------------------------------------------------------------
+  5.2  Refresh / Logout / me
+--------------------------------------------------------------------------------
+
+  POST /auth/refresh
+     Body : { "refreshToken": "<REFRESH_TOKEN>" }
+     Notes: refresh tokens are ROTATED.
+
+  POST /auth/logout
+     Body : { "refreshToken": "<REFRESH_TOKEN>" }
+     Returns 204.
+
+  GET /auth/me
+     Header : Authorization: Bearer <ACCESS_TOKEN>
+
+
+--------------------------------------------------------------------------------
+  5.3  Dashboard / stats / notifications
+--------------------------------------------------------------------------------
+
+  GET /stats                    (any admin role)
+  GET /notifications/counts     (any admin role)
+
+
+--------------------------------------------------------------------------------
+  5.4  Products
+--------------------------------------------------------------------------------
+
+  GET /products?q=&status=&category=&page=0&size=20
+
+  POST /products                (SUPERADMIN or PRODUCT_MANAGER)
+     Body
+       {
+         "sku":                "AUDIT-TEST-001",
+         "slug":               "audit-test-001",
+         "name":               "Audit Test Product",
+         "shortDescription":   "Created by audit team.",
+         "description":        "Full description.",
+         "category":           "RAW_COFFEE",
+         "status":             "DRAFT",
+         "weightKg":           0.5,
+         "hsCode":             "090111",
+         "originCountry":      "ET",
+         "baseCurrency":       "USD",
+         "basePrice":          19.99,
+         "costPrice":          10.00,
+         "minOrderQuantity":   1.0,
+         "packagingNotes":     "Test only"
+       }
+
+  GET   /products/<ID>
+  PATCH /products/<ID>          (SUPERADMIN or PRODUCT_MANAGER)
+  DELETE /products/<ID>         (SUPERADMIN or PRODUCT_MANAGER)
+
+  Notes
+    - "sku" must match ^[A-Z0-9._-]+$ (max 64) and is immutable
+      after creation.
+    - "slug" must match ^[a-z0-9]+(?:-[a-z0-9]+)*$ (max 200).
+    - Duplicate SKU / slug returns 409 CONFLICT.
+
+
+--------------------------------------------------------------------------------
+  5.5  Product media  and  inventory
+--------------------------------------------------------------------------------
+
+  POST /products/<ID>/media
+     Body : { "url":"https://.../img.jpg", "altText":"...",
+              "mediaType":"IMAGE", "isPrimary":true, "sortOrder":1 }
+
+  DELETE /products/<ID>/media/<MEDIA_ID>
+
+  POST /inventory/products/<PRODUCT_ID>/adjust
+     Body : { "delta": -3.0, "reason": "audit test - loss" }
+
+  PUT /inventory/products/<PRODUCT_ID>
+     Body : { "quantity": 100.0, "restockThreshold": 10.0 }
+
+
+--------------------------------------------------------------------------------
+  5.6  Variants
+--------------------------------------------------------------------------------
+
+  GET   /products/<PRODUCT_ID>/variants
+  POST  /products/<PRODUCT_ID>/variants
+     Body
+       {
+         "sku":              "AUDIT-TEST-001-RED",
+         "name":             "Red 500g",
+         "priceOverride":    21.99,
+         "weightKgOverride": 0.5,
+         "active":           true,
+         "sortOrder":        1,
+         "attributes":       [ {"key":"color","value":"red"} ]
+       }
+  PATCH  /products/<PRODUCT_ID>/variants/<VARIANT_ID>
+  DELETE /products/<PRODUCT_ID>/variants/<VARIANT_ID>
+
+
+--------------------------------------------------------------------------------
+  5.7  Price lists  and  entries
+--------------------------------------------------------------------------------
+
+  GET  /price-lists
+  POST /price-lists
+     Body : { "customerGroupId": 2, "name":"Audit Test List",
+              "currency":"USD", "active":true,
+              "effectiveFrom":"2026-08-01", "effectiveTo":"2026-12-31" }
+  GET   /price-lists/<ID>
+  PATCH /price-lists/<ID>
+  DELETE /price-lists/<ID>
+
+  PUT /price-lists/<ID>/entries
+     Body : { "productId": <PID>, "price": 18.50, "minQuantity": 10 }
+
+  DELETE /price-lists/<ID>/entries/<ENTRY_ID>
+
+
+--------------------------------------------------------------------------------
+  5.8  Shipping methods  and  zones
+--------------------------------------------------------------------------------
+
+  GET  /shipping-methods
+  POST /shipping-methods       (SUPERADMIN or ORDER_MANAGER)
+     Body : { "code":"AUDIT_STD", "name":"Audit Standard",
+              "description":"Standard rate", "currency":"USD",
+              "baseCost":5.00, "perKgRate":0.50, "minDays":3,
+              "maxDays":7, "active":true, "sortOrder":1 }
+  PATCH  /shipping-methods/<ID>
+  DELETE /shipping-methods/<ID>
+
+  Zone (country-specific override) endpoints
+    GET   /shipping-methods/<ID>/zones
+    POST  /shipping-methods/<ID>/zones
+    PATCH /shipping-methods/zones/<ZONE_ID>
+    DELETE /shipping-methods/zones/<ZONE_ID>
+
+
+--------------------------------------------------------------------------------
+  5.9  Orders  and  refunds
+--------------------------------------------------------------------------------
+
+  GET /orders?status=PAID&q=INV&page=0&size=20
+  GET /orders/<UUID>
+
+  POST /orders/<UUID>/transition
+     Body : { "next": "SHIPPED", "note": "audit test - shipped" }
+     Legal transitions are enforced server-side.
+
+  GET  /orders/<UUID>/refunds
+  POST /orders/<UUID>/refunds  (SUPERADMIN or ORDER_MANAGER)
+     Body : { "amount": 5.00, "reason":"audit test refund",
+              "manual": false }
+     "manual": true  bypasses the payment gateway - audit note only,
+     no money movement.  ALL refund attempts are stored (success or
+     failure) in table order_refund.
+
+
+--------------------------------------------------------------------------------
+  5.10 Quotes
+--------------------------------------------------------------------------------
+
+  GET /quotes?status=SUBMITTED&page=0&size=20
+  GET /quotes/<UUID>
+
+  POST  /quotes/<UUID>/review
+  PATCH /quotes/<UUID>/items/<LINE_ID>
+     Body : { "proposedUnitPrice": 17.50 }
+  POST  /quotes/<UUID>/send
+     Body : { "adminNotes":"Volume discount", "validForDays":30,
+              "shippingTotal":15.00, "taxTotal":45.00 }
+  POST  /quotes/<UUID>/reject
+     Body : { "adminNotes":"Cannot meet requested terms" }
+  POST  /quotes/<UUID>/convert
+     Body : { "shipToAddressId": <A_ID>, "billToAddressId": null,
+              "shippingMethodId": <SM_ID>,
+              "internalNotes":"audit test - converted" }
+
+
+--------------------------------------------------------------------------------
+  5.11 Customers
+--------------------------------------------------------------------------------
+
+  5.11.1 GET /customers?q=&type=&status=&page=0&size=20
+  5.11.2 GET /customers/<ID>
+
+  Admin actions (SUPERADMIN or CUSTOMER_MANAGER)
+  5.11.3 POST /customers/<ID>/status
+         Body : { "status":"SUSPENDED", "reason":"audit test" }
+         Legal target statuses: PENDING_VERIFICATION, ACTIVE,
+         SUSPENDED, DEACTIVATED (from allowedNextStatuses).
+
+  5.11.4 POST /customers/<ID>/approve-b2b
+         No body.  Flips a B2B account from PENDING_APPROVAL -> ACTIVE.
+
+  5.11.5 POST /customers/<ID>/verify-email
+         No body.  Bypasses the normal verify-email flow.
+
+  5.11.6 POST /customers/<ID>/revoke-sessions
+         No body.  Revokes every refresh token for that customer.
+
+  5.11.7 POST /customers/<ID>/reset-password
+         No body.  Emails the customer a fresh reset link, invalidates
+         all prior links, and revokes their sessions.
+
+  5.11.8 POST /customers/<ID>/group
+         Body : { "groupId": <GROUP_ID> | null }
+
+
+--------------------------------------------------------------------------------
+  5.12 Customer groups
+--------------------------------------------------------------------------------
+
+  GET  /customer-groups
+  POST /customer-groups        (SUPERADMIN or CUSTOMER_MANAGER)
+     Body : { "code":"AUDIT_TEST_GROUP", "name":"Audit Test",
+              "description":"Audit test only",
+              "priceTier":"WHOLESALE_T1", "moqMultiplier":5.0,
+              "active":true }
+  PATCH /customer-groups/<ID>
+  DELETE /customer-groups/<ID>   -> 409 if customers still assigned
+
+
+--------------------------------------------------------------------------------
+  5.13 Coupons
+--------------------------------------------------------------------------------
+
+  GET  /coupons?page=0&size=20
+  POST /coupons                 (SUPERADMIN or PRODUCT_MANAGER)
+     Body
+       {
+         "code":            "AUDIT20",
+         "description":     "Audit test 20% off",
+         "discountType":    "PERCENT",
+         "discountValue":   20.00,
+         "currency":        "USD",
+         "minSubtotal":     50.00,
+         "freeShipping":    false,
+         "maxRedemptions":  10,
+         "maxPerCustomer":  1,
+         "active":          true,
+         "startsAt":        "2026-08-11T00:00:00Z",
+         "expiresAt":       "2026-08-31T23:59:59Z"
+       }
+  GET   /coupons/<ID>
+  PATCH /coupons/<ID>
+  DELETE /coupons/<ID>   -> 409 if redemptions > 0
+
+  POST /coupons/reports/expiry-check   (trigger expiry warning)
+  POST /coupons/reports/usage-report   (trigger usage-report email)
+
+
+--------------------------------------------------------------------------------
+  5.14 CMS pages  and  banners
+--------------------------------------------------------------------------------
+
+  Pages
+    GET  /cms/pages
+    POST /cms/pages
+       Body : { "slug":"audit-test-page", "title":"Audit test",
+                "bodyHtml":"<p>Test</p>",
+                "seoTitle":"Audit page",
+                "seoDescription":"Audit only",
+                "status":"DRAFT", "sortOrder":100 }
+    GET   /cms/pages/<ID>
+    PATCH /cms/pages/<ID>
+    DELETE /cms/pages/<ID>
+
+  Banners
+    GET  /cms/banners
+    POST /cms/banners
+       Body : { "placement":"homepage_hero", "title":"Audit banner",
+                "imageUrl":"https://.../banner.jpg",
+                "altText":"Audit banner",
+                "linkUrl":"/", "activeFrom":"2026-08-11T00:00:00Z",
+                "activeTo":"2026-08-31T23:59:59Z",
+                "sortOrder":100, "active":true }
+    GET   /cms/banners/<ID>
+    PATCH /cms/banners/<ID>
+    DELETE /cms/banners/<ID>
+
+  Audit hints
+    - The CMS Body HTML is sanitised on the storefront BUT auditors
+      should still submit XSS payloads and confirm no reflection or
+      DOM insertion of raw HTML happens at either the storefront or
+      the admin preview.
+
+
+--------------------------------------------------------------------------------
+  5.15 Admin users  and  MFA reset
+--------------------------------------------------------------------------------
+
+  GET /admin-users             (any admin role)
+
+  POST /admin-users/<ID>/mfa/reset    (SUPERADMIN ONLY)
+     - Wipes the target admin's TOTP secret.
+     - Revokes every refresh token for that admin.
+     - Cannot be called against yourself (400 SELF_RESET_FORBIDDEN).
+
+  Audit hints
+    - Confirm that a non-SUPERADMIN calling mfa/reset returns 403.
+    - Confirm that repeated login attempts to an account whose MFA
+      was just reset re-enter the enrolment flow (state =
+      MFA_ENROLLMENT_REQUIRED).
+
+
+================================================================================
+  6. CROSS-CUTTING CONCERNS
+================================================================================
+
+  6.1  Standard headers
+  --------------------------------------------------------------------------
+       Authorization: Bearer <access_token>        (customer + admin)
+       X-Guest-Session-Key: <UUID>                 (guest cart only)
+       Content-Type: application/json              (all JSON requests)
+       X-Correlation-Id: <optional-uuid>           (trace requests)
+       X-Requested-With: XMLHttpRequest            (SPA default)
+
+  6.2  Rate limits (per client IP; identified via X-Forwarded-For,
+       X-Real-IP, or the Vert.x remote address in that order)
+  --------------------------------------------------------------------------
+       Storefront /auth/register              5   / 600 s
+       Storefront /auth/login                 10  / 60  s
+       Storefront /auth/forgot-password       3   / 600 s
+       Storefront /auth/reset-password        10  / 600 s
+       Storefront /auth/resend-verification   3   / 600 s
+       Storefront /auth/me/change-password    5   / 600 s
+       Storefront cart mutations              60  / 60  s
+       Storefront POST /me/orders             6   / 60  s
+       Storefront POST /me/quotes             5   / 300 s
+       Storefront GET  /track-order           20  / 60  s
+
+       When exceeded, response is 429 with body
+         { "code":"RATE_LIMIT_EXCEEDED", "message":"...",
+           "retryAfterSeconds": <n> }
+       and header  Retry-After: <n>
+
+  6.3  Error response format (all endpoints)
+  --------------------------------------------------------------------------
+       {
+         "code":    "<UPPER_SNAKE_CASE_CODE>",
+         "message": "Human-readable message",
+         "details": { "field": ["error-1", "error-2"] }
+       }
+
+  6.4  Common HTTP status codes
+  --------------------------------------------------------------------------
+       200 OK
+       201 Created (POST /me/orders, POST /me/quotes, admin POSTs)
+       202 Accepted (email flows; never reveals whether address exists)
+       204 No Content (logout, delete)
+       400 Validation error
+       401 Missing / invalid / expired token
+       403 Forbidden (role check or business rule)
+       404 Resource not found (or masked as such)
+       409 Conflict (e.g. duplicate SKU, invalid state transition)
+       429 Rate limit exceeded
+       500 Internal server error
+
+  6.5  CORS
+  --------------------------------------------------------------------------
+       Allowed origins  : https://gedaaistar.et and
+                          https://admin.gedaaistar.et
+       Allowed methods  : GET, POST, PUT, PATCH, DELETE, OPTIONS
+       Allowed headers  : Accept, Authorization, Content-Type,
+                          Idempotency-Key, X-Requested-With,
+                          X-Correlation-Id, X-Guest-Session-Key
+       Credentials      : true
+
+  6.6  JWT structure
+  --------------------------------------------------------------------------
+       Algorithm : HS256
+       Claims    :
+         sub       - user id (string)
+         iss       - configured issuer URL
+         aud       - "storefront" or "admin"
+         aud_type  - "STOREFRONT" or "ADMIN"
+         exp       - expiry (seconds since epoch)
+         iat       - issued-at
+         jti       - unique jwt id (UUID) - stored server-side for
+                     revocation of long-lived tokens
+         email     - user email
+         roles     - array of role names (admin only:
+                     SUPERADMIN, PRODUCT_MANAGER, ORDER_MANAGER,
+                     CUSTOMER_MANAGER)
+       Admin MFA challenge token uses JOSE header  typ = "mfa-challenge"
+       and additional claim  purpose = "mfa-challenge",  TTL 300 s.
+
+
+================================================================================
+  7. REPORTING & ESCALATION
+================================================================================
+
+  7.1  Findings channel
+       Interim findings should be submitted to:
+         Portal / secure share : <TO_BE_PROVIDED>
+         Encrypted email       : <TO_BE_PROVIDED>
+                                 PGP fingerprint : <TO_BE_PROVIDED>
+
+  7.2  Critical / high-severity findings
+       Auditors must notify the primary operations contact (Section 1.5)
+       by phone within one hour of discovery for anything rated Critical
+       or High (RCE, authentication bypass, mass PII exposure, active
+       compromise).
+
+  7.3  Debrief
+       Debrief meeting is scheduled for <TO_BE_PROVIDED>. All findings
+       and evidence are due 48 h before the debrief.
+
+  7.4  Retention
+       Audit artefacts must be destroyed within 30 days after the
+       debrief unless the operations team requests longer retention
+       for remediation follow-up.
+
+
+================================================================================
+  APPENDIX A - ERROR CODE REFERENCE (selected)
+================================================================================
+
+  Auth (storefront + admin)
+    INVALID_CREDENTIALS       Bad email or password
+    ACCOUNT_INACTIVE          Not yet activated
+    ACCOUNT_SUSPENDED         Suspended by admin
+    ACCOUNT_DEACTIVATED       Permanently deactivated
+    TOKEN_EXPIRED             Access or refresh token expired
+    INVALID_TOKEN             Malformed / not-recognised token
+    EMAIL_EXISTS              /auth/register duplicate email
+    VALIDATION_FAILED         Bean-Validation failure; see "details"
+    RATE_LIMIT_EXCEEDED       Bucket quota exceeded; retry after N s
+
+  Admin MFA
+    MFA_REQUIRED              (state) MFA code required
+    MFA_ENROLLMENT_REQUIRED   (state) First-time TOTP setup required
+    MFA_INVALID_CODE          6-digit code was rejected
+    MFA_NOT_INITIALIZED       Server has no MFA secret on file
+    SELF_RESET_FORBIDDEN      Admin cannot reset its own MFA
+
+  Cart / product
+    PRODUCT_NOT_PURCHASABLE   Draft or archived product
+    INSUFFICIENT_STOCK        Requested qty exceeds available
+    MIN_ORDER_QUANTITY        Below effective MOQ (retail x group mult.)
+    VARIANT_REQUIRED          Product requires a variant selection
+    VARIANT_INACTIVE          Selected variant is deactivated
+
+  Coupons
+    COUPON_NOT_FOUND          Code does not exist
+    COUPON_EXPIRED            Outside starts_at / expires_at window
+    COUPON_INACTIVE           Manually disabled
+    COUPON_MIN_SUBTOTAL       Cart subtotal below minSubtotal
+    COUPON_MAX_REDEMPTIONS    Overall usage cap reached
+    COUPON_MAX_PER_CUSTOMER   Per-customer cap reached
+
+  Orders
+    ORDER_NOT_FOUND
+    ORDER_CANNOT_BE_CANCELLED Not in a cancellable state
+    ORDER_INVALID_TRANSITION  Not a legal source -> target transition
+    ORDER_ALREADY_PAID
+    ORDER_REQUIRES_ADDRESS
+    ORDER_REQUIRES_SHIPPING   No shipping method selected
+
+  Refunds
+    REFUND_AMOUNT_INVALID     amount <= 0 or > remaining refundable
+    REFUND_REASON_TOO_SHORT   reason < 3 chars
+    REFUND_GATEWAY_FAILED     Gateway rejected the refund
+
+  Quotes (B2B)
+    QUOTE_NOT_FOUND
+    QUOTE_INVALID_STATE       Wrong status for requested action
+    QUOTE_CUSTOMER_MISMATCH   Not the caller's quote
+
+
+================================================================================
+  APPENDIX B - PLACEHOLDER LEGEND
+================================================================================
+
+  <TO_BE_PROVIDED>     Filled in by Gadaa Istar operations before
+                       handover.
+  <STRONG_PW>          Any password meeting the policy (>= 8 chars);
+                       auditors may pick their own.
+  <ACCESS_TOKEN>       Bearer JWT returned by /auth/login or
+                       /auth/verify-mfa.
+  <REFRESH_TOKEN>      Refresh token returned by the same endpoint.
+                       Rotated on every /auth/refresh.
+  <CHALLENGE_TOKEN>    MFA challenge JWT returned by admin /auth/login,
+                       valid for 300 s, single-use.
+  <GK>                 X-Guest-Session-Key value (any UUID).
+  <ORDER_UUID>         "uuid" field of an OrderDetail (not the numeric
+                       id).
+  <QUOTE_UUID>         "uuid" field of a QuoteDetail.
+  <PRODUCT_ID>         Numeric id of a product.
+  <VARIANT_ID>         Numeric id of a variant.
+  <ADDRESS_ID>         Numeric id of a saved address.
+  <SHIPPING_METHOD_ID> Numeric id of a shipping method.
+  <MEDIA_ID>           Numeric id of a product-media entry.
+  <ENTRY_ID>           Numeric id of a price-list entry.
+  <LINE_ID>            Numeric id of a quote line.
+  <GROUP_ID>           Numeric id of a customer group.
+  <ID>                 Numeric id (context-dependent).
+
+
+================================================================================
+  END OF DOCUMENT
+================================================================================

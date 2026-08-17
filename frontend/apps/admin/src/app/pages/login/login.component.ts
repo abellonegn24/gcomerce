@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
-import { AdminAuthService } from '../../core/auth/admin-auth.service';
+import { AdminAuthService, ForcedLogoutReason } from '../../core/auth/admin-auth.service';
 import { NormalizedApiError } from '../../core/http/error.interceptor';
 
 @Component({
@@ -18,6 +18,7 @@ export class LoginComponent {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AdminAuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly year = new Date().getFullYear();
 
@@ -29,6 +30,15 @@ export class LoginComponent {
   protected readonly submitting = signal<boolean>(false);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly showPassword = signal<boolean>(false);
+  /**
+   * Populated when the user is redirected here by AppComponent after a
+   * forced logout (idle timeout, expired refresh token, refresh request
+   * failed). Rendered above the form so the user understands why they
+   * were kicked out of the admin portal.
+   */
+  protected readonly noticeMessage = signal<string | null>(
+    this.mapReason(this.route.snapshot.queryParamMap.get('reason'))
+  );
 
   protected togglePasswordVisibility(): void {
     this.showPassword.update((v) => !v);
@@ -68,6 +78,21 @@ export class LoginComponent {
         return err.message;
       default:
         return err.message || 'Sign-in failed. Please try again.';
+    }
+  }
+
+  private mapReason(raw: string | null): string | null {
+    if (!raw) return null;
+    const reason = raw as ForcedLogoutReason;
+    switch (reason) {
+      case 'idle':
+        return 'You were signed out after 10 minutes of inactivity. Please sign in again.';
+      case 'expired':
+        return 'Your admin session has expired. Please sign in again.';
+      case 'refresh-failed':
+        return 'Your admin session is no longer valid. Please sign in again.';
+      default:
+        return null;
     }
   }
 }

@@ -27,6 +27,18 @@ import org.jboss.logging.Logger;
  * {@code com.gadaaistar.storefront.security.RefreshTokenService}, but points
  * at {@link AdminUser} instead of Customer. Extracted into the admin module
  * because it is tightly coupled to the admin entity graph.
+ *
+ * <p><strong>Admin session policy (stricter than storefront):</strong>
+ * <ul>
+ *   <li><em>Idle timeout</em> ({@code gadaa.admin.session.idle-timeout-minutes}):
+ *       the refresh token expires this many minutes after it was last issued /
+ *       rotated. If the admin does not exercise the token within the window,
+ *       they must sign in again.</li>
+ *   <li><em>Absolute cap</em> ({@code gadaa.admin.session.max-lifetime-minutes}):
+ *       measured from {@code sessionStartedAt} — the moment the session began.
+ *       The value is carried forward across every rotation in the chain so a
+ *       rotating token cannot indefinitely extend a session past this wall.</li>
+ * </ul>
  */
 @ApplicationScoped
 public class AdminRefreshTokenService {
@@ -36,13 +48,18 @@ public class AdminRefreshTokenService {
 
     @Inject AdminRefreshTokenRepository repo;
 
-    @ConfigProperty(name = "gadaa.jwt.refresh-ttl-days") int refreshTtlDays;
+    @ConfigProperty(name = "gadaa.admin.session.idle-timeout-minutes", defaultValue = "10")
+    int idleTimeoutMinutes;
+
+    @ConfigProperty(name = "gadaa.admin.session.max-lifetime-minutes", defaultValue = "480")
+    int maxLifetimeMinutes;
 
     // -------------------------------------------------------------------------
 
     @Transactional
     public IssuedRefresh issueForAdmin(AdminUser admin, String ip, String userAgent) {
-        return persist(admin, ip, userAgent, null);
+        var now = Instant.now();
+        return persist(admin, ip, userAgent, null, now, now);
     }
 
     @Transactional
@@ -51,24 +68,37 @@ public class AdminRefreshTokenService {
         var row = repo.findByIdOptional(parts.id())
                 .orElseThrow(() -> new UnauthorizedException("REFRESH_UNKNOWN", "Refresh token not recognized."));
 
+        var now = Instant.now();
+
         if (row.revokedAt != null) {
             LOG.warnf("Admin refresh-token reuse detected for adminUser=%d; revoking chain.", row.adminUser.id);
             repo.revokeAllForAdmin(row.adminUser.id);
             throw new UnauthorizedException("REFRESH_REUSE", "Refresh token was already used. Please sign in again.");
         }
-        if (Instant.now().isAfter(row.expiresAt)) {
+        if (now.isAfter(row.expiresAt)) {
             throw new UnauthorizedException("REFRESH_EXPIRED", "Refresh token has expired.");
+        }
+        if (row.sessionStartedAt != null && now.isAfter(sessionAbsoluteExpiry(row.sessionStartedAt))) {
+            // Belt-and-braces: even if the row's own expiresAt hasn't hit, refuse
+            // once the underlying session has been alive past its absolute cap.
+            LOG.infof("Admin session id=%s exceeded absolute lifetime cap; forcing re-auth.", row.id);
+            row.revokedAt = now;
+            throw new UnauthorizedException("SESSION_EXPIRED",
+                    "This admin session has reached its maximum lifetime. Please sign in again.");
         }
         if (!constantTimeEquals(row.tokenHash, sha256Hex(parts.secret()))) {
             LOG.warnf("Admin refresh-token secret mismatch for tokenId=%s; revoking.", parts.id());
-            row.revokedAt = Instant.now();
+            row.revokedAt = now;
             throw new UnauthorizedException("REFRESH_INVALID", "Refresh token is invalid.");
         }
 
         var admin = row.adminUser;
-        var next  = persist(admin, ip, userAgent, null);
+        // Preserve the session's original start time so the rotated token still
+        // ages against the same absolute cap.
+        var sessionStartedAt = row.sessionStartedAt != null ? row.sessionStartedAt : row.issuedAt;
+        var next  = persist(admin, ip, userAgent, null, now, sessionStartedAt);
 
-        row.revokedAt    = Instant.now();
+        row.revokedAt    = now;
         row.replacedById = next.tokenRow().id;
 
         return new RotationResult(admin, next.presentedToken(), next.tokenRow().expiresAt);
@@ -93,21 +123,31 @@ public class AdminRefreshTokenService {
 
     // -------------------------------------------------------------------------
 
-    private IssuedRefresh persist(AdminUser admin, String ip, String userAgent, String replacedById) {
+    private IssuedRefresh persist(AdminUser admin, String ip, String userAgent, String replacedById,
+                                   Instant issuedAt, Instant sessionStartedAt) {
         var row = new AdminRefreshToken();
-        row.id           = UUID.randomUUID().toString();
-        row.adminUser    = admin;
-        row.issuedAt     = Instant.now();
-        row.expiresAt    = row.issuedAt.plus(Duration.ofDays(refreshTtlDays));
-        row.ipAddress    = ip;
-        row.userAgent    = userAgent;
-        row.replacedById = replacedById;
+        row.id               = UUID.randomUUID().toString();
+        row.adminUser        = admin;
+        row.issuedAt         = issuedAt;
+        row.sessionStartedAt = sessionStartedAt;
+        // The new row expires at the earlier of (a) idle timeout from now, or
+        // (b) the session's absolute cap. This is what prevents infinite rotation.
+        var idleExpiry      = issuedAt.plus(Duration.ofMinutes(idleTimeoutMinutes));
+        var sessionExpiry   = sessionAbsoluteExpiry(sessionStartedAt);
+        row.expiresAt        = idleExpiry.isBefore(sessionExpiry) ? idleExpiry : sessionExpiry;
+        row.ipAddress        = ip;
+        row.userAgent        = userAgent;
+        row.replacedById     = replacedById;
 
         var secret = randomSecret();
         row.tokenHash = sha256Hex(secret);
         repo.persist(row);
 
         return new IssuedRefresh(row.id + "." + secret, row);
+    }
+
+    private Instant sessionAbsoluteExpiry(Instant sessionStartedAt) {
+        return sessionStartedAt.plus(Duration.ofMinutes(maxLifetimeMinutes));
     }
 
     private static String randomSecret() {
