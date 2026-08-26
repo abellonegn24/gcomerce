@@ -189,7 +189,7 @@
     <tr><td>Operator</td><td>Gadaa Istar Business Group S.C.</td></tr>
     <tr><td>Primary URL</td><td>https://gedaaistar.et/</td></tr>
     <tr><td>Admin URL</td><td>https://admin.gedaaistar.et/</td></tr>
-    <tr><td>Payment processor</td><td>CyberSource Secure Acceptance Hosted Checkout &amp; Mastercard Payment Gateway Services (MPGS)</td></tr>
+    <tr><td>Payment processor</td><td>Mastercard Payment Gateway Services (MPGS)</td></tr>
     <tr><td>Compliance</td><td>PCI DSS SAQ-A, Ethiopian VAT (ERCA)</td></tr>
     <tr><td>Audience</td><td>Retail shoppers (B2C), wholesale buyers (B2B), and administrative staff</td></tr>
     <tr><td>Purpose</td><td>Describe how the system is used in practice; support the identification of misuse scenarios and user-related risks</td></tr>
@@ -629,7 +629,7 @@
     <li>Tax and Shipping shown as "Calculated at checkout".</li>
     <li><b>Proceed to checkout</b> button. If the user is a guest, this redirects to <code>/login?next=/checkout</code>.</li>
     <li><b>Request a quote</b> button &mdash; visible only if the user is signed in and the cart is non-empty. Recommended for B2B buyers who want to negotiate.</li>
-    <li>The reassurance line "Secure payment via CyberSource".</li>
+    <li>The reassurance line "Secure payment via MPGS".</li>
   </ul>
 
   <h3>8.3 Empty cart</h3>
@@ -841,7 +841,7 @@
     <li><b>Totals:</b> Subtotal, Discount (with the applied coupon code), Tax, Shipping (with the method's name), and Total.</li>
     <li><b>Addresses:</b> "Ship to" and "Bill to" cards.</li>
     <li><b>Status timeline:</b> a chronological list of status changes with source (webhook / api) and any admin notes attached to the transition.</li>
-    <li><b>Actions when the order is Pending payment:</b> a payment-method selector, "Continue payment" (redirects to CyberSource / MPGS), "I've paid &mdash; refresh status", and <b>Cancel order</b> (with confirmation).</li>
+    <li><b>Actions when the order is Pending payment:</b> a payment-method selector, "Continue payment" (redirects to MPGS), "I've paid &mdash; refresh status", and <b>Cancel order</b> (with confirmation).</li>
   </ul>
 
   <h3>13.4 Transactions</h3>
@@ -900,12 +900,12 @@
   <p>An optional free-text field (max 1000 characters) for the fulfilment team.</p>
 
   <h3>14.6 Order summary and placement</h3>
-  <p>The right-hand summary shows every cart line with thumbnails, quantities and prices, and the running totals: Subtotal, Tax ("Applied at payment"), Shipping (with method name), Discount (with the coupon code), and an estimated total. The button reads <b>Continue to secure payment</b>. Underneath the button: "You'll be redirected to Mastercard / CyberSource".</p>
+  <p>The right-hand summary shows every cart line with thumbnails, quantities and prices, and the running totals: Subtotal, Tax ("Applied at payment"), Shipping (with method name), Discount (with the coupon code), and an estimated total. The button reads <b>Continue to secure payment</b>. Underneath the button: "You'll be redirected to Mastercard (MPGS)".</p>
 
   <div class="callout warn no-break">
     <span class="cotitle">What happens when you click "Continue to secure payment"</span>
     The platform creates the order in <b>Pending payment</b> status and
-    submits an auto-post form that hands the browser to CyberSource or
+    submits an auto-post form that hands the browser to
     MPGS. Card details are entered on the payment processor's page &mdash;
     the storefront never receives them. This is what makes the platform
     PCI DSS SAQ-A compliant.
@@ -1600,7 +1600,7 @@
       <td>Customer</td>
       <td>Chargeback fraud &mdash; disputing a legitimate paid order.</td>
       <td>Financial loss; card-scheme penalties.</td>
-      <td>Payment is processed by CyberSource / MPGS (PCI DSS SAQ-A). Order status timeline, IP and address records feed dispute responses; use refund panel's Manual refund only when the money has already moved out-of-band.</td>
+      <td>Payment is processed by MPGS (PCI DSS SAQ-A). Order status timeline, IP and address records feed dispute responses; use refund panel's Manual refund only when the money has already moved out-of-band.</td>
     </tr>
     <tr>
       <td>Customer</td>
@@ -1705,7 +1705,7 @@
     <li>Alert on any burst of failed <code>MFA_INVALID_CODE</code> or <code>INVALID_CREDENTIALS</code> errors from a single IP or account.</li>
     <li>Require two-person approval for any <b>Reset MFA</b>, <b>Force verify email</b>, or <b>Manual refund</b> action &mdash; operationally, not just technically.</li>
     <li>Review admin audit logs weekly for out-of-hours activity, refunds, price changes, and CMS publishing.</li>
-    <li>Reconcile refunds daily against the CyberSource / MPGS statements.</li>
+    <li>Reconcile refunds daily against the MPGS statements.</li>
     <li>Provide staff with dedicated MFA devices and never share TOTP secrets.</li>
     <li>Roll out password-breach checking and stronger password policy on the storefront in a future release.</li>
     <li>Encourage retail customers to sign out on shared devices; consider a session-timeout banner.</li>
@@ -1727,9 +1727,8 @@
     <tr><td>Customer group</td><td>The category assigned to a customer (RETAIL, WHOLESALE_T1, WHOLESALE_T2, VIP). Drives which price list applies and the MOQ multiplier.</td></tr>
     <tr><td>TOTP</td><td>Time-based One-Time Password. The 6-digit code generated by an authenticator app (Google Authenticator, Authy, 1Password). SHA-1 with a 30-second window.</td></tr>
     <tr><td>MFA</td><td>Multi-Factor Authentication. Required for every admin session on Gadaa Istar.</td></tr>
-    <tr><td>SAQ-A</td><td>PCI DSS Self-Assessment Questionnaire A &mdash; the compliance level applicable when card data is handled entirely by a third-party (CyberSource / MPGS).</td></tr>
-    <tr><td>CyberSource</td><td>Third-party payment gateway operated by Visa. Handles card entry on its own page.</td></tr>
-    <tr><td>MPGS</td><td>Mastercard Payment Gateway Services. Alternate payment gateway used at checkout.</td></tr>
+    <tr><td>SAQ-A</td><td>PCI DSS Self-Assessment Questionnaire A &mdash; the compliance level applicable when card data is handled entirely by a third-party (MPGS).</td></tr>
+    <tr><td>MPGS</td><td>Mastercard Payment Gateway Services. Payment gateway used at checkout; handles card entry on its own page.</td></tr>
     <tr><td>HS code</td><td>Harmonised System code &mdash; international customs classification.</td></tr>
     <tr><td>TIN</td><td>Tax Identification Number, used on B2B accounts for VAT-compliant invoicing.</td></tr>
     <tr><td>VAT</td><td>Value Added Tax. Ethiopian VAT (ERCA) rules apply to Ethiopian buyers.</td></tr>

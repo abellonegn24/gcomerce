@@ -16,6 +16,7 @@ import com.gadaaistar.common.exceptions.BadRequestException;
 import com.gadaaistar.common.exceptions.NotFoundException;
 import com.gadaaistar.common.exceptions.ValidationException;
 import com.gadaaistar.persistence.auth.CustomerRefreshTokenRepository;
+import com.gadaaistar.persistence.auth.LoginAttemptService;
 import com.gadaaistar.persistence.customer.Customer;
 import com.gadaaistar.persistence.customer.CustomerAddress;
 import com.gadaaistar.persistence.customer.CustomerGroup;
@@ -65,6 +66,7 @@ public class CustomersService {
     @Inject CustomerRefreshTokenRepository  refreshTokens;
     @Inject CheckoutOrderRepository         orders;
     @Inject B2bNotificationMailService      b2bMail;
+    @Inject LoginAttemptService             loginAttempts;
 
     // -------------------------------------------------------------------------
     // Read
@@ -190,6 +192,21 @@ public class CustomersService {
         LOG.infof("Admin id=%d revoked %d refresh tokens for customer id=%d", actorId, revoked, c.id);
         return new CustomersDtos.ActionResponse(c.id, c.status.name(),
                 "Revoked " + revoked + " active session(s). The customer must sign in again.");
+    }
+
+    /**
+     * Manually clear a brute-force lockout on a customer account (INSA CWE-307).
+     * Lets support staff resolve false lockouts without waiting for the
+     * lockout window to expire.
+     */
+    @Transactional
+    public CustomersDtos.ActionResponse unlock(long id, long actorId) {
+        var c = customers.findByIdOptional(id)
+                .orElseThrow(() -> new NotFoundException("Customer", id));
+        loginAttempts.unlock(c);
+        LOG.infof("Admin id=%d unlocked customer id=%d", actorId, c.id);
+        return new CustomersDtos.ActionResponse(c.id, c.status.name(),
+                "Account lockout cleared. The customer can sign in again.");
     }
 
     @Transactional

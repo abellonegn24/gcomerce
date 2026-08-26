@@ -82,7 +82,7 @@
   --------------------------------------------------------------------------
        - Testing against any host, subdomain, or IP not listed in
          Section 2.
-       - Real card payments through CyberSource / MPGS live endpoints.
+       - Real card payments through MPGS live endpoints.
          Use only the sandbox card numbers listed in Section 3.2.7.
        - Sustained volumetric / DoS attacks (>5 requests / second per
          endpoint) without prior written approval.
@@ -209,11 +209,11 @@
 
   Payment sandbox
   ---------------
-    Provider           : CyberSource Secure Acceptance (sandbox tenant)
+    Provider           : MPGS (sandbox tenant)
     Sandbox card       : 4111 1111 1111 1111 (Visa, any future exp,
                          CVV 123)
     Sandbox merchant   : Configured on order placement; auditors do NOT
-                         need to touch CyberSource credentials directly.
+                         need to touch MPGS credentials directly.
 
   Rate limits applicable to this base URL (per client IP)
   -------------------------------------------------------
@@ -772,7 +772,7 @@
 
   GET /me/orders/<ORDER_UUID>/payment-payload
      Returns { provider, gatewayUrl, fields{...} } for the auto-post
-     form to CyberSource / MPGS.
+     form to MPGS.
 
   POST /me/orders/<ORDER_UUID>/payment-method
      Body : { "paymentMethod": "MPGS" }

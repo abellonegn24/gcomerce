@@ -1,4 +1,4 @@
-package com.gadaaistar.storefront.ratelimit;
+package com.gadaaistar.web.ratelimit;
 
 import java.time.Duration;
 import java.util.ArrayDeque;
@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-import com.gadaaistar.storefront.ratelimit.RateLimitService.Decision;
+import com.gadaaistar.web.ratelimit.RateLimitService.Decision;
 
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -28,14 +28,11 @@ import jakarta.enterprise.context.ApplicationScoped;
  * <ul>
  *   <li><strong>Single instance only.</strong> Behind a load balancer with
  *       N replicas the effective limit becomes {@code N × max}. Multi-instance
- *       deployments should switch to {@link RedisRateLimitBackend} via
+ *       deployments should switch to the Redis backend via
  *       {@code gadaa.ratelimit.backend=redis}.</li>
  *   <li>State is lost on process restart. That's <em>desirable</em> here — a
  *       forced restart should reset penalty windows, not extend them.</li>
  * </ul>
- *
- * <p>Extracted verbatim from the pre-Phase-4d.6 {@code RateLimitService};
- * behaviour and constants are unchanged.
  */
 @ApplicationScoped
 public class InMemoryRateLimitBackend implements RateLimitBackend {
@@ -91,8 +88,6 @@ public class InMemoryRateLimitBackend implements RateLimitBackend {
     /**
      * Periodic sweeper — removes queues that haven't seen a hit in the last
      * 15 minutes so long-tail keys (bots, one-off scans) don't accumulate.
-     * Scheduled here rather than on the parent {@link RateLimitService} so
-     * the Redis backend doesn't need to inherit an in-memory-only sweep.
      */
     @Scheduled(every = "5m", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     void reap() {

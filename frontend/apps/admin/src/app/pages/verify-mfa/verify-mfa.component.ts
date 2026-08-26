@@ -71,6 +71,14 @@ export class VerifyMfaComponent {
     switch (err.code) {
       case 'MFA_INVALID_CODE':
         return 'That code was not accepted. Try the current 6-digit code from your authenticator.';
+      case 'ACCOUNT_LOCKED': {
+        const seconds = err.details?.['retryAfterSeconds'] as number | undefined;
+        if (seconds && seconds > 0) {
+          const minutes = Math.ceil(seconds / 60);
+          return `Too many failed attempts. This admin account is temporarily locked. Please try again in ${minutes} minute${minutes > 1 ? 's' : ''}.`;
+        }
+        return 'Too many failed attempts. This admin account is temporarily locked. Please try again later.';
+      }
       case 'INVALID_TOKEN':
       case 'TOKEN_EXPIRED':
         return 'Your sign-in window expired. Please sign in again.';

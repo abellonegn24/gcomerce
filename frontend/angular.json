@@ -72,6 +72,14 @@
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "headers": {
+              "Content-Security-Policy": "frame-ancestors 'self'",
+              "X-Frame-Options": "DENY",
+              "X-Content-Type-Options": "nosniff",
+              "Referrer-Policy": "strict-origin-when-cross-origin"
+            }
+          },
           "configurations": {
             "production": { "buildTarget": "storefront:build:production" },
             "development": { "buildTarget": "storefront:build:development" }
@@ -146,6 +154,14 @@
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "headers": {
+              "Content-Security-Policy": "frame-ancestors 'self'",
+              "X-Frame-Options": "DENY",
+              "X-Content-Type-Options": "nosniff",
+              "Referrer-Policy": "strict-origin-when-cross-origin"
+            }
+          },
           "configurations": {
             "production": { "buildTarget": "admin:build:production" },
             "development": { "buildTarget": "admin:build:development" }

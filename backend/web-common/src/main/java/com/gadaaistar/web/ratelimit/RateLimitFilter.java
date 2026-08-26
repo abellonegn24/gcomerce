@@ -1,4 +1,4 @@
-package com.gadaaistar.storefront.ratelimit;
+package com.gadaaistar.web.ratelimit;
 
 import java.time.Duration;
 
@@ -78,8 +78,7 @@ public class RateLimitFilter implements ContainerRequestFilter {
         if (xRealIp != null && !xRealIp.isBlank()) return xRealIp.trim();
 
         if (vertxRequest != null && vertxRequest.remoteAddress() != null) {
-            var host = vertxRequest.remoteAddress().host();
-            if (host != null && !host.isBlank()) return host;
+            return vertxRequest.remoteAddress().host();
         }
         return "unknown";
     }

@@ -7,6 +7,7 @@ import com.gadaaistar.common.exceptions.BadRequestException;
 import com.gadaaistar.common.exceptions.NotFoundException;
 import com.gadaaistar.persistence.admin.AdminUser;
 import com.gadaaistar.persistence.admin.AdminUserRepository;
+import com.gadaaistar.persistence.auth.LoginAttemptService;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -32,6 +33,7 @@ public class AdminUsersService {
 
     @Inject AdminUserRepository        admins;
     @Inject AdminRefreshTokenService   refreshTokens;
+    @Inject LoginAttemptService        loginAttempts;
 
     // -------------------------------------------------------------------------
 
@@ -81,6 +83,24 @@ public class AdminUsersService {
                 target.email,
                 "MFA_RESET",
                 "MFA secret wiped and all sessions revoked. The admin will re-enroll on next sign-in."
+        );
+    }
+
+    /**
+     * Manually clear a brute-force lockout on an admin account (INSA CWE-307).
+     * SUPERADMIN-gated, same as {@link #resetMfa}.
+     */
+    @Transactional
+    public AdminUsersDtos.ResetMfaResponse unlock(long targetId, long actorId) {
+        var target = admins.findByIdOptional(targetId)
+                .orElseThrow(() -> new NotFoundException("AdminUser", targetId));
+        loginAttempts.unlock(target);
+        LOG.infof("Admin id=%d unlocked by super-admin id=%d", target.id, actorId);
+        return new AdminUsersDtos.ResetMfaResponse(
+                target.id,
+                target.email,
+                "UNLOCKED",
+                "Account lockout cleared. The admin can sign in again."
         );
     }
 }

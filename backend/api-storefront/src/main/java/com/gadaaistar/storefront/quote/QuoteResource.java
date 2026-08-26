@@ -2,7 +2,7 @@ package com.gadaaistar.storefront.quote;
 
 import java.util.List;
 
-import com.gadaaistar.storefront.ratelimit.RateLimit;
+import com.gadaaistar.web.ratelimit.RateLimit;
 import com.gadaaistar.web.security.SecurityContextHolder;
 
 import jakarta.inject.Inject;

@@ -9,6 +9,7 @@ import com.gadaaistar.common.exceptions.ConflictException;
 import com.gadaaistar.common.exceptions.NotFoundException;
 import com.gadaaistar.common.exceptions.UnauthorizedException;
 import com.gadaaistar.common.exceptions.ValidationException;
+import com.gadaaistar.persistence.auth.LoginAttemptService;
 import com.gadaaistar.persistence.customer.Customer;
 import com.gadaaistar.persistence.customer.CustomerGroupRepository;
 import com.gadaaistar.persistence.customer.CustomerRepository;
@@ -39,6 +40,7 @@ public class AuthService {
     @Inject JwtIssuer            jwtIssuer;
     @Inject RefreshTokenService  refreshTokens;
     @Inject AuthMapper           mapper;
+    @Inject LoginAttemptService  loginAttempts;
 
     // -------------------------------------------------------------------------
     // Register
@@ -97,16 +99,31 @@ public class AuthService {
     @Transactional
     public AuthDtos.AuthResponse login(AuthDtos.LoginRequest req, String ip, String userAgent) {
         var normalizedEmail = req.email().trim().toLowerCase();
-        var customer = customers.findByEmail(normalizedEmail)
-                .orElseThrow(() -> new UnauthorizedException("INVALID_CREDENTIALS", "Invalid email or password."));
+        var customer = customers.findByEmail(normalizedEmail).orElse(null);
+
+        // Constant-time anti-enumeration: when the email is unknown we still
+        // burn a BCrypt verify so the response timing matches the "wrong
+        // password" branch (INSA CWE-307 hardening).
+        if (customer == null) {
+            hasher.verifyDummy();
+            throw new UnauthorizedException("INVALID_CREDENTIALS", "Invalid email or password.");
+        }
+
+        // Account-level lockout check runs BEFORE the password verify so a
+        // locked account cannot be probed for validity (INSA CWE-307).
+        loginAttempts.checkNotLocked(customer);
 
         if (!hasher.verify(req.password(), customer.passwordHash)) {
+            loginAttempts.recordFailure(customer, ip, userAgent, LoginAttemptService.AccountType.CUSTOMER);
             throw new UnauthorizedException("INVALID_CREDENTIALS", "Invalid email or password.");
         }
         if (!customer.status.canLogin()) {
             throw new UnauthorizedException("ACCOUNT_" + customer.status.name(),
                     "This account cannot sign in at this time.");
         }
+
+        // Successful authentication — reset the failed-attempt counter.
+        loginAttempts.recordSuccess(customer, ip, userAgent, LoginAttemptService.AccountType.CUSTOMER);
 
         // Ensure account stays ACTIVE and verified — email verification is disabled.
         if (customer.status != CustomerStatus.ACTIVE) {

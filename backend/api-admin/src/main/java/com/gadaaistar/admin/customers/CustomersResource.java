@@ -102,6 +102,15 @@ public class CustomersResource {
     }
 
     @POST
+    @Path("/{id}/unlock")
+    @Operation(summary = "Clear a brute-force lockout on the customer account (INSA CWE-307).")
+    public CustomersDtos.ActionResponse unlock(@PathParam("id") long id) {
+        var actorId = security.requireAdmin();
+        security.requireAnyRole(WRITE_ROLES);
+        return service.unlock(id, actorId);
+    }
+
+    @POST
     @Path("/{id}/reset-password")
     @Operation(summary = "Issue a one-shot password-reset link and email it to the customer. "
                        + "Also revokes any live sessions so a stolen access token cannot race the reset.")

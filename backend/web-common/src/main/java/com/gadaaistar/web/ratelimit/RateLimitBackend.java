@@ -1,8 +1,8 @@
-package com.gadaaistar.storefront.ratelimit;
+package com.gadaaistar.web.ratelimit;
 
 import java.time.Duration;
 
-import com.gadaaistar.storefront.ratelimit.RateLimitService.Decision;
+import com.gadaaistar.web.ratelimit.RateLimitService.Decision;
 
 /**
  * Strategy interface for the rate-limit sliding-window store.
@@ -13,13 +13,13 @@ import com.gadaaistar.storefront.ratelimit.RateLimitService.Decision;
  *       Fast, no external dependency, but resets on restart and gives every
  *       replica its own quota (so behind a load balancer the effective limit
  *       is {@code N × max}).</li>
- *   <li>{@link RedisRateLimitBackend} — Redis-backed sorted-set sliding
- *       window driven by a single atomic Lua script. Multi-instance safe
- *       and shared across replicas.</li>
+ *   <li>{@code RedisRateLimitBackend} (in {@code api-storefront}, optional) —
+ *       Redis-backed sorted-set sliding window driven by a single atomic Lua
+ *       script. Multi-instance safe and shared across replicas.</li>
  * </ul>
  *
  * <p>{@link RateLimitService} picks between them at boot based on the
- * {@code gadaa.ratelimit.backend} config value.
+ * {@code gadaa.ratelimit.backend} config value, matching by {@link #label()}.
  */
 public interface RateLimitBackend {
 
@@ -42,8 +42,9 @@ public interface RateLimitBackend {
     int activeKeyCount();
 
     /**
-     * Human-readable label surfaced in logs at startup and in the metrics
-     * {@code /q/health} envelope. Should be one of {@code "memory"} or
+     * Human-readable label surfaced in logs at startup and used by
+     * {@link RateLimitService} to select the active backend via
+     * {@code gadaa.ratelimit.backend}. Should be one of {@code "memory"} or
      * {@code "redis"}.
      */
     String label();

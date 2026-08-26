@@ -66,6 +66,7 @@ export class LoginComponent {
   private friendlyMessage(err: NormalizedApiError): string {
     switch (err.code) {
       case 'INVALID_CREDENTIALS':       return 'The email or password you entered is incorrect.';
+      case 'ACCOUNT_LOCKED':            return this.lockedMessage(err);
       case 'ACCOUNT_SUSPENDED':         return 'Your account has been suspended. Please contact support.';
       case 'ACCOUNT_DEACTIVATED':       return 'This account is no longer active.';
       case 'ACCOUNT_PENDING_APPROVAL':  return 'Your B2B account is still awaiting approval.';
@@ -73,5 +74,18 @@ export class LoginComponent {
       case 'NETWORK_ERROR':             return 'Could not reach the server. Please check your connection.';
       default:                          return err.message || 'Something went wrong. Please try again.';
     }
+  }
+
+  /**
+   * Builds a user-friendly "account temporarily locked" message from the
+   * {@code retryAfterSeconds} detail in the 429 response (INSA CWE-307).
+   */
+  private lockedMessage(err: NormalizedApiError): string {
+    const seconds = err.details?.['retryAfterSeconds'] as number | undefined;
+    if (seconds && seconds > 0) {
+      const minutes = Math.ceil(seconds / 60);
+      return `Too many failed attempts. Your account is temporarily locked. Please try again in ${minutes} minute${minutes > 1 ? 's' : ''}.`;
+    }
+    return 'Too many failed attempts. Your account is temporarily locked. Please try again later.';
   }
 }

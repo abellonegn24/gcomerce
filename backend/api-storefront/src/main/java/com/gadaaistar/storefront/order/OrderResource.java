@@ -9,7 +9,7 @@ import com.gadaaistar.common.exceptions.ForbiddenException;
 import com.gadaaistar.storefront.payment.CyberSourceService;
 import com.gadaaistar.storefront.payment.MpgsConfig;
 import com.gadaaistar.storefront.payment.MpgsService;
-import com.gadaaistar.storefront.ratelimit.RateLimit;
+import com.gadaaistar.web.ratelimit.RateLimit;
 import com.gadaaistar.web.security.SecurityContextHolder;
 
 import jakarta.inject.Inject;

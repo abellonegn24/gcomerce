@@ -29,5 +29,13 @@ dependencies {
     // JwtIssuer#verify returns com.nimbusds.jwt.JWTClaimsSet — must be on consumer classpath
     api 'com.nimbusds:nimbus-jose-jwt'
 
+    // Rate-limit infra (RateLimitFilter / RateLimitService / InMemoryRateLimitBackend)
+    // needs Vert.x (HttpServerRequest), Micrometer (MeterRegistry), and the
+    // Quarkus scheduler (@Scheduled on the in-memory reaper). Exposed as `api`
+    // so downstream Quarkus runtimes resolve them transitively.
+    api 'io.quarkus:quarkus-vertx'
+    api 'io.quarkus:quarkus-micrometer'
+    api 'io.quarkus:quarkus-scheduler'
+
     implementation "at.favre.lib:bcrypt:${bcryptVersion}"
 }

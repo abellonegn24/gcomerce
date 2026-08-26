@@ -1,4 +1,4 @@
-package com.gadaaistar.storefront.ratelimit;
+package com.gadaaistar.web.ratelimit;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -24,6 +24,9 @@ import java.lang.annotation.Target;
  * {@code gadaa.ratelimit.backend}. Multi-instance production deploys should
  * set that to {@code redis}; single-instance dev / staging can stay on
  * memory.
+ *
+ * <p><strong>Location:</strong> lives in {@code web-common} so both the
+ * storefront and admin Quarkus runtimes can apply it to their endpoints.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.TYPE })

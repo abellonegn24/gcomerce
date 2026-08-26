@@ -69,6 +69,8 @@ export class LoginComponent {
     switch (err.code) {
       case 'INVALID_CREDENTIALS':
         return 'That email or password is incorrect. Please try again.';
+      case 'ACCOUNT_LOCKED':
+        return this.lockedMessage(err);
       case 'ACCOUNT_SUSPENDED':
       case 'ACCOUNT_DEACTIVATED':
         return 'This admin account is disabled. Contact a super-admin.';
@@ -79,6 +81,19 @@ export class LoginComponent {
       default:
         return err.message || 'Sign-in failed. Please try again.';
     }
+  }
+
+  /**
+   * Builds a user-friendly "account temporarily locked" message from the
+   * {@code retryAfterSeconds} detail in the 429 response (INSA CWE-307).
+   */
+  private lockedMessage(err: NormalizedApiError): string {
+    const seconds = err.details?.['retryAfterSeconds'] as number | undefined;
+    if (seconds && seconds > 0) {
+      const minutes = Math.ceil(seconds / 60);
+      return `Too many failed attempts. This admin account is temporarily locked. Please try again in ${minutes} minute${minutes > 1 ? 's' : ''}.`;
+    }
+    return 'Too many failed attempts. This admin account is temporarily locked. Please try again later.';
   }
 
   private mapReason(raw: string | null): string | null {
