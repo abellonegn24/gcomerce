@@ -14,9 +14,11 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+import com.gadaaistar.persistence.LockableAccount;
+
 @Entity
 @Table(name = "admin_user")
-public class AdminUser {
+public class AdminUser implements LockableAccount {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -53,6 +55,16 @@ public class AdminUser {
     @Column(name = "last_login_at")
     public Instant lastLoginAt;
 
+    // --- INSA CWE-307: brute-force lockout tracking ---
+    @Column(name = "failed_login_attempts", nullable = false)
+    public int failedLoginAttempts;
+
+    @Column(name = "locked_until")
+    public Instant lockedUntil;
+
+    @Column(name = "lockout_sequence", nullable = false)
+    public int lockoutSequence;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     public Instant createdAt;
 
@@ -79,4 +91,14 @@ public class AdminUser {
     public boolean isMfaEnrolled() {
         return mfaSecret != null && mfaEnrolledAt != null;
     }
+
+    // --- LockableAccount ---
+    @Override public Long getId() { return id; }
+    @Override public String getEmail() { return email; }
+    @Override public int getFailedLoginAttempts() { return failedLoginAttempts; }
+    @Override public void setFailedLoginAttempts(int count) { this.failedLoginAttempts = count; }
+    @Override public Instant getLockedUntil() { return lockedUntil; }
+    @Override public void setLockedUntil(Instant until) { this.lockedUntil = until; }
+    @Override public int getLockoutSequence() { return lockoutSequence; }
+    @Override public void setLockoutSequence(int sequence) { this.lockoutSequence = sequence; }
 }

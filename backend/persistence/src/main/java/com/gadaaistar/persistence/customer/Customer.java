@@ -7,6 +7,7 @@ import java.util.List;
 import com.gadaaistar.common.CustomerStatus;
 import com.gadaaistar.common.CustomerType;
 import com.gadaaistar.persistence.BaseEntity;
+import com.gadaaistar.persistence.LockableAccount;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -21,7 +22,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "customer")
-public class Customer extends BaseEntity {
+public class Customer extends BaseEntity implements LockableAccount {
 
     @Column(nullable = false, unique = true, length = 255)
     public String email;
@@ -74,6 +75,16 @@ public class Customer extends BaseEntity {
     @Column(name = "last_login_at")
     public Instant lastLoginAt;
 
+    // --- INSA CWE-307: brute-force lockout tracking ---
+    @Column(name = "failed_login_attempts", nullable = false)
+    public int failedLoginAttempts;
+
+    @Column(name = "locked_until")
+    public Instant lockedUntil;
+
+    @Column(name = "lockout_sequence", nullable = false)
+    public int lockoutSequence;
+
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     public List<CustomerAddress> addresses = new ArrayList<>();
 
@@ -91,4 +102,14 @@ public class Customer extends BaseEntity {
     public boolean isEmailVerified() {
         return emailVerifiedAt != null;
     }
+
+    // --- LockableAccount ---
+    @Override public Long getId() { return id; }
+    @Override public String getEmail() { return email; }
+    @Override public int getFailedLoginAttempts() { return failedLoginAttempts; }
+    @Override public void setFailedLoginAttempts(int count) { this.failedLoginAttempts = count; }
+    @Override public Instant getLockedUntil() { return lockedUntil; }
+    @Override public void setLockedUntil(Instant until) { this.lockedUntil = until; }
+    @Override public int getLockoutSequence() { return lockoutSequence; }
+    @Override public void setLockoutSequence(int sequence) { this.lockoutSequence = sequence; }
 }

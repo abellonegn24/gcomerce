@@ -11,6 +11,7 @@ import com.gadaaistar.common.exceptions.NotFoundException;
 import com.gadaaistar.common.exceptions.UnauthorizedException;
 import com.gadaaistar.persistence.admin.AdminUser;
 import com.gadaaistar.persistence.admin.AdminUserRepository;
+import com.gadaaistar.persistence.auth.LoginAttemptService;
 import com.gadaaistar.web.security.JwtIssuer;
 import com.gadaaistar.web.security.PasswordHasher;
 
@@ -54,6 +55,7 @@ public class AdminAuthService {
     @Inject TotpService                totp;
     @Inject AdminRefreshTokenService   refreshTokens;
     @Inject AdminAuthMapper            mapper;
+    @Inject LoginAttemptService        loginAttempts;
 
     @ConfigProperty(name = "gadaa.admin.mfa.challenge-ttl-seconds", defaultValue = "300")
     int challengeTtlSeconds;
@@ -66,17 +68,40 @@ public class AdminAuthService {
     // -------------------------------------------------------------------------
 
     @Transactional
-    public AdminAuthDtos.LoginChallengeResponse login(AdminAuthDtos.LoginRequest req) {
+    public AdminAuthDtos.LoginChallengeResponse login(AdminAuthDtos.LoginRequest req, String ip, String userAgent) {
         var normalizedEmail = req.email().trim().toLowerCase();
-        var admin = admins.findByEmail(normalizedEmail)
-                .orElseThrow(() -> new UnauthorizedException("INVALID_CREDENTIALS", "Invalid email or password."));
+        var admin = admins.findByEmail(normalizedEmail).orElse(null);
+
+        // Constant-time anti-enumeration: when the email is unknown we still
+        // burn a BCrypt verify so the response timing matches the "wrong
+        // password" branch (INSA CWE-307 hardening).
+        if (admin == null) {
+            hasher.verifyDummy();
+            throw new UnauthorizedException("INVALID_CREDENTIALS", "Invalid email or password.");
+        }
+
+        // Account-level lockout check runs BEFORE the password verify so a
+        // locked account cannot be probed for validity (INSA CWE-307).
+        loginAttempts.checkNotLocked(admin);
 
         if (!hasher.verify(req.password(), admin.passwordHash)) {
+            loginAttempts.recordFailure(admin, ip, userAgent, LoginAttemptService.AccountType.ADMIN);
             throw new UnauthorizedException("INVALID_CREDENTIALS", "Invalid email or password.");
         }
         if (!admin.canLogin()) {
             throw new UnauthorizedException("ACCOUNT_" + admin.status,
                     "This admin account cannot sign in at this time.");
+        }
+
+        // Password verified — issue the MFA challenge. We do NOT call
+        // recordSuccess here: the admin session is not yet authenticated
+        // (MFA is still pending). The counter is reset only after verifyMfa()
+        // succeeds. However, a correct password should not count as a failure,
+        // so we clear any stale failed-attempt counter here. If the admin
+        // abandons the MFA step the counter stays at 0 — the next wrong
+        // password starts a fresh count.
+        if (admin.getFailedLoginAttempts() > 0) {
+            admin.setFailedLoginAttempts(0);
         }
 
         // If this is a fresh admin, generate + persist the TOTP secret NOW so we
@@ -151,11 +176,19 @@ public class AdminAuthService {
                     "No MFA secret on file. Please restart the sign-in flow.");
         }
 
+        // Lockout check also guards the MFA step — a failed TOTP code counts
+        // toward the lockout threshold (INSA CWE-307).
+        loginAttempts.checkNotLocked(admin);
+
         if (!totp.verifyCode(admin.mfaSecret, req.code())) {
             LOG.warnf("MFA code rejected for admin id=%d", admin.id);
+            loginAttempts.recordFailure(admin, ip, userAgent, LoginAttemptService.AccountType.ADMIN);
             throw new UnauthorizedException("MFA_INVALID_CODE",
                     "That code was not accepted. Try again with the current 6-digit code.");
         }
+
+        // MFA verified — full authentication complete. Reset the lockout state.
+        loginAttempts.recordSuccess(admin, ip, userAgent, LoginAttemptService.AccountType.ADMIN);
 
         // First successful verify completes enrollment.
         var now = Instant.now();

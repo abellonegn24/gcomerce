@@ -1,5 +1,6 @@
 package com.gadaaistar.admin.auth;
 
+import com.gadaaistar.web.ratelimit.RateLimit;
 import com.gadaaistar.web.security.SecurityContextHolder;
 
 import jakarta.inject.Inject;
@@ -38,13 +39,17 @@ public class AdminAuthResource {
 
     @POST
     @Path("/login")
+    @RateLimit(bucket = "admin-auth-login", max = 10, windowSeconds = 60)
     @Operation(summary = "Step 1 — verify email + password; returns MFA challenge.")
-    public AdminAuthDtos.LoginChallengeResponse login(@Valid AdminAuthDtos.LoginRequest req) {
-        return authService.login(req);
+    public AdminAuthDtos.LoginChallengeResponse login(@Valid AdminAuthDtos.LoginRequest req,
+                                                      @RestHeader("X-Forwarded-For") String forwardedFor,
+                                                      @RestHeader("User-Agent") String userAgent) {
+        return authService.login(req, clientIp(forwardedFor), userAgent);
     }
 
     @POST
     @Path("/verify-mfa")
+    @RateLimit(bucket = "admin-mfa-verify", max = 10, windowSeconds = 60)
     @Operation(summary = "Step 2 — submit the 6-digit TOTP code; returns access + refresh tokens.")
     public AdminAuthDtos.AuthResponse verifyMfa(@Valid AdminAuthDtos.VerifyMfaRequest req,
                                                   @RestHeader("X-Forwarded-For") String forwardedFor,

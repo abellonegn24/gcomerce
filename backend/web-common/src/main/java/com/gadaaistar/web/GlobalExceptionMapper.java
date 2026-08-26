@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.gadaaistar.common.ErrorResponse;
+import com.gadaaistar.common.exceptions.AccountLockedException;
 import com.gadaaistar.common.exceptions.ApiException;
 import com.gadaaistar.common.exceptions.RateLimitExceededException;
 
@@ -54,6 +55,14 @@ public class GlobalExceptionMapper implements ExceptionMapper<Throwable> {
             return build(rl.status(), rl.code(), rl.getMessage(), rl.details(), correlationId)
                     .toResponseBuilder()
                     .header("Retry-After", String.valueOf(rl.retryAfterSeconds()))
+                    .build();
+        }
+        if (ex instanceof AccountLockedException al) {
+            // INSA CWE-307: account locked after repeated failed logins.
+            // 429 + Retry-After, mirroring the rate-limit path above.
+            return build(al.status(), al.code(), al.getMessage(), al.details(), correlationId)
+                    .toResponseBuilder()
+                    .header("Retry-After", String.valueOf(al.retryAfterSeconds()))
                     .build();
         }
         if (ex instanceof ApiException api) {

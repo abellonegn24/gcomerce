@@ -1,6 +1,6 @@
 package com.gadaaistar.storefront.cart;
 
-import com.gadaaistar.storefront.ratelimit.RateLimit;
+import com.gadaaistar.web.ratelimit.RateLimit;
 
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;

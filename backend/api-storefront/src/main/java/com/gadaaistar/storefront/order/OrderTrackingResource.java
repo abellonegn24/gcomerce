@@ -3,7 +3,7 @@ package com.gadaaistar.storefront.order;
 import java.util.List;
 
 import com.gadaaistar.common.OrderStatus;
-import com.gadaaistar.storefront.ratelimit.RateLimit;
+import com.gadaaistar.web.ratelimit.RateLimit;
 
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.Email;

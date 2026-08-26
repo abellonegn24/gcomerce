@@ -1,7 +1,8 @@
-package com.gadaaistar.storefront.ratelimit;
+package com.gadaaistar.web.ratelimit;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Stream;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -11,33 +12,40 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
 /**
- * Sliding-window rate limiter — public entry point used by {@code RateLimitFilter}.
+ * Sliding-window rate limiter — public entry point used by {@link RateLimitFilter}.
  *
  * <p>Behaves as a thin selector shim over a pluggable {@link RateLimitBackend}
  * so multi-instance deployments can swap the process-local in-memory store
  * for a shared Redis-backed one at runtime without touching call sites or
- * the {@code @RateLimit} annotation. The {@link #tryAcquire} signature and
- * {@link Decision} record stayed identical across the Phase 4d.6 refactor.
+ * the {@code @RateLimit} annotation.
  *
  * <h4>Backend selection</h4>
  * Driven by {@code gadaa.ratelimit.backend}:
  * <ul>
  *   <li>{@code memory} (default) — {@link InMemoryRateLimitBackend}. Fine for
  *       single-instance dev / staging.</li>
- *   <li>{@code redis} — {@link RedisRateLimitBackend}. Required for
- *       multi-instance production; the Redis extension must be configured
- *       (see {@code quarkus.redis.hosts}). Fail-open on Redis errors.</li>
+ *   <li>{@code redis} — any {@link RateLimitBackend} whose {@link RateLimitBackend#label()}
+ *       returns {@code "redis"} (the concrete impl lives in {@code api-storefront}
+ *       and is discovered via CDI). Required for multi-instance production;
+ *       the Redis extension must be configured (see {@code quarkus.redis.hosts}).
+ *       Fail-open on Redis errors.</li>
  * </ul>
+ *
+ * <p>Lives in {@code web-common} so both the storefront and admin runtimes
+ * share a single rate-limit implementation. The optional Redis backend is
+ * discovered generically via {@code Instance<RateLimitBackend>} so
+ * {@code web-common} does not need a compile-time dependency on
+ * {@code quarkus-redis-client}.
  *
  * <h4>Global on/off</h4>
  * {@code gadaa.ratelimit.enabled=false} short-circuits every call to
- * {@link Decision#ALLOWED} regardless of backend. Intended for load tests
- * where the limiter itself is not what we want to measure.
+ * {@link Decision#ALLOWED} regardless of backend.
  *
- * <h4>Metrics (Phase 5.3)</h4>
+ * <h4>Metrics</h4>
  * Exposes Prometheus counters via Micrometer:
  * <ul>
  *   <li>{@code gi_ratelimit_requests_total{backend,result}} — incremented on
@@ -60,10 +68,8 @@ public class RateLimitService {
     String backendName;
 
     @Inject InMemoryRateLimitBackend memoryBackend;
-    // Redis backend is looked up via CDI Instance<> so it stays optional —
-    // if the quarkus-redis-client extension were removed the memory backend
-    // would keep working.
-    @Inject jakarta.enterprise.inject.Instance<RedisRateLimitBackend> redisBackend;
+    /** All other backends (e.g. the Redis one in api-storefront). Optional. */
+    @Inject Instance<RateLimitBackend> otherBackends;
     @Inject MeterRegistry meterRegistry;
 
     private RateLimitBackend active;
@@ -81,11 +87,12 @@ public class RateLimitService {
         }
 
         if ("redis".equalsIgnoreCase(backendName)) {
-            if (redisBackend.isResolvable()) {
-                active = redisBackend.get();
+            RateLimitBackend redis = resolveByLabel("redis");
+            if (redis != null) {
+                active = redis;
                 LOG.infof("Rate-limit backend: %s (multi-instance safe)", active.label());
             } else {
-                LOG.warn("gadaa.ratelimit.backend=redis but the Redis backend bean is not resolvable " +
+                LOG.warn("gadaa.ratelimit.backend=redis but no redis-labelled backend is resolvable " +
                          "(quarkus-redis-client missing?). Falling back to memory.");
                 active = memoryBackend;
             }
@@ -103,6 +110,16 @@ public class RateLimitService {
 
         // --- Active keys gauge ---
         meterRegistry.gauge("gi_ratelimit_active_keys", backendTag, activeKeysGaugeValue);
+    }
+
+    /** Find a backend (other than the memory one) whose label matches. */
+    private RateLimitBackend resolveByLabel(String label) {
+        if (otherBackends == null) return null;
+        // Exclude InMemoryRateLimitBackend (already held) by checking label.
+        Stream<RateLimitBackend> stream = otherBackends.stream();
+        return stream.filter(b -> label.equalsIgnoreCase(b.label()))
+                     .findFirst()
+                     .orElse(null);
     }
 
     /**

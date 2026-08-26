@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clickjacking PoC — INSA CWE-1021</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background: #f5f5f5; }
+        h1 { color: #333; }
+        h2 { color: #555; margin-top: 30px; }
+        iframe {
+            width: 100%;
+            height: 400px;
+            border: 2px solid #ccc;
+            background: white;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .blocked { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .vulnerable { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .checking { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .note { background: #d1ecf1; color: #0c5460; padding: 10px; border-radius: 4px; margin: 10px 0; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <h1>Clickjacking PoC (CWE-1021)</h1>
+    <p>This page attempts to embed your application pages inside iframes.
+       If the fix is working, the iframes will be <strong>blank</strong> (browser refuses to render them).
+       If the fix is NOT working, you will see the actual pages rendered inside the iframes.</p>
+
+    <div class="note">
+        <strong>How to interpret results:</strong><br>
+        ✅ If the iframe is <strong>blank/empty</strong> → clickjacking protection is WORKING.<br>
+        ❌ If you can <strong>see the login page</strong> inside the iframe → clickjacking protection is NOT working.<br>
+        <br>
+        <strong>Note:</strong> The "BLOCKED/VULNERABLE" labels below are heuristic.
+        The definitive test is whether you can <em>visually see</em> the page content inside the iframe.
+    </div>
+
+    <h2>1. Storefront login (http://localhost:4200/login)</h2>
+    <div id="result-storefront" class="result checking">Checking...</div>
+    <iframe id="frame-storefront" src="http://localhost:4200/login"></iframe>
+
+    <h2>2. Admin login (http://localhost:4300/login)</h2>
+    <div id="result-admin" class="result checking">Checking...</div>
+    <iframe id="frame-admin" src="http://localhost:4300/login"></iframe>
+
+    <h2>3. Storefront API (http://localhost:8080)</h2>
+    <div id="result-api" class="result checking">Checking...</div>
+    <iframe id="frame-api" src="http://localhost:8080/api/storefront/v1/auth/login"></iframe>
+
+    <h2>4. Admin API (http://localhost:8081)</h2>
+    <div id="result-admin-api" class="result checking">Checking...</div>
+    <iframe id="frame-admin-api" src="http://localhost:8081/api/admin/v1/auth/login"></iframe>
+
+    <script>
+        // The most reliable detection: check if the iframe has visible content
+        // after a delay. CSP frame-ancestors causes the browser to render a
+        // blank frame, so the iframe's clientHeight/content will be empty.
+        function checkFrame(frameId, resultId, label) {
+            var frame = document.getElementById(frameId);
+            var result = document.getElementById(resultId);
+            var loaded = false;
+
+            frame.onload = function() {
+                loaded = true;
+                // Give the browser a moment to apply CSP blocking
+                setTimeout(function() {
+                    try {
+                        var doc = frame.contentDocument || frame.contentWindow.document;
+                        // If we can read the document and it has visible content,
+                        // the page was NOT blocked by CSP/X-Frame-Options.
+                        var hasContent = doc.body && (doc.body.innerHTML.length > 100 ||
+                            doc.body.textContent.trim().length > 0);
+                        if (hasContent) {
+                            result.className = 'result vulnerable';
+                            result.textContent = label + ': ❌ VULNERABLE — page content is visible inside the iframe (clickjacking possible)';
+                        } else {
+                            result.className = 'result blocked';
+                            result.textContent = label + ': ✅ BLOCKED — iframe is blank (CSP/X-Frame-Options prevented framing)';
+                        }
+                    } catch (e) {
+                        // Cross-origin: can't read content. But if CSP blocked it,
+                        // the frame will be blank. We can check the frame's
+                        // contentWindow.length — a blocked frame has 0 sub-frames.
+                        // This is not 100% reliable, so rely on visual inspection.
+                        result.className = 'result blocked';
+                        result.textContent = label + ': ✅ BLOCKED — cross-origin frame access denied (check visually: iframe should be blank)';
+                    }
+                }, 2000);
+            };
+
+            // Fallback: if onload doesn't fire within 5s, the browser likely blocked it
+            setTimeout(function() {
+                if (!loaded) {
+                    result.className = 'result blocked';
+                    result.textContent = label + ': ✅ BLOCKED — frame did not load (server may be down or CSP blocked it)';
+                }
+            }, 5000);
+        }
+
+        checkFrame('frame-storefront', 'result-storefront', 'Storefront (4200)');
+        checkFrame('frame-admin', 'result-admin', 'Admin (4300)');
+        checkFrame('frame-api', 'result-api', 'Storefront API (8080)');
+        checkFrame('frame-admin-api', 'result-admin-api', 'Admin API (8081)');
+    </script>
+</body>
+</html>

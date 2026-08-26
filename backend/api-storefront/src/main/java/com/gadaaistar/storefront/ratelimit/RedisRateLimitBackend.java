@@ -6,7 +6,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.jboss.logging.Logger;
 
-import com.gadaaistar.storefront.ratelimit.RateLimitService.Decision;
+import com.gadaaistar.web.ratelimit.RateLimitBackend;
+import com.gadaaistar.web.ratelimit.RateLimitService.Decision;
 
 import io.quarkus.redis.datasource.RedisDataSource;
 import io.vertx.mutiny.redis.client.Response;
@@ -28,6 +29,13 @@ import jakarta.inject.Inject;
  * </ol>
  * Also sets a {@code PEXPIRE} on the key equal to the window duration so
  * long-abandoned keys reap themselves — no separate cleanup scheduler needed.
+ *
+ * <h4>Location</h4>
+ * Lives in {@code api-storefront} (not {@code web-common}) because it depends
+ * on {@code quarkus-redis-client}, which only the storefront module pulls in.
+ * It is discovered by {@link com.gadaaistar.web.ratelimit.RateLimitService}
+ * generically via {@code Instance<RateLimitBackend>} + {@link #label()}, so
+ * {@code web-common} has no compile-time dependency on Redis.
  *
  * <h4>Fail-open</h4>
  * On any Redis exception (connection refused, timeout, script error) we

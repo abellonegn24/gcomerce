@@ -44,4 +44,13 @@ public class AdminUsersResource {
         securityContext.requireAnyRole("SUPERADMIN");
         return service.resetMfa(targetId, actorId);
     }
+
+    @POST
+    @Path("/{id}/unlock")
+    @Operation(summary = "Clear a brute-force lockout on the admin account (INSA CWE-307). SUPERADMIN only.")
+    public AdminUsersDtos.ResetMfaResponse unlock(@PathParam("id") long targetId) {
+        var actorId = securityContext.requireAdmin();
+        securityContext.requireAnyRole("SUPERADMIN");
+        return service.unlock(targetId, actorId);
+    }
 }
