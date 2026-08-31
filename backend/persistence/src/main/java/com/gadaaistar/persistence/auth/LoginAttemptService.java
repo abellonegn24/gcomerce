@@ -158,8 +158,15 @@ public class LoginAttemptService {
      * Record a successful login. Resets the failed-attempt counter, clears the
      * lockout window, and resets the lockout sequence (so a future lockout
      * starts again at the base duration).
+     *
+     * <p>Uses the default {@code REQUIRED} propagation (joins the caller's
+     * transaction) because the caller does not throw on the success path —
+     * the transaction commits normally. Using {@code REQUIRES_NEW} here would
+     * cause an {@code OptimisticLockException} because the inner transaction
+     * would bump the entity's version column, and the outer transaction's
+     * flush would then fail with a stale version.
      */
-    @Transactional(TxType.REQUIRES_NEW)
+    @Transactional
     public void recordSuccess(LockableAccount account, String ip, String userAgent, AccountType type) {
         writeAudit(account, ip, userAgent, type, true);
 
@@ -183,8 +190,12 @@ public class LoginAttemptService {
      * Manually clear a lockout (admin unlock endpoint). Resets all three
      * fields without writing an audit row (the unlock action itself is logged
      * by the calling resource).
+     *
+     * <p>Uses the default {@code REQUIRED} propagation — joins the caller's
+     * transaction. The admin unlock endpoints do not throw on the success path,
+     * so the transaction commits normally.
      */
-    @Transactional(TxType.REQUIRES_NEW)
+    @Transactional
     public void unlock(LockableAccount account) {
         if (account == null) return;
         var managed = reFetch(account);

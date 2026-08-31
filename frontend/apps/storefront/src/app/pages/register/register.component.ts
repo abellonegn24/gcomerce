@@ -85,7 +85,7 @@ export class RegisterComponent {
   private friendlyMessage(err: NormalizedApiError): string {
     switch (err.code) {
       case 'EMAIL_TAKEN':       return 'An account with this email already exists. Try signing in instead.';
-      case 'VALIDATION_FAILED': return 'Please check the fields highlighted below.';
+      case 'VALIDATION_FAILED': return err.message || 'Please check the fields highlighted below.';
       case 'NETWORK_ERROR':     return 'Could not reach the server. Please check your connection.';
       default:                  return err.message || 'Something went wrong. Please try again.';
     }

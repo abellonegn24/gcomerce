@@ -16,6 +16,7 @@ import com.gadaaistar.persistence.customer.CustomerRepository;
 import com.gadaaistar.storefront.security.RefreshTokenService;
 import com.gadaaistar.web.security.JwtIssuer;
 import com.gadaaistar.web.security.PasswordHasher;
+import com.gadaaistar.web.security.PasswordPolicy;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -37,6 +38,7 @@ public class AuthService {
     @Inject CustomerRepository       customers;
     @Inject CustomerGroupRepository  groups;
     @Inject PasswordHasher       hasher;
+    @Inject PasswordPolicy       passwordPolicy;
     @Inject JwtIssuer            jwtIssuer;
     @Inject RefreshTokenService  refreshTokens;
     @Inject AuthMapper           mapper;
@@ -49,6 +51,10 @@ public class AuthService {
     @Transactional
     public AuthDtos.AuthResponse register(AuthDtos.RegisterRequest req, String ip, String userAgent) {
         var normalizedEmail = req.email().trim().toLowerCase();
+
+        // Enforce password strength policy (INSA CWE-521).
+        passwordPolicy.validate(req.password(), "password");
+
         if (customers.existsByEmail(normalizedEmail)) {
             throw new ConflictException("EMAIL_TAKEN", "An account with this email already exists.",
                     java.util.Map.of("email", normalizedEmail));
@@ -234,6 +240,9 @@ public class AuthService {
     public void changePassword(long customerId, AuthDtos.ChangePasswordRequest req) {
         var customer = customers.findByIdOptional(customerId)
                 .orElseThrow(() -> new NotFoundException("Customer", customerId));
+
+        // Enforce password strength policy on the new password (INSA CWE-521).
+        passwordPolicy.validate(req.newPassword(), "newPassword");
 
         if (!hasher.verify(req.currentPassword(), customer.passwordHash)) {
             throw new UnauthorizedException("INVALID_CREDENTIALS",

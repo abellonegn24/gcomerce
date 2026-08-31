@@ -14,6 +14,7 @@ import com.gadaaistar.persistence.customer.CustomerRepository;
 import com.gadaaistar.storefront.mail.MailService;
 import com.gadaaistar.storefront.security.RefreshTokenService;
 import com.gadaaistar.web.security.PasswordHasher;
+import com.gadaaistar.web.security.PasswordPolicy;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -42,6 +43,7 @@ public class PasswordResetService {
     @Inject PasswordResetTokenRepository tokens;
     @Inject MailService                  mail;
     @Inject PasswordHasher               hasher;
+    @Inject PasswordPolicy               passwordPolicy;
     @Inject RefreshTokenService          refreshTokens;
 
     @ConfigProperty(name = "gadaa.auth.password-reset-ttl-minutes", defaultValue = "30")
@@ -93,10 +95,8 @@ public class PasswordResetService {
         if (rawToken == null || rawToken.isBlank()) {
             throw new ValidationException("Reset token is required.");
         }
-        if (newPassword == null || newPassword.length() < 8) {
-            throw new ValidationException("Password must be at least 8 characters long.",
-                    java.util.Map.of("newPassword", "min length 8"));
-        }
+        // Enforce password strength policy (INSA CWE-521).
+        passwordPolicy.validate(newPassword, "newPassword");
         var row = tokens.findByHash(EmailVerificationService.sha256Hex(rawToken))
                 .orElseThrow(() -> new NotFoundException("Password-reset token", "invalid or already used"));
 

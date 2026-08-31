@@ -70,7 +70,7 @@ export class LoginComponent {
       case 'ACCOUNT_SUSPENDED':         return 'Your account has been suspended. Please contact support.';
       case 'ACCOUNT_DEACTIVATED':       return 'This account is no longer active.';
       case 'ACCOUNT_PENDING_APPROVAL':  return 'Your B2B account is still awaiting approval.';
-      case 'VALIDATION_FAILED':         return 'Please check the fields highlighted below.';
+      case 'VALIDATION_FAILED':         return err.message || 'Please check the fields highlighted below.';
       case 'NETWORK_ERROR':             return 'Could not reach the server. Please check your connection.';
       default:                          return err.message || 'Something went wrong. Please try again.';
     }

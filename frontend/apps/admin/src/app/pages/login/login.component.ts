@@ -75,7 +75,7 @@ export class LoginComponent {
       case 'ACCOUNT_DEACTIVATED':
         return 'This admin account is disabled. Contact a super-admin.';
       case 'VALIDATION_FAILED':
-        return 'Please check the highlighted fields and try again.';
+        return err.message || 'Please check the highlighted fields and try again.';
       case 'NETWORK_ERROR':
         return err.message;
       default:
