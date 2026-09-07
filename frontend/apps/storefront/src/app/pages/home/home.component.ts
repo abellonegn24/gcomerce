@@ -86,7 +86,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.seo.set({
       title: 'Gadaa Istar — Ethiopian Coffee & Specialty Exports',
-      description: 'Direct-from-origin Ethiopian coffee, honey, and spice exports from Gadaa Istar Business Group S.C.',
+      description: 'Direct-from-origin Ethiopian coffee, honey, and spice exports from GADAA ISTAR J AND M PLC.',
       canonicalUrl: this.document.location.origin,
       ogType: 'website',
       jsonLd: {

@@ -26,7 +26,7 @@ export const omTranslations: TranslationMap = {
   'label.wishlist': 'Fe\'iyyuu',
   'label.account': 'Herrega',
   'hero.title': 'Buna Ethioopiaa, dhibee fi quraannaa — addunyaaaf.',
-  'hero.subtitle': 'Kallattii irraa baafatama Gadaa Istar Business Group S.C. irraa.',
+  'hero.subtitle': 'Kallattii irraa baafatama GADAA ISTAR J AND M PLC irraa.',
   'hero.ctaShop': 'Amma bitadhaa',
   'hero.ctaWholesale': 'Gurgistuu fi baafatama',
   'footer.rights': 'Haaquun hunda eegameera.',

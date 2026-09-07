@@ -26,7 +26,7 @@ export const enTranslations: TranslationMap = {
   'label.wishlist': 'Wishlist',
   'label.account': 'Account',
   'hero.title': 'Ethiopian coffee, honey & spices — for the world.',
-  'hero.subtitle': 'Direct-from-origin exports from Gadaa Istar Business Group S.C.',
+  'hero.subtitle': 'Direct-from-origin exports from GADAA ISTAR J AND M PLC.',
   'hero.ctaShop': 'Shop now',
   'hero.ctaWholesale': 'Wholesale & export',
   'footer.rights': 'All rights reserved.',

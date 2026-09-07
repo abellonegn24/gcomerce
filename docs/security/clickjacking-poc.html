@@ -35,34 +35,30 @@
         ✅ If the iframe is <strong>blank/empty</strong> → clickjacking protection is WORKING.<br>
         ❌ If you can <strong>see the login page</strong> inside the iframe → clickjacking protection is NOT working.<br>
         <br>
-        <strong>Note:</strong> The definitive test is whether you can <em>visually see</em> the page content inside the iframe.
+        <strong>Note:</strong> The "BLOCKED/VULNERABLE" labels below are heuristic.
+        The definitive test is whether you can <em>visually see</em> the page content inside the iframe.
     </div>
 
-    <h2>1. Production Storefront (http://localhost:4200/login)</h2>
-    <div id="result-prod-storefront" class="result checking">Checking...</div>
-    <iframe id="frame-prod-storefront" src="http://localhost:4200/login"></iframe>
-
-    <h2>2. Production Admin (http://localhost:4300/login)</h2>
-    <div id="result-prod-admin" class="result checking">Checking...</div>
-    <iframe id="frame-prod-admin" src="http://localhost:4300/login"></iframe>
-
-    <h2>3. Local Storefront (http://localhost:4200/login)</h2>
+    <h2>1. Storefront login (https://gedaaistar.et/login)</h2>
     <div id="result-storefront" class="result checking">Checking...</div>
-    <iframe id="frame-storefront" src="http://localhost:4200/login"></iframe>
+    <iframe id="frame-storefront" src="https://gedaaistar.et/login"></iframe>
 
-    <h2>4. Local Admin (http://localhost:4300/login)</h2>
+    <h2>2. Admin login (https://admin.gedaaistar.et/login)</h2>
     <div id="result-admin" class="result checking">Checking...</div>
-    <iframe id="frame-admin" src="http://localhost:4300/login"></iframe>
+    <iframe id="frame-admin" src="https://admin.gedaaistar.et/login"></iframe>
 
-    <h2>5. Storefront API (http://localhost:8080)</h2>
+    <h2>3. Storefront API (http://api.gedaistar.et/api/storefront)</h2>
     <div id="result-api" class="result checking">Checking...</div>
-    <iframe id="frame-api" src="http://localhost:8080/api/storefront/v1/auth/login"></iframe>
+    <iframe id="frame-api" src="http://api.gedaistar.et/api/storefront/v1/auth/login"></iframe>
 
-    <h2>6. Admin API (http://localhost:8081)</h2>
+    <h2>4. Admin API (https://api.gedaaistar.et/api/admin)</h2>
     <div id="result-admin-api" class="result checking">Checking...</div>
-    <iframe id="frame-admin-api" src="http://localhost:8081/api/admin/v1/auth/login"></iframe>
+    <iframe id="frame-admin-api" src="https://api.gedaaistar.et/api/admin/v1/auth/login"></iframe>
 
     <script>
+        // The most reliable detection: check if the iframe has visible content
+        // after a delay. CSP frame-ancestors causes the browser to render a
+        // blank frame, so the iframe's clientHeight/content will be empty.
         function checkFrame(frameId, resultId, label) {
             var frame = document.getElementById(frameId);
             var result = document.getElementById(resultId);
@@ -70,9 +66,12 @@
 
             frame.onload = function() {
                 loaded = true;
+                // Give the browser a moment to apply CSP blocking
                 setTimeout(function() {
                     try {
                         var doc = frame.contentDocument || frame.contentWindow.document;
+                        // If we can read the document and it has visible content,
+                        // the page was NOT blocked by CSP/X-Frame-Options.
                         var hasContent = doc.body && (doc.body.innerHTML.length > 100 ||
                             doc.body.textContent.trim().length > 0);
                         if (hasContent) {
@@ -83,12 +82,17 @@
                             result.textContent = label + ': ✅ BLOCKED — iframe is blank (CSP/X-Frame-Options prevented framing)';
                         }
                     } catch (e) {
+                        // Cross-origin: can't read content. But if CSP blocked it,
+                        // the frame will be blank. We can check the frame's
+                        // contentWindow.length — a blocked frame has 0 sub-frames.
+                        // This is not 100% reliable, so rely on visual inspection.
                         result.className = 'result blocked';
                         result.textContent = label + ': ✅ BLOCKED — cross-origin frame access denied (check visually: iframe should be blank)';
                     }
                 }, 2000);
             };
 
+            // Fallback: if onload doesn't fire within 5s, the browser likely blocked it
             setTimeout(function() {
                 if (!loaded) {
                     result.className = 'result blocked';
@@ -97,10 +101,8 @@
             }, 5000);
         }
 
-        checkFrame('frame-prod-storefront', 'result-prod-storefront', 'Prod Storefront');
-        checkFrame('frame-prod-admin', 'result-prod-admin', 'Prod Admin');
-        checkFrame('frame-storefront', 'result-storefront', 'Local Storefront (4200)');
-        checkFrame('frame-admin', 'result-admin', 'Local Admin (4300)');
+        checkFrame('frame-storefront', 'result-storefront', 'Storefront (4200)');
+        checkFrame('frame-admin', 'result-admin', 'Admin (4300)');
         checkFrame('frame-api', 'result-api', 'Storefront API (8080)');
         checkFrame('frame-admin-api', 'result-admin-api', 'Admin API (8081)');
     </script>
