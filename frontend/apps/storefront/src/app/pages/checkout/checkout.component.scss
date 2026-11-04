@@ -404,6 +404,48 @@
   .material-icons-round { font-size: 0.95rem; color: var(--gi-gold-600); flex-shrink: 0; }
 }
 
+// --- Terms of Service checkbox -----------------------------------------------
+.gi-checkout__terms {
+  margin: 1.25rem 0;
+  padding: 1rem;
+  background: var(--gi-cream-50);
+  border: 1px solid var(--gi-border);
+  border-radius: var(--gi-radius-md);
+}
+
+.gi-checkout__terms-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  cursor: pointer;
+  user-select: none;
+
+  input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    margin-top: 0.15rem;
+    accent-color: var(--gi-gold-600);
+    cursor: pointer;
+  }
+
+  span {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--gi-navy-900);
+  }
+}
+
+.gi-checkout__terms-link {
+  color: var(--gi-navy-700);
+  text-decoration: underline;
+  font-weight: 500;
+
+  &:hover {
+    color: var(--gi-gold-600);
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Reusable form primitives (mirror profile.component.scss patterns)
 // -----------------------------------------------------------------------------
