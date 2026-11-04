@@ -51,6 +51,12 @@
     border: 1px solid rgba(201, 51, 39, 0.3);
     color: var(--gi-red-600);
   }
+  &--info {
+    background: rgba(2, 119, 189, 0.08);
+    border: 1px solid rgba(2, 119, 189, 0.3);
+    color: #0a558c;
+    align-items: flex-start;
+  }
 }
 
 .gi-order__skeleton {

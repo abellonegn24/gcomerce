@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>YagoutPay Transaction Form</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background-color: #ffffff;
+      color: #060452;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .tab-content {
+      border: 2px solid #890603;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+    .nav-tabs .nav-link.active {
+      background-color: #890603;
+      color: #ffffff;
+    }
+    .nav-tabs .nav-link {
+      color: #060452;
+      font-weight: 600;
+    }
+    label {
+      color: #060452;
+      font-weight: 500;
+    }
+    .form-control, .form-select {
+      border-radius: 8px;
+    }
+    .btn-next {
+      background-color: #890603;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+    }
+    .btn-next:hover {
+      background-color: #060452;
+      color: #fff;
+    }
+    .img-fluid {
+      width: 50%;
+      max-width: 200px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-4">
+    <div class="logo-placeholder text-center">
+<img src="/images/Logo.png" alt="YagoutPay logo" class="img-fluid" />
+    </div>
+    <ul class="nav nav-tabs" id="tabMenu">
+      <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="tab" href="#txn">Transaction Details</a>
+      </li>
+    </ul>
+    <form method="post">
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="txn">
+          <div class="row g-3">
+            <!-- Food Selection -->
+            <div class="col-md-6">
+              <label>Select Food Item</label>
+              <select id="foodSelect" name="food_item" class="form-select" required>
+                <option value="">-- Choose a food --</option>
+                <option value="Pizza" data-price="500">Pizza - 500 ETB</option>
+                <option value="Burger" data-price="300">Burger - 300 ETB</option>
+                <option value="Pasta" data-price="150">Pasta -  150 ETB</option>
+                <option value="Sandwich" data-price="1">Sandwich - 1 ETB</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label>Price</label>
+              <input id="priceDisplay" class="form-control" readonly />
+              <input type="hidden" id="amount" name="amount" />
+            </div>
+
+            <div class="col-md-6">
+              <label>Mobile Number</label>
+              <input name="mobile_number" class="form-control" required />
+            </div>
+          </div>
+          <div class="text-end mt-3">
+            <button type="submit" class="btn btn-next">Proceed to Pay</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.getElementById('foodSelect').addEventListener('change', function() {
+      const price = this.options[this.selectedIndex].getAttribute('data-price');
+      document.getElementById('priceDisplay').value = price ? price + ' ETB' : '';
+      document.getElementById('amount').value = price || '';
+    });
+  </script>
+</body>
+</html>

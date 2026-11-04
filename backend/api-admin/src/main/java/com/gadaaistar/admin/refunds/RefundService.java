@@ -85,6 +85,11 @@ public class RefundService {
         boolean callGateway = !Boolean.TRUE.equals(req.manual());
         if ("MPGS".equals(provider)) {
             callGateway = callGateway && mpgsConfig.isConfigured();
+        } else if ("YAGOUTPAY".equals(provider)) {
+            // YagoutPay's integration documents no refund API — every refund
+            // is settled out-of-band and only the audit row + status update
+            // happen here, regardless of the manual checkbox.
+            callGateway = false;
         } else {
             callGateway = callGateway && cybersourceConfig.isConfigured();
         }
@@ -128,8 +133,10 @@ public class RefundService {
             }
         } else {
             // MANUAL — the admin refunded the customer out-of-band and
-            // just needs the audit row + status update.
-            row.gatewayProvider = "MANUAL";
+            // just needs the audit row + status update. Keep the original
+            // gateway on the row for YagoutPay so the audit trail shows the
+            // refund was an out-of-band YagoutPay refund, not a generic one.
+            row.gatewayProvider = "YAGOUTPAY".equals(provider) ? "YAGOUTPAY" : "MANUAL";
             row.status          = OrderRefund.Status.SUCCEEDED;
         }
 

@@ -2499,3 +2499,92 @@ PHASE 6 — CMS, SEO, Notifications, i18n                      [COMPLETE]
 - Currency switcher now backed by I18nService (was local signal).
   Persists selection across sessions.
 - LOCALE_OPTIONS + TranslationKey type-safe model.
+
+===========================================================================
+PHASE 7 — YagoutPay Payment Gateway Integration            [IN PROGRESS]
+===========================================================================
+
+YagoutPay added as a third hosted-checkout provider alongside MPGS and
+CyberSource ("Aggregator Hosted / Non-Seamless" flow — browser form-POST
+with AES-256-CBC encrypted fields; no server webhook).
+
+7a — Backend (api-storefront)
+- YagoutPayConfig: gadaa.yagoutpay.* keys — enabled flag, merchant-id,
+  encryption-key (base64, 16/24/32 bytes → AES-128/192/256),
+  aggregator-id, gateway-url, callback-base-url, country (ETH),
+  supported-currencies allowlist (empty = all currencies — YagoutPay's
+  international rollout is in progress per stakeholder discussion).
+- YagoutPayCrypto: AES-CBC encrypt/decrypt with the protocol's fixed IV
+  "0123456789abcdef", PKCS7 (=JCA PKCS5 for 16-byte blocks), base64
+  ciphertext, lowercase-hex SHA-256.
+- YagoutPayService: builds the 9-section tilde-joined payload
+  (txn/pg/card/cust/bill/ship/item/upi/other_details, pipe-joined fields),
+  encrypts merchant_request + hash (AES of sha256 of
+  me_id~order_no~amount~country~currency — tilde-delimited), fills real
+  customer + address data, puts order UUID in udf_1, sanitizes |/~ out of
+  field values. parseReturn() decrypts + validates txn_response
+  (me_id match, >=13 fields) and extracts udf_1 from other_details.
+- YagoutPayReturnResource: public POST /payment/yagoutpay/return +
+  /failure (form-urlencoded, rate-limited 60/min) — gateway has NO
+  webhook, so the browser return POST is authoritative. Decrypts, resolves
+  the order via udf_1 UUID → exact invoice match → attempt-suffix strip,
+  guards (YAGOUTPAY method only, PENDING_PAYMENT only → idempotent,
+  amount + currency must match order exactly), then markPaid /
+  markPaymentFailed and 303-redirects to /checkout/return or
+  /checkout/cancel. Failure URL never marks paid even on a "Successful"
+  body; decrypted payloads never reach the browser or logs.
+- OrderService: YAGOUTPAY accepted in setPaymentMethod (configured +
+  currency checks) and createFromCart (supported-method + currency
+  validation — also closes the silent-fallback hole where an unknown
+  method became a CyberSource redirect). registerPaymentAttempt() bumps
+  the attempt counter.
+- OrderResource payment-payload: YAGOUTPAY branch returns
+  {me_id, merchant_request, hash} + gateway URL — frontend auto-POSTs it.
+- PaymentMethodsResource lists YagoutPay when configured (optionally
+  gated by supported-currencies vs the caller's cart currency).
+- Flyway V21: checkout_order.payment_attempt INT — order_no uniqueness
+  (invoice number, then invoice-N on retries, per YagoutPay spec).
+
+7b — Backend (api-admin)
+- RefundService: YagoutPay has no documented refund API → every refund on
+  a YAGOUTPAY order takes the manual path (out-of-band payout) and the
+  audit row records gateway_provider=YAGOUTPAY regardless of the
+  admin's manual checkbox.
+
+7c — Frontend
+- Storefront needed ZERO code changes — the payment picker renders
+  PaymentMethodsResource output and checkout already auto-POSTs any
+  non-MPGS provider to its gateway URL; the return page polls order
+  status for non-MPGS providers.
+- Admin order detail: isYagoutPayOrder computed locks the manual-refund
+  checkbox pre-ticked + shows an info banner explaining refunds are
+  out-of-band; submitRefund forces manual:true.
+
+7d — Config / Ops
+- application.properties + .env.example + docker-compose env wiring
+  (YAGOUTPAY_* vars; UAT gateway URL + localhost callback defaults).
+- %dev profile enables YagoutPay with the published UAT test merchant
+  (202505060003) — payload building works locally; end-to-end payment
+  still needs a YagoutPay-registered callback domain.
+
+7e — Tests
+- YagoutPayCryptoTest: round-trips (incl. the doc's printed plaintext
+  forms), sha256hex, key-length validation, wrong-key failure.
+  NOTE: the doc's printed sample ciphertext is internally inconsistent
+  with its own key (bad padding under JCA + openssl) — exact wire-vector
+  validation deferred to YagoutPay's /encryption + /decryption debug
+  APIs at UAT.
+- YagoutPayServiceTest: 9-section payload layout, attempt suffixing,
+  delimiter sanitization, config + currency gating, parseReturn paths.
+- YagoutPayReturnResourceTest: all outcome branches — markPaid,
+  markPaymentFailed (success/failure URLs), idempotent replay,
+  amount/currency mismatch, wrong-provider and unknown-order guards,
+  303 redirect targets.
+
+7f — Still open (external dependencies)
+- YagoutPay merchant onboarding + prod credentials.
+- Callback domain registration with YagoutPay ("Invalid Referral URL"
+  blocks e2e otherwise).
+- UAT end-to-end: success + decline paths, payment retry (attempt-N
+  order_no), abandoned-order sweeper behaviour.
+- Refund runbook for YagoutPay orders (out-of-band payout procedure).

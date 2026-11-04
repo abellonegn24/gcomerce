@@ -158,6 +158,8 @@ The objective of this request is to obtain a **web application security audit ce
 | Integration | Purpose | Direction | Auth method |
 |---|---|---|---|
 | **MPGS (Mastercard Payment Gateway Services)** | Card payment (hosted checkout) | Browser → MPGS → Webhook | Merchant ID + API password + notification secret |
+| **CyberSource Secure Acceptance** | Card payment (hosted checkout) | Browser → CyberSource → Webhook | Profile ID + access key + HMAC-SHA256 secret |
+| **YagoutPay** | Domestic wallet/card payment (aggregator hosted checkout) | Browser → YagoutPay → encrypted return POST | Merchant ID + AES-256-CBC shared encryption key |
 | **SMTP relay** | Transactional emails (verification, reset, shipment, B2B, coupon reports) | Server → SMTP | Username + password (prod); MailHog (dev) |
 | **MinIO / S3** | Product media + invoice storage | Server → S3 API | Access key + secret key |
 | **Cloudflare Turnstile / reCAPTCHA** | Contact form bot protection | Browser → Cloudflare | Site key + secret key |
@@ -221,7 +223,7 @@ The entire platform is custom-developed by the Gadaa Istar engineering team. Not
 
 | Standard / Practice | Implementation |
 |---|---|
-| **PCI DSS SAQ-A** | Card data never touches our servers — all card entry happens on MPGS hosted pages. We only receive HMAC-signed webhook callbacks with transaction IDs (no PAN, no CVV). |
+| **PCI DSS SAQ-A** | Card data never touches our servers — all card/wallet entry happens on the gateways' hosted pages (MPGS, CyberSource, YagoutPay). We only receive signed/encrypted callbacks with transaction IDs (no PAN, no CVV). |
 | **OWASP Top 10 mitigation** | Input validation (Bean Validation), JWT auth, RBAC, parameterized queries (JPA/Hibernate), CSRF-safe (Bearer token, no cookies for auth), security headers (HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy). |
 | **Ethiopian VAT compliance (ERCA)** | Tax classes (STANDARD 15%, EXPORT zero-rated, EXEMPT), per-fiscal-year invoice sequences, credit note support. |
 | **RFC 6238 TOTP** | Mandatory MFA for all admin accounts (Google Authenticator / Authy / 1Password compatible). |
@@ -258,17 +260,18 @@ The following devices / services are in place between the tester and the applica
 | 3 | Gadaa Istar Admin Back-Office | `https://admin.gadaaistar.et` | **Internal web portal** | Admin test accounts (one per role: SUPERADMIN, PRODUCT_MANAGER, ORDER_MANAGER, CUSTOMER_MANAGER, FINANCE) will be provided. |
 | 4 | Gadaa Istar Admin API | `https://api.gadaaistar.et/api/admin/v1` | **Internal API** | Admin test accounts (one per role) will be provided. |
 | 5 | MPGS Webhook Endpoint | `https://api.gadaaistar.et/api/storefront/v1/payment/mpgs/webhook` | **Public API (webhook)** | No account; notification secret verification. Test payload + secret can be provided. |
-| 6 | Storefront SSR (origin) | `10.0.1.20:4000` / `10.0.1.21:4000` (internal) | **Internal local application** | — |
-| 7 | Admin SPA (origin) | `10.0.1.30:80` (internal) | **Internal local application** | — |
-| 8 | api-storefront (origin) | `10.0.1.10:8080` / `10.0.1.11:8080` (internal) | **Internal local application** | — |
-| 9 | api-admin (origin) | `10.0.1.10:8081` / `10.0.1.11:8081` (internal) | **Internal local application** | — |
-| 10 | PostgreSQL database | `10.0.1.x:5432` (internal, DB: `GCOMERCE`) | **Internal infrastructure** | Read-only DB account can be provided for schema review. |
-| 11 | MinIO / S3 object storage | `10.0.1.x:9000` (internal) | **Internal infrastructure** | — |
-| 12 | Redis (if deployed) | `10.0.1.x:6379` (internal) | **Internal infrastructure** | — |
+| 6 | YagoutPay Return Endpoints | `https://api.gadaaistar.et/api/storefront/v1/payment/yagoutpay/return` + `.../failure` | **Public API (gateway return)** | No account; AES-256-CBC encrypted fields + strict order/amount/currency validation. Enabled only when gateway credentials are configured. |
+| 7 | Storefront SSR (origin) | `10.0.1.20:4000` / `10.0.1.21:4000` (internal) | **Internal local application** | — |
+| 8 | Admin SPA (origin) | `10.0.1.30:80` (internal) | **Internal local application** | — |
+| 9 | api-storefront (origin) | `10.0.1.10:8080` / `10.0.1.11:8080` (internal) | **Internal local application** | — |
+| 10 | api-admin (origin) | `10.0.1.10:8081` / `10.0.1.11:8081` (internal) | **Internal local application** | — |
+| 11 | PostgreSQL database | `10.0.1.x:5432` (internal, DB: `GCOMERCE`) | **Internal infrastructure** | Read-only DB account can be provided for schema review. |
+| 12 | MinIO / S3 object storage | `10.0.1.x:9000` (internal) | **Internal infrastructure** | — |
+| 13 | Redis (if deployed) | `10.0.1.x:6379` (internal) | **Internal infrastructure** | — |
 
 ### 7.2 Out of Scope
 
-- The MPGS hosted payment page itself (this is a PCI-DSS-certified third-party service; we never receive card data).
+- The hosted payment pages themselves (MPGS, CyberSource, YagoutPay — PCI-DSS-certified third-party services; we never receive card data).
 - Cloudflare's internal infrastructure (edge network, WAF engine internals).
 - Ethio Telecom Cloud's underlying hypervisor / physical infrastructure.
 - Third-party SMTP relay infrastructure (in production).

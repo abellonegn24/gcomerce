@@ -61,6 +61,15 @@ export class OrderDetailComponent implements OnInit {
     return Math.max(0, Math.round((gt - rt) * 100) / 100);
   });
 
+  /**
+   * YagoutPay documents no refund API — refunds on its orders are always
+   * out-of-band, so the modal forces + locks the manual checkbox.
+   */
+  protected readonly isYagoutPayOrder = computed<boolean>(() => {
+    const o = this.order();
+    return !!o && (o.paymentProvider === 'YAGOUTPAY' || o.paymentMethod === 'YAGOUTPAY');
+  });
+
   /** True when the current state legally accepts a refund attempt. */
   protected readonly canRefund = computed<boolean>(() => {
     const o = this.order();
@@ -177,7 +186,8 @@ export class OrderDetailComponent implements OnInit {
     // one-field edit away.
     this.refundAmount.set(remaining > 0 ? remaining.toFixed(2) : '');
     this.refundReason.set('');
-    this.refundManual.set(false);
+    // YagoutPay has no refund API — pre-tick manual (checkbox is locked).
+    this.refundManual.set(this.isYagoutPayOrder());
     this.refundError.set(null);
     this.refundOpen.set(true);
   }
@@ -214,7 +224,7 @@ export class OrderDetailComponent implements OnInit {
     const payload: CreateRefundPayload = {
       amount: amountStr,
       reason,
-      manual: this.refundManual(),
+      manual: this.refundManual() || this.isYagoutPayOrder(),
     };
     this.refundError.set(null);
     this.refundSaving.set(true);

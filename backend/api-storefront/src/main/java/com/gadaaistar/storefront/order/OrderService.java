@@ -36,6 +36,7 @@ import com.gadaaistar.storefront.mail.MailService;
 import com.gadaaistar.storefront.payment.CyberSourceConfig;
 import com.gadaaistar.storefront.payment.MpgsConfig;
 import com.gadaaistar.storefront.payment.MpgsService;
+import com.gadaaistar.storefront.payment.YagoutPayConfig;
 import com.gadaaistar.storefront.pricing.PriceResolver;
 import com.gadaaistar.storefront.shipping.ShippingQuoteService;
 import com.gadaaistar.storefront.tax.TaxService;
@@ -91,6 +92,7 @@ public class OrderService {
     @Inject MpgsService                 mpgsService;
     @Inject MpgsConfig                  mpgsConfig;
     @Inject CyberSourceConfig           cybersourceConfig;
+    @Inject YagoutPayConfig             yagoutPayConfig;
 
     @ConfigProperty(name = "gadaa.transactions.admin-viewer-email",
                     defaultValue = "admin@gplus.com")
@@ -159,6 +161,17 @@ public class OrderService {
                         "MPGS is not configured. Contact support.",
                         Map.of("paymentMethod", method));
             }
+        } else if ("YAGOUTPAY".equals(method)) {
+            if (!yagoutPayConfig.isConfigured()) {
+                throw new ConflictException("PAYMENT_GATEWAY_NOT_CONFIGURED",
+                        "YagoutPay is not configured. Contact support.",
+                        Map.of("paymentMethod", method));
+            }
+            if (!yagoutPayConfig.supportsCurrency(order.currency)) {
+                throw new ConflictException("PAYMENT_METHOD_CURRENCY_MISMATCH",
+                        "YagoutPay cannot process orders in " + order.currency + ".",
+                        Map.of("paymentMethod", method, "currency", order.currency));
+            }
         } else {
             throw new ConflictException("UNSUPPORTED_PAYMENT_METHOD",
                     "Unsupported payment method: " + paymentMethod,
@@ -178,6 +191,21 @@ public class OrderService {
 
         LOG.infof("Customer %d set payment method %s on order %s", customerId, method, uuid);
         return order;
+    }
+
+    /**
+     * Bump the hosted-checkout attempt counter on an order about to be sent
+     * to YagoutPay, and return the new 1-based attempt number. YagoutPay
+     * requires {@code order_no} unique per transaction request, so the
+     * payment-payload endpoint calls this before building each redirect
+     * payload and {@code YagoutPayService} suffixes {@code order_no} from
+     * attempt 2 onward.
+     */
+    @Transactional
+    public int registerPaymentAttempt(CheckoutOrder order) {
+        var managed = orders.findById(order.id);
+        managed.paymentAttempt++;
+        return managed.paymentAttempt;
     }
 
     // -------------------------------------------------------------------------
@@ -280,6 +308,23 @@ public class OrderService {
         // Store the customer's chosen payment method (defaults to CYBERSOURCE).
         order.paymentMethod = req.paymentMethod() == null || req.paymentMethod().isBlank()
                 ? "CYBERSOURCE" : req.paymentMethod().toUpperCase();
+        if (!"CYBERSOURCE".equals(order.paymentMethod)
+                && !"MPGS".equals(order.paymentMethod)
+                && !"YAGOUTPAY".equals(order.paymentMethod)) {
+            // Without this check a typo'd method silently became a CyberSource
+            // redirect at payment-payload time — a gateway the customer never
+            // picked.
+            throw new ConflictException("UNSUPPORTED_PAYMENT_METHOD",
+                    "Unsupported payment method: " + req.paymentMethod(),
+                    Map.of("paymentMethod", order.paymentMethod));
+        }
+        if ("YAGOUTPAY".equals(order.paymentMethod)
+                && !yagoutPayConfig.supportsCurrency(order.currency)) {
+            throw new ConflictException("PAYMENT_METHOD_CURRENCY_MISMATCH",
+                    "YagoutPay cannot process orders in " + order.currency + ".",
+                    Map.of("paymentMethod", order.paymentMethod,
+                            "currency", order.currency));
+        }
 
         BigDecimal subtotal = BigDecimal.ZERO;
         BigDecimal taxTotal = BigDecimal.ZERO;

@@ -126,6 +126,15 @@ public class CheckoutOrder {
     @Column(name = "mpgs_success_indicator", length = 128)
     public String mpgsSuccessIndicator;
 
+    /**
+     * Number of hosted-checkout redirect payloads built for this order.
+     * YagoutPay requires {@code order_no} to be unique per transaction
+     * request, so attempts after the first append {@code -<attempt>} to the
+     * invoice number. Incremented by the payment-payload endpoint.
+     */
+    @Column(name = "payment_attempt", nullable = false)
+    public int paymentAttempt = 0;
+
     // Timestamps --------------------------------------------------------------
     @Column(name = "placed_at", nullable = false, updatable = false)
     public Instant placedAt;

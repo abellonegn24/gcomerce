@@ -443,12 +443,23 @@
               <small class="gi-field__hint">Recorded on the audit log and visible to any admin who opens this order.</small>
             </div>
 
+            @if (isYagoutPayOrder()) {
+              <div class="gi-order__banner gi-order__banner--info" role="note">
+                <span class="material-icons-round">info_outline</span>
+                <span>
+                  This order was paid via <strong>YagoutPay</strong>, which has no automated
+                  refund API. The refund is always recorded as manual — issue the actual
+                  payout out-of-band (bank transfer / wallet) before or after saving.
+                </span>
+              </div>
+            }
+
             <label class="gi-field gi-field--check">
               <input
                 type="checkbox"
                 [checked]="refundManual()"
                 (change)="refundManual.set($any($event.target).checked)"
-                [disabled]="refundSaving()" />
+                [disabled]="refundSaving() || isYagoutPayOrder()" />
               <span>
                 Record as <strong>manual</strong> refund — skip the gateway call.
                 Use when the customer was already refunded out-of-band (cash, wire, prior CyberSource action).

@@ -9,6 +9,7 @@ import com.gadaaistar.common.exceptions.ForbiddenException;
 import com.gadaaistar.storefront.payment.CyberSourceService;
 import com.gadaaistar.storefront.payment.MpgsConfig;
 import com.gadaaistar.storefront.payment.MpgsService;
+import com.gadaaistar.storefront.payment.YagoutPayService;
 import com.gadaaistar.storefront.ratelimit.RateLimit;
 import com.gadaaistar.web.security.SecurityContextHolder;
 
@@ -55,6 +56,7 @@ public class OrderResource {
     @Inject CyberSourceService    cybersource;
     @Inject MpgsService           mpgs;
     @Inject MpgsConfig            mpgsConfig;
+    @Inject YagoutPayService      yagoutPay;
     @Inject SecurityContextHolder security;
 
     // -------------------------------------------------------------------------
@@ -145,6 +147,13 @@ public class OrderResource {
             fields.put("orderReference", order.invoiceNumber);
             // gatewayUrl = checkout.js script URL; frontend loads it then calls Checkout.configure().
             return new PaymentPayload("MPGS", mpgsConfig.checkoutJsUrl(), fields);
+        }
+        if ("YAGOUTPAY".equals(method)) {
+            // YagoutPay requires order_no unique per transaction request —
+            // bump the attempt counter so retry redirects don't collide.
+            var attempt = orderService.registerPaymentAttempt(order);
+            var payload = yagoutPay.buildRedirectPayload(order, attempt);
+            return new PaymentPayload("YAGOUTPAY", payload.endpoint(), payload.fields());
         }
         // Default: CyberSource signed form fields.
         var payload = cybersource.buildRedirectPayload(order);

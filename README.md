@@ -1,13 +1,13 @@
 # Gadaa Istar Export E-Commerce Platform
 
-Hybrid **B2B + B2C** e-commerce platform for exporting Ethiopian coffee (raw & processed) and specialty agricultural products (white products, spicy products) to international buyers, integrated with **CyberSource Secure Acceptance Hosted Checkout**.
+Hybrid **B2B + B2C** e-commerce platform for exporting Ethiopian coffee (raw & processed) and specialty agricultural products (white products, spicy products) to international buyers, integrated with hosted payment gateways (**MPGS**, **CyberSource Secure Acceptance**, and **YagoutPay**).
 
 **Stack**
 
 - **Frontend:** Angular 20 (standalone components, signals, SSR)
 - **Backend:** Java 21 + Quarkus 3.x (multi-module Gradle)
 - **Database:** PostgreSQL 16 with Flyway migrations
-- **Payment:** CyberSource Secure Acceptance Hosted Checkout
+- **Payment:** MPGS + CyberSource Secure Acceptance + YagoutPay (hosted checkouts)
 - **Hosting:** Ethio Telecom Cloud + Cloudflare edge
 - **Compliance:** PCI DSS SAQ-A, Ethiopian VAT (ERCA)
 

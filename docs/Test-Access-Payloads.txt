@@ -33,7 +33,9 @@
   4. Item 5 (MPGS Webhook Endpoint) is intentionally omitted from this
      document. Webhook payloads, notification secret, and HMAC signing
      details will be handed over out-of-band via a separate encrypted
-     channel.
+     channel. Item 12 (YagoutPay Return Endpoints) is likewise kept
+     minimal: the merchant encryption key and any test transactions are
+     provided out-of-band.
 
 
 ================================================================================
@@ -74,7 +76,7 @@
 
   1.2  In scope
   --------------------------------------------------------------------------
-       Items 1 through 11 in the scope matrix (Section 2). Testing is
+       Items 1 through 12 in the scope matrix (Section 2). Testing is
        authorised only against the exact hosts, IPs, and ports listed in
        Section 2 for the duration of the testing window.
 
@@ -82,8 +84,9 @@
   --------------------------------------------------------------------------
        - Testing against any host, subdomain, or IP not listed in
          Section 2.
-       - Real card payments through CyberSource / MPGS live endpoints.
-         Use only the sandbox card numbers listed in Section 3.2.7.
+       - Real card payments through CyberSource / MPGS / YagoutPay live
+         endpoints. Use only the sandbox card numbers listed in
+         Section 3.2.7.
        - Sustained volumetric / DoS attacks (>5 requests / second per
          endpoint) without prior written approval.
        - Social engineering of Gadaa Istar staff or customers.
@@ -141,6 +144,9 @@
   9 | api-admin (origin)               | 10.0.1.10:8081                         | Internal LAN; JWT + MFA
   10 | PostgreSQL database              | 10.0.1.<host>:5432 (DB: GCOMERCE)      | Read-only DB user (Sec 3.10)
   11 | MinIO / S3 object storage        | 10.0.1.<host>:9000                     | Access key + secret (Sec 3.11)
+  12 | YagoutPay return endpoints       | https://api.gedaaistar.et/api/         | AES-256-CBC encrypted fields;
+    |                                  |   storefront/v1/payment/yagoutpay/     |   merchant key OUT-OF-BAND;
+    |                                  |   return  +  .../failure               |   disabled until credentials set
 
 
 ================================================================================
@@ -472,6 +478,31 @@
     - The pre-signed URLs that the Admin API generates expire in 300 s
       by default.  Auditors may test URL replay after expiry to confirm
       rejection.
+
+
+--------------------------------------------------------------------------------
+  3.12 ITEM 12 - YAGOUTPAY RETURN ENDPOINTS
+--------------------------------------------------------------------------------
+
+  URLs            : https://api.gedaaistar.et/api/storefront/v1/payment/
+                    yagoutpay/return        (gateway success POST)
+                    https://api.gedaaistar.et/api/storefront/v1/payment/
+                    yagoutpay/failure       (gateway failure POST)
+  Auth            : No user account; the gateway POSTs form-urlencoded
+                    fields whose contents are AES-256-CBC encrypted under
+                    the merchant encryption key.
+  Integrity model : Decryption requires the shared merchant key, then the
+                    decrypted me_id, order reference, amount, and currency
+                    must all match a PENDING_PAYMENT order placed through
+                    YagoutPay before any state changes. Failed validation
+                    mutates nothing and 303-redirects to the storefront.
+  Current state   : The endpoints are deployed but the gateway feature
+                    flag (YAGOUTPAY_ENABLED) is OFF — requests are dropped
+                    safely until merchant credentials are configured.
+  Merchant key    : To be provided out-of-band via encrypted channel, as
+                    with Item 5. Sample encrypted payloads can be
+                    generated with the YagoutPay UAT /encryption debug
+                    API on request.
 
 
 ================================================================================
