@@ -377,6 +377,21 @@
             </div>
           </dl>
 
+          <div class="gi-checkout__terms">
+            <label class="gi-checkout__terms-label">
+              <input
+                type="checkbox"
+                [checked]="termsAccepted()"
+                (change)="termsAccepted.set($any($event.target).checked)" />
+              <span>
+                Before paying, I accept the
+                <a routerLink="/terms-of-service" target="_blank" class="gi-checkout__terms-link">Terms of Service</a>
+                and
+                <a routerLink="/privacy-policy" target="_blank" class="gi-checkout__terms-link">Privacy Policy</a>
+              </span>
+            </label>
+          </div>
+
           <button type="button"
                   class="gi-btn-inline gi-btn-inline--gold gi-checkout__pay"
                   [disabled]="!canPlaceOrder()"

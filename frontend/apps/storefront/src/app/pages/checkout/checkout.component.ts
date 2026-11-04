@@ -129,6 +129,7 @@ export class CheckoutComponent implements OnInit {
 
   // --- Submission state -----------------------------------------------------
   protected readonly customerNotes = signal<string>('');
+  protected readonly termsAccepted = signal<boolean>(false);
   protected readonly placing = signal<boolean>(false);
   protected readonly redirecting = signal<boolean>(false);
   protected readonly errorMessage = signal<string | null>(null);
@@ -307,7 +308,8 @@ export class CheckoutComponent implements OnInit {
       !this.isCartEmpty() &&
       this.selectedAddressId() !== null &&
       shippingSatisfied &&
-      this.auth.isAuthenticated()
+      this.auth.isAuthenticated() &&
+      this.termsAccepted()
     );
   }
 

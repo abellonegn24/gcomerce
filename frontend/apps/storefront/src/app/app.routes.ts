@@ -187,6 +187,20 @@ export const routes: Routes = [
     title: 'Reset password — Gadaa Istar',
   },
 
+  // -------------------- Legal pages --------------------
+  {
+    path: 'terms-of-service',
+    loadComponent: () =>
+      import('./pages/legal/terms-of-service.component').then((m) => m.TermsOfServiceComponent),
+    title: 'Terms of Service — Gadaa Istar',
+  },
+  {
+    path: 'privacy-policy',
+    loadComponent: () =>
+      import('./pages/legal/privacy-policy.component').then((m) => m.PrivacyPolicyComponent),
+    title: 'Privacy Policy — Gadaa Istar',
+  },
+
   // -------------------- CMS static pages --------------------
   { path: 'about', redirectTo: 'pages/about', pathMatch: 'full' },
   { path: 'contact', redirectTo: 'pages/contact', pathMatch: 'full' },
