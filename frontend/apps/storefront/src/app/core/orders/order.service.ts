@@ -80,4 +80,12 @@ export class OrderService {
       {},
     );
   }
+
+  /** Invoice PDF for a paid order — raw blob; the caller saves it as a file. */
+  downloadInvoice(uuid: string): Observable<Blob> {
+    return this.http.get(
+      `${environment.apiBaseUrl}/me/orders/${uuid}/invoice`,
+      { responseType: 'blob' },
+    );
+  }
 }

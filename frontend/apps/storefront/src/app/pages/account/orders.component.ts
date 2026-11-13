@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DOCUMENT, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
@@ -19,10 +19,13 @@ import { OrderStatus, OrderSummary } from '../../core/orders/order.model';
 })
 export class AccountOrdersComponent implements OnInit {
   private readonly orderService = inject(OrderService);
+  private readonly doc = inject(DOCUMENT);
 
   protected readonly orders = signal<OrderSummary[]>([]);
   protected readonly loading = signal<boolean>(true);
   protected readonly errorMessage = signal<string | null>(null);
+  /** UUID of the order whose invoice is currently downloading, if any. */
+  protected readonly downloadingInvoiceId = signal<string | null>(null);
   protected readonly page = signal<number>(0);
   protected readonly size = signal<number>(20);
   protected readonly total = signal<number>(0);
@@ -58,6 +61,36 @@ export class AccountOrdersComponent implements OnInit {
       error: (err: NormalizedApiError) => {
         this.errorMessage.set(err.message || 'Could not load your orders.');
         this.loading.set(false);
+      },
+    });
+  }
+
+  /**
+   * Download the invoice PDF straight from the list — no need to open the
+   * order first. The row itself is a router link, so the click must not
+   * bubble into a navigation.
+   */
+  protected downloadInvoice(o: OrderSummary, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!o.paidAt || this.downloadingInvoiceId()) return;
+    this.downloadingInvoiceId.set(o.uuid);
+    this.errorMessage.set(null);
+    this.orderService.downloadInvoice(o.uuid).subscribe({
+      next: (blob) => {
+        this.downloadingInvoiceId.set(null);
+        const url = URL.createObjectURL(blob);
+        const a = this.doc.createElement('a');
+        a.href = url;
+        a.download = `invoice-${o.invoiceNumber}.pdf`;
+        this.doc.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.downloadingInvoiceId.set(null);
+        this.errorMessage.set('Could not download the invoice. Please try again.');
       },
     });
   }

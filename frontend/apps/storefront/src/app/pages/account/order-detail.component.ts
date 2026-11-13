@@ -34,6 +34,7 @@ export class AccountOrderDetailComponent implements OnInit {
   protected readonly cancelling = signal<boolean>(false);
   protected readonly startingPayment = signal<boolean>(false);
   protected readonly checkingPayment = signal<boolean>(false);
+  protected readonly downloadingInvoice = signal<boolean>(false);
 
   // Payment method selection
   protected readonly paymentMethods = signal<PaymentMethodOption[]>([]);
@@ -261,6 +262,34 @@ export class AccountOrderDetailComponent implements OnInit {
       error: (err: NormalizedApiError) => {
         this.checkingPayment.set(false);
         this.errorMessage.set(err.message || 'Could not refresh payment status from MPGS.');
+      },
+    });
+  }
+
+  /**
+   * Download the server-generated invoice PDF. Only offered once the order
+   * has a {@code paidAt} timestamp — before that there is nothing to bill.
+   */
+  protected downloadInvoice(): void {
+    const o = this.order();
+    if (!o || !o.paidAt) return;
+    this.downloadingInvoice.set(true);
+    this.errorMessage.set(null);
+    this.orderService.downloadInvoice(o.uuid).subscribe({
+      next: (blob) => {
+        this.downloadingInvoice.set(false);
+        const url = URL.createObjectURL(blob);
+        const a = this.doc.createElement('a');
+        a.href = url;
+        a.download = `invoice-${o.invoiceNumber}.pdf`;
+        this.doc.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.downloadingInvoice.set(false);
+        this.errorMessage.set('Could not download the invoice. Please try again.');
       },
     });
   }

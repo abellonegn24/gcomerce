@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DOCUMENT, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription, timer } from 'rxjs';
@@ -30,12 +30,14 @@ export class CheckoutReturnComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly orderService = inject(OrderService);
   private readonly cartService = inject(CartService);
+  private readonly doc = inject(DOCUMENT);
 
   private pollSub: Subscription | null = null;
 
   protected readonly order = signal<OrderDetail | null>(null);
   protected readonly loading = signal<boolean>(true);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly downloadingInvoice = signal<boolean>(false);
   protected readonly stillPending = computed<boolean>(() => {
     const o = this.order();
     return o?.status === 'PENDING_PAYMENT';
@@ -104,6 +106,42 @@ export class CheckoutReturnComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.pollSub?.unsubscribe();
+  }
+
+  /**
+   * Gateway label for the pending-payment copy — "MPGS", "CyberSource", or a
+   * generic fallback so we never name the wrong provider.
+   */
+  protected providerLabel(): string {
+    const o = this.order();
+    const raw = o?.paymentProvider ?? o?.paymentMethod;
+    if (raw === 'MPGS') return 'MPGS';
+    if (raw === 'CYBERSOURCE') return 'CyberSource';
+    return 'the payment gateway';
+  }
+
+  /** Download the server-generated invoice PDF for the paid order. */
+  protected downloadInvoice(): void {
+    const o = this.order();
+    if (!o || !o.paidAt) return;
+    this.downloadingInvoice.set(true);
+    this.orderService.downloadInvoice(o.uuid).subscribe({
+      next: (blob) => {
+        this.downloadingInvoice.set(false);
+        const url = URL.createObjectURL(blob);
+        const a = this.doc.createElement('a');
+        a.href = url;
+        a.download = `invoice-${o.invoiceNumber}.pdf`;
+        this.doc.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.downloadingInvoice.set(false);
+        this.errorMessage.set('Could not download the invoice. Please try again.');
+      },
+    });
   }
 
   protected formatMoney(currency: string, amount: string | number): string {

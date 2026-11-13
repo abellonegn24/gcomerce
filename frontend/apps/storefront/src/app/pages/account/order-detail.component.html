@@ -34,9 +34,24 @@
           Placed {{ o.placedAt | date:'medium' }}
         </p>
       </div>
-      <span class="gi-order-detail__status" [ngClass]="statusClass(o.status)">
-        {{ statusLabel(o.status) }}
-      </span>
+      <div class="gi-order-detail__head-side">
+        <span class="gi-order-detail__status" [ngClass]="statusClass(o.status)">
+          {{ statusLabel(o.status) }}
+        </span>
+        @if (o.paidAt) {
+          <button type="button" class="gi-btn-inline gi-btn-inline--ghost"
+                  (click)="downloadInvoice()"
+                  [disabled]="downloadingInvoice()">
+            @if (downloadingInvoice()) {
+              <span class="material-icons-round gi-spin">progress_activity</span>
+              Preparing…
+            } @else {
+              <span class="material-icons-round">download</span>
+              Download invoice
+            }
+          </button>
+        }
+      </div>
     </header>
 
     @if (gatewayMissing()) {

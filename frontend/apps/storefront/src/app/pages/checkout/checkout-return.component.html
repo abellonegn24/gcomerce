@@ -24,7 +24,7 @@
         <h1>Waiting for your bank to confirm…</h1>
         <p>
           Your order <strong>{{ o.invoiceNumber }}</strong> is placed and we're
-          waiting on CyberSource to notify us. This usually takes a few seconds.
+          waiting on {{ providerLabel() }} to notify us. This usually takes a few seconds.
         </p>
         @if (stillPending()) {
           <p class="gi-return__hint">
@@ -70,6 +70,19 @@
       </dl>
 
       <div class="gi-return__actions">
+        @if (o.paidAt) {
+          <button type="button" class="gi-btn-inline gi-btn-inline--gold"
+                  (click)="downloadInvoice()"
+                  [disabled]="downloadingInvoice()">
+            @if (downloadingInvoice()) {
+              <span class="material-icons-round gi-spin">progress_activity</span>
+              Preparing…
+            } @else {
+              <span class="material-icons-round">picture_as_pdf</span>
+              Download invoice
+            }
+          </button>
+        }
         <a [routerLink]="['/account/orders', o.uuid]" class="gi-btn-inline gi-btn-inline--gold">
           <span class="material-icons-round">receipt_long</span>
           View order details

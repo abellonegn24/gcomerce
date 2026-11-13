@@ -33,6 +33,12 @@ dependencies {
     implementation "at.favre.lib:bcrypt:${bcryptVersion}"
     implementation 'commons-codec:commons-codec:1.17.1'
 
+    // Customer-downloadable invoice PDF after a successful payment.
+    implementation 'com.github.librepdf:openpdf:3.0.5'
+    // QR code on the invoice pointing at the public order-tracking page.
+    implementation 'com.google.zxing:core:3.5.3'
+    implementation 'com.google.zxing:javase:3.5.3'
+
     testImplementation 'io.quarkus:quarkus-junit5'
     testImplementation 'io.rest-assured:rest-assured'
     testImplementation 'org.testcontainers:postgresql:1.20.3'

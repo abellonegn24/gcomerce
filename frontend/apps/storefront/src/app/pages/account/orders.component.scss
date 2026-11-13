@@ -115,6 +115,26 @@
   &.is-cancelled { background: rgba(201, 51, 39, 0.1); color: var(--gi-red-600); }
 }
 
+.gi-orders__invoice-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--gi-cream-300, #e5dcc8);
+  border-radius: 0.4rem;
+  background: transparent;
+  color: var(--gi-gold-700);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease;
+
+  .material-icons-round { font-size: 1.15rem; }
+
+  &:hover:not(:disabled) { background: var(--gi-cream-100); }
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+
 .gi-orders__chevron {
   color: var(--gi-text-secondary);
 }

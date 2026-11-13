@@ -6,6 +6,7 @@ import java.util.Map;
 import com.gadaaistar.common.OrderStatus;
 import com.gadaaistar.common.exceptions.ConflictException;
 import com.gadaaistar.common.exceptions.ForbiddenException;
+import com.gadaaistar.storefront.invoice.InvoicePdfService;
 import com.gadaaistar.storefront.payment.CyberSourceService;
 import com.gadaaistar.storefront.payment.MpgsConfig;
 import com.gadaaistar.storefront.payment.MpgsService;
@@ -52,6 +53,7 @@ public class OrderResource {
 
     @Inject OrderService          orderService;
     @Inject OrderMapper           mapper;
+    @Inject InvoicePdfService     invoicePdf;
     @Inject CyberSourceService    cybersource;
     @Inject MpgsService           mpgs;
     @Inject MpgsConfig            mpgsConfig;
@@ -97,6 +99,38 @@ public class OrderResource {
     public OrderDtos.OrderDetail get(@PathParam("uuid") String uuid) {
         var customerId = security.requireCustomer();
         return mapper.toDetail(orderService.getForCustomer(customerId, uuid));
+    }
+
+    // -------------------------------------------------------------------------
+    // Invoice PDF (downloadable once payment is confirmed)
+    // -------------------------------------------------------------------------
+
+    @GET
+    @Path("/{uuid}/invoice")
+    @Produces("application/pdf")
+    @Transactional
+    @Operation(summary = "Download the invoice PDF for a paid order. "
+            + "Generated on demand from the order snapshot; names the actual "
+            + "payment gateway (MPGS, CyberSource, …) that collected the funds.")
+    public Response invoice(@PathParam("uuid") String uuid) {
+        var customerId = security.requireCustomer();
+        var order = orderService.getForCustomer(customerId, uuid);
+
+        // Invoices only exist for orders the customer actually paid for —
+        // a PENDING_PAYMENT / CANCELLED order has no settled funds to bill.
+        if (order.paidAt == null) {
+            throw new ConflictException("INVOICE_NOT_AVAILABLE",
+                    "An invoice is available once payment has been confirmed.",
+                    Map.of("status", order.status.name()));
+        }
+
+        var pdf = invoicePdf.render(order);
+        return Response.ok(pdf)
+                .type("application/pdf")
+                .header("Content-Disposition",
+                        "attachment; filename=\"invoice-" + order.invoiceNumber + ".pdf\"")
+                .header("Cache-Control", "private, no-store")
+                .build();
     }
 
     // -------------------------------------------------------------------------

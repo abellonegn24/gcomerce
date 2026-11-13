@@ -48,6 +48,19 @@
                 {{ statusLabel(o.status) }}
               </span>
               <strong>{{ formatMoney(o.currency, o.grandTotal) }}</strong>
+              @if (o.paidAt) {
+                <button type="button" class="gi-orders__invoice-btn"
+                        title="Download invoice PDF"
+                        aria-label="Download invoice for {{ o.invoiceNumber }}"
+                        [disabled]="downloadingInvoiceId() === o.uuid"
+                        (click)="downloadInvoice(o, $event)">
+                  @if (downloadingInvoiceId() === o.uuid) {
+                    <span class="material-icons-round gi-spin">progress_activity</span>
+                  } @else {
+                    <span class="material-icons-round">picture_as_pdf</span>
+                  }
+                </button>
+              }
               <span class="material-icons-round gi-orders__chevron">chevron_right</span>
             </div>
           </a>
